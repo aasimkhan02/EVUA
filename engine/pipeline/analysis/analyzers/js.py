@@ -1,18 +1,25 @@
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 from .base import Analyzer
-
-# Minimal JS AST via esprima (pip install esprima)
 import esprima
 
 
 class RawController:
-    def __init__(self, name: str, file: str, di: List[str], scope_reads: List[str], scope_writes: List[str]):
+    def __init__(
+        self,
+        name: str,
+        file: str,
+        di: List[str],
+        scope_reads: List[str],
+        scope_writes: List[str],
+        watch_depths: List[str],  # "shallow" | "deep"
+    ):
         self.name = name
         self.file = file
         self.di = di
         self.scope_reads = scope_reads
         self.scope_writes = scope_writes
+        self.watch_depths = watch_depths
 
         # IRBuilder expects these
         self.classes = []
@@ -28,7 +35,7 @@ class JSAnalyzer(Analyzer):
             if not hasattr(node, "type"):
                 return
 
-            # Match any `.controller('X', function(...) { ... })` in the tree
+            # Match angular.module(...).controller('X', function(...) { ... })
             if (
                 node.type == "CallExpression"
                 and node.callee.type == "MemberExpression"
@@ -45,8 +52,10 @@ class JSAnalyzer(Analyzer):
 
                         scope_reads: List[str] = []
                         scope_writes: List[str] = []
+                        watch_depths: List[str] = []
 
                         for stmt in fn_node.body.body:
+                            # $scope.x = ...
                             if stmt.type == "ExpressionStatement" and stmt.expression.type == "AssignmentExpression":
                                 left = stmt.expression.left
                                 if (
@@ -56,14 +65,24 @@ class JSAnalyzer(Analyzer):
                                 ):
                                     scope_writes.append(left.property.name)
 
+                            # $scope.$watch('x', fn, true)
                             if stmt.type == "ExpressionStatement" and stmt.expression.type == "CallExpression":
                                 callee = stmt.expression.callee
                                 if (
                                     callee.type == "MemberExpression"
                                     and callee.object.type == "Identifier"
                                     and callee.object.name == "$scope"
+                                    and getattr(callee.property, "name", None) == "$watch"
                                 ):
-                                    scope_reads.append(callee.property.name)
+                                    # Third argument true → deep watch
+                                    if len(stmt.expression.arguments) >= 3:
+                                        third = stmt.expression.arguments[2]
+                                        if third.type == "Literal" and third.value is True:
+                                            watch_depths.append("deep")
+                                        else:
+                                            watch_depths.append("shallow")
+                                    else:
+                                        watch_depths.append("shallow")
 
                         raw_modules.append(
                             RawController(
@@ -72,10 +91,10 @@ class JSAnalyzer(Analyzer):
                                 di=di,
                                 scope_reads=scope_reads,
                                 scope_writes=scope_writes,
+                                watch_depths=watch_depths,
                             )
                         )
 
-            # Recurse through child nodes
             for attr in dir(node):
                 child = getattr(node, attr)
                 if isinstance(child, list):
@@ -91,7 +110,6 @@ class JSAnalyzer(Analyzer):
                 ast = esprima.parseScript(text, tolerant=True)
             except Exception:
                 continue
-
             walk(ast, str(path))
 
         return raw_modules, [], [], []

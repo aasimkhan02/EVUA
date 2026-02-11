@@ -1,0 +1,12 @@
+{
+  "routes": ["/home", "/stats"],
+  "sharedState": {
+    "user": { "name": "alice" },
+    "clicks": 0
+  },
+  "antiPatterns": [
+    "watcher on service state",
+    "two-way binding to service object",
+    "controller-service tight coupling"
+  ]
+}

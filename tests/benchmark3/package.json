@@ -1,0 +1,16 @@
+{
+  "name": "ngjs-medium-multi",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "karma start --single-run"
+  },
+  "devDependencies": {
+    "angular": "^1.8.3",
+    "angular-mocks": "^1.8.3",
+    "jasmine-core": "^5.1.0",
+    "karma": "^6.4.4",
+    "karma-chrome-launcher": "^3.2.0",
+    "karma-jasmine": "^5.1.0"
+  }
+}

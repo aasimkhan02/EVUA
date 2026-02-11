@@ -1,36 +1,41 @@
 {
+  "angular_workspace": "out/angular-app",
   "controllers": [
     {
-      "id": "0b69787f-ed50-4de6-aa50-aeae530a6565",
+      "id": "d69cf1b0-b5cc-41c3-be82-3379df96fd64",
       "name": "AdminController",
       "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js"
     },
     {
-      "id": "b8bac6e0-d847-4b59-aa22-2bfd34b2be87",
+      "id": "ca07d42c-d9bf-4f0d-a51a-4aa1ae9f8d5a",
       "name": "UserController",
       "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js"
     }
   ],
   "changes": [
     {
-      "before_id": "0b69787f-ed50-4de6-aa50-aeae530a6565",
+      "before_id": "d69cf1b0-b5cc-41c3-be82-3379df96fd64",
       "before_name": "AdminController",
       "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js",
-      "after_id": "component_0b69787f-ed50-4de6-aa50-aeae530a6565",
-      "reason": "Controller \u2192 Angular Component written to out\\angular\\admin.component.ts",
-      "output_path": "out\\angular\\admin.component.ts",
+      "after_id": "component_d69cf1b0-b5cc-41c3-be82-3379df96fd64",
+      "reason": "Controller \u2192 Angular Component wired into Angular app at out\\angular-app (files: out\\angular-app\\src\\app\\admin.component.ts, out\\angular-app\\src\\app\\admin.component.html)",
+      "output_path": "out\\angular-app (files: out\\angular-app\\src\\app\\admin.component.ts, out\\angular-app\\src\\app\\admin.component.html)",
       "risk": "RiskLevel.RISKY",
-      "risk_reason": "Controller \u2192 Component is a semantic paradigm shift"
+      "risk_reason": "Multiple $scope writes detected",
+      "build_passed": false,
+      "snapshot_passed": true
     },
     {
-      "before_id": "b8bac6e0-d847-4b59-aa22-2bfd34b2be87",
+      "before_id": "ca07d42c-d9bf-4f0d-a51a-4aa1ae9f8d5a",
       "before_name": "UserController",
       "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js",
-      "after_id": "component_b8bac6e0-d847-4b59-aa22-2bfd34b2be87",
-      "reason": "Controller \u2192 Angular Component written to out\\angular\\user.component.ts",
-      "output_path": "out\\angular\\user.component.ts",
+      "after_id": "component_ca07d42c-d9bf-4f0d-a51a-4aa1ae9f8d5a",
+      "reason": "Controller \u2192 Angular Component wired into Angular app at out\\angular-app (files: out\\angular-app\\src\\app\\user.component.ts, out\\angular-app\\src\\app\\user.component.html)",
+      "output_path": "out\\angular-app (files: out\\angular-app\\src\\app\\user.component.ts, out\\angular-app\\src\\app\\user.component.html)",
       "risk": "RiskLevel.RISKY",
-      "risk_reason": "Controller \u2192 Component is a semantic paradigm shift"
+      "risk_reason": "Multiple $scope writes detected",
+      "build_passed": false,
+      "snapshot_passed": true
     }
   ],
   "validation": {

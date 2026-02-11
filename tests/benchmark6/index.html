@@ -1,0 +1,24 @@
+<!doctype html>
+<html ng-app="asyncApp">
+  <head>
+    <meta charset="utf-8" />
+    <title>AngularJS Async Data Fetch</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+    <script src="./app.js"></script>
+    <script src="./services/api.service.js"></script>
+    <script src="./controllers/data.controller.js"></script>
+  </head>
+  <body ng-controller="DataController">
+    <h2>Users</h2>
+    <button ng-click="load()">Load</button>
+
+    <p ng-if="loading">Loading...</p>
+    <p ng-if="error">Error loading data</p>
+
+    <ul>
+      <li ng-repeat="u in users track by u.id">
+        {{ u.name }}
+      </li>
+    </ul>
+  </body>
+</html>

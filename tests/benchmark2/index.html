@@ -1,0 +1,25 @@
+<!doctype html>
+<html ng-app="crudApp">
+  <head>
+    <meta charset="utf-8" />
+    <title>AngularJS Simple CRUD</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+    <script src="./app.js"></script>
+    <script src="./services.js"></script>
+  </head>
+  <body ng-controller="TodoController">
+    <h1>Todos</h1>
+
+    <form ng-submit="addTodo()">
+      <input type="text" ng-model="newTodo" placeholder="New todo" />
+      <button type="submit">Add</button>
+    </form>
+
+    <ul>
+      <li ng-repeat="todo in todos track by $index">
+        {{ todo }}
+        <button ng-click="removeTodo($index)">x</button>
+      </li>
+    </ul>
+  </body>
+</html>

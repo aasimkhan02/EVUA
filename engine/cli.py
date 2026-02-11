@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+import argparse
 
 from pipeline.ingestion.scanner import FileScanner
 from pipeline.ingestion.classifier import FileClassifier, FileType
@@ -22,8 +23,10 @@ from pipeline.reporting.reporters.markdown_reporter import MarkdownReporter
 from pipeline.validation.runners.tests import TestRunner
 from pipeline.validation.comparators.snapshot import SnapshotComparator
 
+from orchestration.pipeline_runner import PipelineRunner
 
-def main(repo_path: str):
+
+def run_pipeline(repo_path: str) -> bool:
     repo_path = Path(repo_path).resolve()
     print(f"▶ Running migration pipeline on: {repo_path}")
 
@@ -87,7 +90,7 @@ def main(repo_path: str):
         print(f"    - Change {change.before_id} → {risk} ({reason})")
 
     # 6) Validation (tests + snapshot)
-    tests_passed, test_output = TestRunner().run(str(repo_path))
+    tests_passed, _ = TestRunner().run(str(repo_path))
 
     before_snapshot = repo_path / "snapshots" / "before.json"
     after_snapshot = repo_path / "snapshots" / "after.json"
@@ -116,7 +119,7 @@ def main(repo_path: str):
 
     print(f"  Validation: tests_passed={tests_passed}, snapshot_passed={snapshot_passed}")
 
-    # 7) Reporting (UTF-8 to avoid Windows encoding issues)
+    # 7) Reporting
     json_report = JSONReporter().render(
         analysis, patterns, transformation, (risk_by_change, reason_by_change), validation_summary
     )
@@ -133,10 +136,29 @@ def main(repo_path: str):
     print("\n📄 Reports saved: report.json, report.md")
     print("\n✅ Pipeline run complete.")
 
+    # 🔴 Critical: return validation result so rollback can happen
+    return tests_passed and snapshot_passed
+
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("repo", nargs="?", help="Path to repo")
+    parser.add_argument("--batch", action="store_true", help="Batch mode for eval harness")
+    args = parser.parse_args()
+
+    if args.batch:
+        # Batch mode: just run pipeline and exit with status
+        ok = run_pipeline(args.repo)
+        sys.exit(0 if ok else 1)
+
+    if not args.repo:
         print("Usage: python cli.py <path-to-repo>")
         sys.exit(1)
 
-    main(sys.argv[1])
+    runner = PipelineRunner(lambda: run_pipeline(args.repo))
+    ok = runner.run()
+
+    if not ok:
+        print("\n↩️ Changes rolled back due to validation failure.")
+    else:
+        print("\n🎉 Changes committed successfully.")

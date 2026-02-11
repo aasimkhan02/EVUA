@@ -1,0 +1,6 @@
+{
+  "component": "HelloController",
+  "state": {
+    "message": "Hello AngularJS"
+  }
+}

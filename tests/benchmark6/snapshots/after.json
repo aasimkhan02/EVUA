@@ -1,0 +1,12 @@
+{
+  "component": "DataComponent",
+  "state": {
+    "users": [],
+    "loading": false,
+    "error": false
+  },
+  "asyncFlows": [
+    "httpClient.getUsers() → await → state.users = users",
+    "try/catch/finally mapped from promise chain"
+  ]
+}

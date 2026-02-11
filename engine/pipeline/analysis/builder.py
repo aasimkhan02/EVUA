@@ -18,9 +18,16 @@ class IRBuilder:
     def build_modules(self, raw_modules: List) -> List[Module]:
         modules: List[Module] = []
         for rm in raw_modules:
+            cls = Class(name=rm.name)
+
+            # 🔥 Propagate analyzer heuristics into IR
+            cls.scope_reads = getattr(rm, "scope_reads", [])
+            cls.scope_writes = getattr(rm, "scope_writes", [])
+            cls.watch_depths = getattr(rm, "watch_depths", [])
+
             module = Module(
                 name=rm.file,
-                classes=[Class(name=rm.name)],   # controller → class
+                classes=[cls],   # controller → class
                 functions=[],
                 globals=[],
             )
@@ -51,27 +58,27 @@ class IRBuilder:
         return templates
 
     def build_behaviors(self, raw_behaviors: List) -> List[Behavior]:
-        # raw_behaviors must already be Behavior-compatible
         return list(raw_behaviors)
 
+    # Keeping these helpers for future non-Angular analyzers
     def _build_class(self, rc) -> Class:
         return Class(
             name=rc.name,
-            fields=[self._build_symbol(s) for s in rc.fields],
-            methods=[self._build_function(f) for f in rc.methods],
+            fields=[self._build_symbol(s) for s in getattr(rc, "fields", [])],
+            methods=[self._build_function(f) for f in getattr(rc, "methods", [])],
         )
 
     def _build_function(self, rf) -> Function:
         return Function(
             name=rf.name,
-            parameters=[self._build_symbol(p) for p in rf.parameters],
-            returns=rf.returns,
-            body_refs=rf.body_refs,
+            parameters=[self._build_symbol(p) for p in getattr(rf, "parameters", [])],
+            returns=getattr(rf, "returns", None),
+            body_refs=getattr(rf, "body_refs", []),
         )
 
     def _build_symbol(self, rs) -> Symbol:
         return Symbol(
             name=rs.name,
-            type_hint=rs.type_hint,
-            mutable=rs.mutable,
+            type_hint=getattr(rs, "type_hint", None),
+            mutable=getattr(rs, "mutable", True),
         )

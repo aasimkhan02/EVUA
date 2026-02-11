@@ -1,0 +1,15 @@
+{
+  "components": {
+    "UserController": {
+      "state": {
+        "isLoggedIn": false,
+        "user": null
+      }
+    },
+    "AdminController": {
+      "state": {
+        "maintenance": false
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 from pipeline.risk.levels import RiskLevel
+from pipeline.patterns.roles import SemanticRole
 
 class TemplateBindingRiskRule:
     def assess(self, analysis, patterns, transformation):
@@ -6,7 +7,13 @@ class TemplateBindingRiskRule:
         reason_by_change = {}
 
         for change in transformation.changes:
-            if "component_" in change.after_id:
+            roles = patterns.roles_by_node.get(change.before_id, [])
+
+            if SemanticRole.TEMPLATE_BINDING in roles:
+                risk_by_change[change.id] = RiskLevel.MANUAL
+                reason_by_change[change.id] = "Template performs two-way bindings to controller state (high coupling risk)"
+            else:
                 risk_by_change[change.id] = RiskLevel.RISKY
-                reason_by_change[change.id] = "Two-way template bindings increase migration risk"
+                reason_by_change[change.id] = "Template bindings present (moderate coupling risk)"
+
         return risk_by_change, reason_by_change

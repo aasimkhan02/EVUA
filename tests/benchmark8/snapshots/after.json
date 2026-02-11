@@ -1,0 +1,12 @@
+{
+  "routes": ["/home", "/stats"],
+  "sharedState": {
+    "user": { "name": "alice" },
+    "clicks": 0
+  },
+  "architecture": [
+    "router → components",
+    "shared state store/service",
+    "selectors instead of watchers"
+  ]
+}

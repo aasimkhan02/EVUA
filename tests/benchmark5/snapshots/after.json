@@ -1,0 +1,11 @@
+{
+  "components": {
+    "ParentComponent": {
+      "state": { "count": 0 }
+    },
+    "ChildComponent": {
+      "inputs": ["count"],
+      "outputs": ["inc"]
+    }
+  }
+}
