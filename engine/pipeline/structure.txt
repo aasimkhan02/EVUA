@@ -1,0 +1,191 @@
+pipeline/ingestion/
+├── base.py          # ingestion contract
+├── source.py        # source abstraction
+├── scanner.py       # file discovery
+├── classifier.py    # file type detection
+├── result.py        # ingestion output
+└── __init__.py
+
+
+pipeline/analysis/
+├── base.py            # analysis stage contract
+├── dispatcher.py      # routes files to analyzers
+├── analyzers/         # language-specific parsers
+│   ├── js/
+│   ├── html/
+│   ├── py/
+│   ├── java/
+│   └── __init__.py
+├── builder.py         # builds IR from parser output
+└── result.py          # analysis output (IR snapshot)
+
+
+pipeline/patterns/
+├── base.py             # stage contract
+├── result.py           # enriched IR output
+├── roles.py            # semantic roles enum
+├── knowledge_base.py   # pattern → meaning mapping
+├── detectors/          # pattern detectors (pluggable)
+│   ├── angularjs/
+│   ├── common/
+│   └── __init__.py
+└── confidence.py       # confidence model for pattern matches
+
+[PatternConfidence not used in KnowledgeBase
+
+KB stores confidence_hint: float, but PatternResult uses PatternConfidence
+
+Two confidence systems → potential confusion later
+
+PatternResult can’t represent multiple patterns per node
+
+You only store roles per node, not which patterns matched
+
+Debugging + explainability will be harder later
+
+No pattern versioning
+
+PatternKnowledgeBase doesn’t support versions
+→ Hard to change rules safely later
+
+No detector interface contract
+
+You have detectors/, but no abstract PatternDetector base
+→ Plugins can drift in shape
+
+No framework scoping
+
+angularjs/ vs common/ is folder-based, not enforced in API
+→ Easy to accidentally run AngularJS patterns on non-Angular repos]
+
+
+pipeline/transformation/
+├── base.py           # stage contract
+├── rules/            # pluggable deterministic rules
+│   ├── angularjs/
+│   └── common/
+├── applier.py        # applies rules to IR
+├── result.py         # transformation output (changes + new IR)
+└── __init__.py
+
+
+[No rule contract defined
+
+There’s no Rule base class / interface
+
+You’re assuming rule.apply(analysis, patterns) shape
+
+No rule ordering / priority
+
+All rules run blindly
+
+Some rules should run before others (e.g. structure → behavior → cleanup)
+
+No conflict detection
+
+Two rules can modify same IRNode
+
+No conflict resolution or deduplication
+
+No idempotency guarantee
+
+Running rules twice may re-apply same transformation
+
+TransformationResult lacks new IR content
+
+You only return new node IDs, not the nodes themselves
+
+Downstream stages may need full IRNode data
+
+No partial failure handling
+
+If one rule crashes, whole transformation crashes]
+
+pipeline/risk/
+├── base.py            # stage contract
+├── levels.py          # risk levels enum
+├── rules/             # risk heuristics (pluggable)
+│   ├── angularjs/
+│   └── common/
+├── result.py          # risk output
+└── __init__.py
+
+[No risk aggregation model
+
+You only assess per-change
+
+No project-level risk summary
+
+No confidence in risk
+
+RiskResult has no confidence score or uncertainty measure
+
+No link to Decision model
+
+RiskLevel doesn’t map directly to AUTO_ACCEPT / HUMAN_ACCEPT / HUMAN_REJECT
+(You already have DecisionType elsewhere)
+
+No severity gradation
+
+Only 3 levels → might be too coarse later
+
+No traceability to patterns
+
+RiskResult can’t explain which pattern caused the risk, only text]
+
+
+pipeline/ai/
+├── base.py            # stage contract
+├── gate.py            # confidence gating logic
+├── prompts/           # prompt templates (per framework)
+│   ├── angularjs/
+│   └── common/
+├── adapters/          # LLM provider adapters
+│   └── openai.py      # stub
+├── result.py          # AI output
+└── __init__.py
+
+
+pipeline/validation/
+├── base.py            # stage contract
+├── runners/           # pluggable validators
+│   ├── tests.py       # run project tests (stub)
+│   └── lint.py        # lint/sanity checks (stub)
+├── comparators/       # before vs after signals
+│   └── snapshot.py   # stub
+├── result.py          # validation output
+└── __init__.py
+
+[No severity levels for validation failures
+
+All failures are equal
+→ Later you may want WARN vs FAIL
+
+No link between failures and Change IDs
+
+ValidationResult doesn’t reference which Change failed
+→ Hard to selectively roll back
+
+No confidence or uncertainty
+
+ValidationResult is binary passed/failed
+→ Doesn’t express flaky tests / partial success
+
+No validation scope
+
+No way to express “only validated subset of changes”
+
+No timing / performance info
+
+Validation might take long; no place to store duration or timeouts]
+
+
+pipeline/reporting/
+├── base.py             # stage contract
+├── metrics.py          # evaluation metrics model
+├── reporters/          # output formats
+│   ├── json_reporter.py
+│   └── markdown_reporter.py
+├── artifacts/          # diffs, bundles (stub)
+├── result.py           # reporting output
+└── __init__.py

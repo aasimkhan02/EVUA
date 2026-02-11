@@ -1,0 +1,29 @@
+<!doctype html>
+<html ng-app="demoApp">
+  <body>
+
+    <div ng-controller="UserController">
+      <h2>Users</h2>
+
+      <ul>
+        <li ng-repeat="u in users">
+          {{ u.name }}
+        </li>
+      </ul>
+
+      <input ng-model="$scope.newUser.name" placeholder="Name" />
+      <button ng-click="add()">Add</button>
+      <button ng-click="load()">Load</button>
+
+      <p ng-if="users.length === 0">No users yet</p>
+    </div>
+
+    <div ng-controller="AdminController">
+      <h2>Admin</h2>
+      <button ng-click="toggleAdmin()">Toggle Admin</button>
+      <p ng-if="isAdmin">Admin mode ON</p>
+      <p ng-if="!isAdmin">Admin mode OFF</p>
+    </div>
+
+  </body>
+</html>

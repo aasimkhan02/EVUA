@@ -1,0 +1,46 @@
+ir/
+├── code_model/        # Language-agnostic code representation
+├── dependency_model/ # Graphs
+├── template_model/   # HTML / views
+├── behavior_model/   # Watchers, bindings, lifecycle
+└── migration_model/  # Before/after + metadata
+
+
+ir/code_model/
+├── base.py        # Core IRNode + SourceLocation (shared base)
+├── symbol.py      # Symbol definitions (variables, parameters, fields)
+├── function.py    # Function IR (name, parameters, return type, body refs)
+├── class_.py      # Class IR (fields + methods)
+└── module.py      # Module IR (top-level container)
+
+
+ir/dependency_model/
+├── base.py      # Dependency primitives (DependencyType enum, DependencyMetadata)
+├── edge.py      # DependencyEdge (links two IR nodes with a dependency type)
+├── graph.py     # DependencyGraph (stores edges + query helpers)
+└── __init__.py  # Package initializer
+
+
+ir/template_model/
+├── base.py        # template primitives
+├── binding.py     # data bindings
+├── directive.py   # loops, conditionals, events
+├── template.py    # whole template
+└── __init__.py
+
+
+ir/behavior_model/
+├── base.py          # behavior primitive
+├── observer.py      # watchers / observers
+├── lifecycle.py     # lifecycle hooks
+├── binding.py       # two-way & implicit bindings
+├── side_effect.py   # hidden runtime effects
+└── __init__.py
+
+ir/migration_model/
+├── base.py          # migration primitive
+├── change.py        # what changed
+├── decision.py      # who/what approved it
+├── confidence.py    # certainty tracking
+├── snapshot.py      # before/after linkage
+└── __init__.py
