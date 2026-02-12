@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "projects": {
+    "evua-app": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+      "architect": {}
+    }
+  }
+}

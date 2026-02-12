@@ -1,0 +1,290 @@
+[
+  {
+    "path": "out\\.backup\\out\\angular-app\\angular.json",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.283961"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\admin.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.284185"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\admin.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.284385"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\app.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.284577"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\app.module.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.284781"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\fancypanel.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.284973"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\fancypanel.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.285162"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\user.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.285347"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\user.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.285538"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\index.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.285872"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\main.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.286263"
+  },
+  {
+    "path": "out\\.backup\\out\\progress.json",
+    "action": "updated",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.287051"
+  },
+  {
+    "path": "out\\angular-app\\angular.json",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.287434"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\admin.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.287649"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\admin.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.287850"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\app.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.288041"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\app.module.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.288233"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\fancypanel.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.288421"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\fancypanel.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.288613"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\user.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.288797"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\user.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.288981"
+  },
+  {
+    "path": "out\\angular-app\\src\\index.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.289166"
+  },
+  {
+    "path": "out\\angular-app\\src\\main.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.289535"
+  },
+  {
+    "path": "out\\progress.json",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.290435"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\angular.json",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310799"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\admin.component.html",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310813"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\admin.component.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310817"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\app.component.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310820"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\app.module.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310823"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\fancypanel.component.html",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310826"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\fancypanel.component.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310829"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\user.component.html",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310831"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\user.component.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310834"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\index.html",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310837"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\main.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310840"
+  },
+  {
+    "path": "out\\.backup\\out\\progress.json",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310842"
+  },
+  {
+    "path": "out\\angular-app\\angular.json",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310845"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\admin.component.html",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310848"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\admin.component.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310851"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\app.component.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310853"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\app.module.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310856"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\fancypanel.component.html",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310859"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\fancypanel.component.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310862"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\user.component.html",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310865"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\user.component.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310867"
+  },
+  {
+    "path": "out\\angular-app\\src\\index.html",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310870"
+  },
+  {
+    "path": "out\\angular-app\\src\\main.ts",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310873"
+  },
+  {
+    "path": "out\\progress.json",
+    "action": "rolled_back",
+    "info": "",
+    "timestamp": "2026-02-12T19:46:59.310882"
+  }
+]

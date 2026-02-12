@@ -7,12 +7,29 @@ class ControllerDetector:
 
         for m in analysis.modules:
             for c in m.classes:
-                roles.setdefault(c.id, []).append(SemanticRole.CONTROLLER)
-                confidence[c.id] = 0.9
+                name = c.name.lower()
 
-                # Heuristic: name-based (works with your current IR)
-                if c.name.lower().endswith("controller"):
+                # ✅ Real AngularJS controllers only
+                if name.endswith("controller"):
+                    roles.setdefault(c.id, []).append(SemanticRole.CONTROLLER)
+                    confidence[c.id] = max(confidence.get(c.id, 0.0), 0.95)
+
+                    # Heuristic: controllers expose component methods/state
                     roles.setdefault(c.id, []).append(SemanticRole.COMPONENT_METHOD)
-                    confidence[c.id] = 0.95
+                    roles.setdefault(c.id, []).append(SemanticRole.COMPONENT_STATE)
+                    confidence[c.id] = max(confidence.get(c.id, 0.0), 0.9)
+
+                # 🚨 Edge-case semantics → tag as unsafe controller patterns
+                if getattr(c, "uses_compile", False):
+                    roles.setdefault(c.id, []).append(SemanticRole.TEMPLATE_BINDING)
+                    confidence[c.id] = max(confidence.get(c.id, 0.0), 0.9)
+
+                if getattr(c, "has_nested_scopes", False):
+                    roles.setdefault(c.id, []).append(SemanticRole.TEMPLATE_BINDING)
+                    confidence[c.id] = max(confidence.get(c.id, 0.0), 0.9)
+
+                if hasattr(c, "watch_depths") and "deep" in getattr(c, "watch_depths", []):
+                    roles.setdefault(c.id, []).append(SemanticRole.COMPONENT_STATE)
+                    confidence[c.id] = max(confidence.get(c.id, 0.0), 0.8)
 
         return roles, confidence

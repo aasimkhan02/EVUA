@@ -7,11 +7,11 @@
 ## Proposed Changes
 - **AdminController** (`C:\Users\moidin\Desktop\Projects\EVUA\engine\demo-angularjs-advanced\app.js`) → Angular Component  
   Output: `out\angular-app (files: out\angular-app\src\app\admin.component.ts, out\angular-app\src\app\admin.component.html)`  
-  Risk: **RiskLevel.RISKY** — Multiple $scope writes detected  
+  Risk: **RiskLevel.RISKY** — Heavy $scope mutation detected (state coupling risk)  
   Build: **False**, Snapshot: **True**
 - **UserController** (`C:\Users\moidin\Desktop\Projects\EVUA\engine\demo-angularjs-advanced\app.js`) → Angular Component  
-  Output: `out\angular-app (files: out\angular-app\src\app\user.component.ts, out\angular-app\src\app\user.component.html)`  
-  Risk: **RiskLevel.RISKY** — Multiple $scope writes detected  
+  Output: `N/A`  
+  Risk: **RiskLevel.MANUAL** — Deep $watch detected (high behavioral coupling risk)  
   Build: **False**, Snapshot: **True**
 
 ## Validation Summary

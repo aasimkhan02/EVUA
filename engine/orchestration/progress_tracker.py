@@ -10,7 +10,7 @@ class ProgressTracker:
     def record(self, path: str, action: str, info: str = ""):
         self.entries.append({
             "path": str(path),
-            "action": action,  # created | updated | unchanged | rolled_back | skipped
+            "action": action,  # created | updated | unchanged | removed | rolled_back | skipped
             "info": info,
             "timestamp": datetime.utcnow().isoformat()
         })

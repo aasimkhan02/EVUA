@@ -2,38 +2,38 @@
   "angular_workspace": "out/angular-app",
   "controllers": [
     {
-      "id": "d69cf1b0-b5cc-41c3-be82-3379df96fd64",
+      "id": "0522139a-4cbe-41cf-bb43-c59445ce8b94",
       "name": "AdminController",
       "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js"
     },
     {
-      "id": "ca07d42c-d9bf-4f0d-a51a-4aa1ae9f8d5a",
+      "id": "c404c07a-b12d-464e-b5e9-4d47ecd64015",
       "name": "UserController",
       "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js"
     }
   ],
   "changes": [
     {
-      "before_id": "d69cf1b0-b5cc-41c3-be82-3379df96fd64",
+      "before_id": "0522139a-4cbe-41cf-bb43-c59445ce8b94",
       "before_name": "AdminController",
       "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js",
-      "after_id": "component_d69cf1b0-b5cc-41c3-be82-3379df96fd64",
+      "after_id": "component_0522139a-4cbe-41cf-bb43-c59445ce8b94",
       "reason": "Controller \u2192 Angular Component wired into Angular app at out\\angular-app (files: out\\angular-app\\src\\app\\admin.component.ts, out\\angular-app\\src\\app\\admin.component.html)",
       "output_path": "out\\angular-app (files: out\\angular-app\\src\\app\\admin.component.ts, out\\angular-app\\src\\app\\admin.component.html)",
       "risk": "RiskLevel.RISKY",
-      "risk_reason": "Multiple $scope writes detected",
+      "risk_reason": "Heavy $scope mutation detected (state coupling risk)",
       "build_passed": false,
       "snapshot_passed": true
     },
     {
-      "before_id": "ca07d42c-d9bf-4f0d-a51a-4aa1ae9f8d5a",
+      "before_id": "c404c07a-b12d-464e-b5e9-4d47ecd64015",
       "before_name": "UserController",
       "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js",
-      "after_id": "component_ca07d42c-d9bf-4f0d-a51a-4aa1ae9f8d5a",
-      "reason": "Controller \u2192 Angular Component wired into Angular app at out\\angular-app (files: out\\angular-app\\src\\app\\user.component.ts, out\\angular-app\\src\\app\\user.component.html)",
-      "output_path": "out\\angular-app (files: out\\angular-app\\src\\app\\user.component.ts, out\\angular-app\\src\\app\\user.component.html)",
-      "risk": "RiskLevel.RISKY",
-      "risk_reason": "Multiple $scope writes detected",
+      "after_id": "manual_component_c404c07a-b12d-464e-b5e9-4d47ecd64015",
+      "reason": "Controller uses unsafe AngularJS features (directives/transclusion/$compile/nested scopes/deep $watch). Manual migration required.",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "Deep $watch detected (high behavioral coupling risk)",
       "build_passed": false,
       "snapshot_passed": true
     }

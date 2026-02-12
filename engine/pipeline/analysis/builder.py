@@ -7,6 +7,7 @@ from ir.dependency_model.graph import DependencyGraph
 from ir.dependency_model.edge import DependencyEdge
 from ir.template_model.template import Template
 from ir.behavior_model.base import Behavior
+from ir.behavior_model.side_effect import SideEffect
 
 
 class IRBuilder:
@@ -20,14 +21,16 @@ class IRBuilder:
         for rm in raw_modules:
             cls = Class(name=rm.name)
 
-            # 🔥 Propagate analyzer heuristics into IR
+            # Propagate analyzer heuristics into IR
             cls.scope_reads = getattr(rm, "scope_reads", [])
             cls.scope_writes = getattr(rm, "scope_writes", [])
             cls.watch_depths = getattr(rm, "watch_depths", [])
+            cls.uses_compile = getattr(rm, "uses_compile", False)
+            cls.has_nested_scopes = getattr(rm, "has_nested_scopes", False)
 
             module = Module(
                 name=rm.file,
-                classes=[cls],   # controller → class
+                classes=[cls],
                 functions=[],
                 globals=[],
             )
@@ -58,9 +61,41 @@ class IRBuilder:
         return templates
 
     def build_behaviors(self, raw_behaviors: List) -> List[Behavior]:
-        return list(raw_behaviors)
+        """
+        Normalize analyzer-side behavioral hazards into IR behaviors.
+        SideEffect signature: (cause, affected_symbol_id, description)
+        """
+        behaviors: List[Behavior] = []
+        for rb in raw_behaviors:
+            if getattr(rb, "has_compile", False):
+                behaviors.append(
+                    SideEffect(
+                        cause="directive_compile",
+                        affected_symbol_id=getattr(rb, "name", "unknown"),
+                        description="AngularJS directive uses compile()"
+                    )
+                )
 
-    # Keeping these helpers for future non-Angular analyzers
+            if getattr(rb, "has_link", False):
+                behaviors.append(
+                    SideEffect(
+                        cause="directive_link",
+                        affected_symbol_id=getattr(rb, "name", "unknown"),
+                        description="AngularJS directive uses link()"
+                    )
+                )
+
+            if getattr(rb, "transclude", False):
+                behaviors.append(
+                    SideEffect(
+                        cause="directive_transclusion",
+                        affected_symbol_id=getattr(rb, "name", "unknown"),
+                        description="AngularJS directive uses transclusion"
+                    )
+                )
+        return behaviors
+
+    # Helpers for future languages
     def _build_class(self, rc) -> Class:
         return Class(
             name=rc.name,

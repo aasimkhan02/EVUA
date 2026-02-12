@@ -14,31 +14,33 @@ class ServiceToInjectableRule:
         self.project.ensure()
 
         for node_id, roles in patterns.roles_by_node.items():
-            if SemanticRole.SERVICE in roles:
-                name = f"MigratedService{node_id[:6]}"
-                file_name = f"{name.lower()}.service.ts"
-                ts_path = self.out_dir / file_name
+            if SemanticRole.SERVICE not in roles:
+                continue
 
-                if not ts_path.exists():
-                    ts_code = f"""
+            name = f"MigratedService{node_id[:6]}"
+            file_name = f"{name.lower()}.service.ts"
+            ts_path = self.out_dir / file_name
+
+            if not ts_path.exists():
+                ts_code = f"""
 import {{ Injectable }} from '@angular/core';
 
 @Injectable({{
   providedIn: 'root'
 }})
 export class {name} {{
-  // TODO: migrate service logic
+  // TODO: migrate service logic manually if behavior depends on $http/$q side-effects
 }}
 """.strip()
-                    ts_path.write_text(ts_code)
+                ts_path.write_text(ts_code)
 
-                changes.append(
-                    Change(
-                        before_id=node_id,
-                        after_id="injectable_" + node_id,
-                        source=ChangeSource.RULE,
-                        reason=f"Service → @Injectable() wired into Angular app at {self.project.root} (file: {ts_path})"
-                    )
+            changes.append(
+                Change(
+                    before_id=node_id,
+                    after_id="injectable_" + node_id,
+                    source=ChangeSource.RULE,
+                    reason=f"Service → @Injectable() wired into Angular app at {self.project.root} (file: {ts_path})"
                 )
+            )
 
         return changes
