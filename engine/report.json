@@ -2,47 +2,65 @@
   "angular_workspace": "out/angular-app",
   "controllers": [
     {
-      "id": "0522139a-4cbe-41cf-bb43-c59445ce8b94",
-      "name": "AdminController",
-      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js"
+      "id": "6bd462c0-9257-499b-9fef-228b17eb3e85",
+      "name": "DashboardController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js"
     },
     {
-      "id": "c404c07a-b12d-464e-b5e9-4d47ecd64015",
+      "id": "38bc56b1-e4dd-40b9-a381-1fa21319b47e",
       "name": "UserController",
-      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js"
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js"
+    },
+    {
+      "id": "29592f72-55c2-47f0-9dee-a92023a587d6",
+      "name": "AdminController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js"
     }
   ],
   "changes": [
     {
-      "before_id": "0522139a-4cbe-41cf-bb43-c59445ce8b94",
-      "before_name": "AdminController",
-      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js",
-      "after_id": "component_0522139a-4cbe-41cf-bb43-c59445ce8b94",
-      "reason": "Controller \u2192 Angular Component wired into Angular app at out\\angular-app (files: out\\angular-app\\src\\app\\admin.component.ts, out\\angular-app\\src\\app\\admin.component.html)",
-      "output_path": "out\\angular-app (files: out\\angular-app\\src\\app\\admin.component.ts, out\\angular-app\\src\\app\\admin.component.html)",
+      "before_id": "6bd462c0-9257-499b-9fef-228b17eb3e85",
+      "before_name": "DashboardController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js",
+      "after_id": "component_6bd462c0-9257-499b-9fef-228b17eb3e85",
+      "reason": "Controller \u2192 Angular Component wired into Angular app at out\\angular-app (files: out\\angular-app\\src\\app\\dashboard.component.ts, out\\angular-app\\src\\app\\dashboard.component.html)",
+      "output_path": "out\\angular-app (files: out\\angular-app\\src\\app\\dashboard.component.ts, out\\angular-app\\src\\app\\dashboard.component.html)",
       "risk": "RiskLevel.RISKY",
       "risk_reason": "Heavy $scope mutation detected (state coupling risk)",
       "build_passed": false,
-      "snapshot_passed": true
+      "snapshot_passed": false
     },
     {
-      "before_id": "c404c07a-b12d-464e-b5e9-4d47ecd64015",
+      "before_id": "38bc56b1-e4dd-40b9-a381-1fa21319b47e",
       "before_name": "UserController",
-      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\demo-angularjs-advanced\\app.js",
-      "after_id": "manual_component_c404c07a-b12d-464e-b5e9-4d47ecd64015",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js",
+      "after_id": "manual_component_38bc56b1-e4dd-40b9-a381-1fa21319b47e",
       "reason": "Controller uses unsafe AngularJS features (directives/transclusion/$compile/nested scopes/deep $watch). Manual migration required.",
       "output_path": null,
       "risk": "RiskLevel.MANUAL",
       "risk_reason": "Deep $watch detected (high behavioral coupling risk)",
       "build_passed": false,
-      "snapshot_passed": true
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "29592f72-55c2-47f0-9dee-a92023a587d6",
+      "before_name": "AdminController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js",
+      "after_id": "component_29592f72-55c2-47f0-9dee-a92023a587d6",
+      "reason": "Controller \u2192 Angular Component wired into Angular app at out\\angular-app (files: out\\angular-app\\src\\app\\admin.component.ts, out\\angular-app\\src\\app\\admin.component.html)",
+      "output_path": "out\\angular-app (files: out\\angular-app\\src\\app\\admin.component.ts, out\\angular-app\\src\\app\\admin.component.html)",
+      "risk": "RiskLevel.RISKY",
+      "risk_reason": "Heavy $scope mutation detected (state coupling risk)",
+      "build_passed": false,
+      "snapshot_passed": false
     }
   ],
   "validation": {
     "tests_passed": false,
-    "snapshot_passed": true,
+    "snapshot_passed": false,
     "failures": [
-      "Tests failed"
+      "Tests failed",
+      "Snapshot file(s) missing: C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\snapshots\\before.json, C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\snapshots\\after.json"
     ]
   }
 }
