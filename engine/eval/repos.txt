@@ -1,0 +1,8 @@
+../tests/benchmark1
+../tests/benchmark2
+../tests/benchmark3
+../tests/benchmark4
+../tests/benchmark5
+../tests/benchmark6
+../tests/benchmark7
+../tests/benchmark8
