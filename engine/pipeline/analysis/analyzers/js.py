@@ -51,6 +51,17 @@ class RawDirective:
         self.functions = []
         self.globals = []
 
+class RawHttpCall:
+    def __init__(self, file: str, method: str, url: str | None, uses_q: bool):
+        self.file = file
+        self.method = method  # get/post/put/delete/config/q_all/q_defer
+        self.url = url
+        self.uses_q = uses_q
+
+        # IRBuilder expects these
+        self.classes = []
+        self.functions = []
+        self.globals = []
 
 def _is_identifier(node, name):
     return node is not None and getattr(node, "type", None) == "Identifier" and getattr(node, "name", None) == name
@@ -73,6 +84,8 @@ class JSAnalyzer(Analyzer):
     def analyze(self, paths: List[Path]):
         raw_modules: List[RawController] = []
         raw_directives: List[RawDirective] = []
+        raw_http_calls: List[RawHttpCall] = []
+
 
         def recurse(node, file_path: str, ctx: Dict = None):
             """
@@ -103,6 +116,28 @@ class JSAnalyzer(Analyzer):
                             # directive(name, function() { return {...}; }) OR factory function
                             if getattr(name_node, "type", None) == "Literal" and getattr(fn_node, "type", None) in ("FunctionExpression", "ArrowFunctionExpression"):
                                 _handle_directive(name_node.value, fn_node, file_path)
+
+                    # --- $http detection ---
+                    if getattr(callee, "type", None) == "MemberExpression":
+                        obj = getattr(callee.object, "type", None) == "Identifier" and getattr(callee.object, "name", None)
+                        prop = getattr(callee.property, "name", None)
+                        if obj == "$http" and prop in ("get", "post", "put", "delete"):
+                            args = getattr(node, "arguments", []) or []
+                            url = None
+                            if args and getattr(args[0], "type", None) == "Literal":
+                                url = args[0].value
+                            raw_http_calls.append(RawHttpCall(file_path, prop, url, uses_q=False))
+
+                    # --- $http({ config }) ---
+                    if getattr(callee, "type", None) == "Identifier" and getattr(callee, "name", None) == "$http":
+                        raw_http_calls.append(RawHttpCall(file_path, "config", None, uses_q=False))
+
+                    # --- $q detection ---
+                    if getattr(callee, "type", None) == "MemberExpression":
+                        obj = getattr(callee.object, "type", None) == "Identifier" and getattr(callee.object, "name", None)
+                        prop = getattr(callee.property, "name", None)
+                        if obj == "$q" and prop in ("all", "defer"):
+                            raw_http_calls.append(RawHttpCall(file_path, f"q_{prop}", None, uses_q=True))
 
             # Recurse into all child nodes (lists + single nodes)
             for attr in dir(node):
@@ -179,14 +214,19 @@ class JSAnalyzer(Analyzer):
                             pname = getattr(callee.property, "name", None)
                             if pname == "$watch":
                                 args = getattr(node, "arguments", []) or []
+                                is_deep = False
+
+                                # $scope.$watch(expr, fn, true) → deep
                                 if len(args) >= 3:
                                     third = args[2]
                                     if getattr(third, "type", None) == "Literal" and getattr(third, "value", None) is True:
-                                        watch_depths.append("deep")
-                                    else:
-                                        watch_depths.append("shallow")
+                                        is_deep = True
+
+                                if is_deep:
+                                    watch_depths.append("deep")
                                 else:
                                     watch_depths.append("shallow")
+
 
                             if pname == "$new":
                                 has_nested_scopes = True
@@ -318,4 +358,5 @@ class JSAnalyzer(Analyzer):
             recurse(ast, str(path))
 
         # Return: raw_modules (controllers), raw_templates (none here), raw_dependencies (none), raw_directives
-        return raw_modules, [], [], raw_directives
+        return raw_modules, [], [], raw_directives, raw_http_calls
+

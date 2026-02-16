@@ -12,28 +12,49 @@ class AngularProjectScaffold:
         if path.exists():
             old = path.read_text(encoding="utf-8")
             if old == content:
-                return  # idempotent: don't touch unchanged files
+                return  # idempotent
         path.write_text(content, encoding="utf-8")
 
     def ensure(self):
         self.app_dir.mkdir(parents=True, exist_ok=True)
 
-        # angular.json (deterministic)
+        # ✅ angular.json (Angular CLI bootable)
         angular_json = self.root / "angular.json"
         angular_json_content = json.dumps({
+            "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
             "version": 1,
+            "defaultProject": "evua-app",
             "projects": {
                 "evua-app": {
                     "projectType": "application",
                     "root": "",
                     "sourceRoot": "src",
-                    "architect": {}
+                    "architect": {
+                        "build": {
+                            "builder": "@angular-devkit/build-angular:browser",
+                            "options": {
+                                "outputPath": "dist/evua-app",
+                                "index": "src/index.html",
+                                "main": "src/main.ts",
+                                "tsConfig": "tsconfig.app.json",
+                                "assets": ["src/favicon.ico", "src/assets"],
+                                "styles": [],
+                                "scripts": []
+                            }
+                        },
+                        "serve": {
+                            "builder": "@angular-devkit/build-angular:dev-server",
+                            "options": {
+                                "browserTarget": "evua-app:build"
+                            }
+                        }
+                    }
                 }
             }
         }, indent=2)
         self._write_if_changed(angular_json, angular_json_content)
 
-        # package.json (minimal bootable workspace)
+        # package.json
         package_json = self.root / "package.json"
         package_json_content = json.dumps({
             "name": "evua-angular-app",
@@ -49,17 +70,19 @@ class AngularProjectScaffold:
                 "@angular/compiler": "^17.0.0",
                 "@angular/platform-browser": "^17.0.0",
                 "@angular/platform-browser-dynamic": "^17.0.0",
+                "@angular/router": "^17.0.0",
                 "rxjs": "^7.8.0",
                 "zone.js": "^0.14.0"
             },
             "devDependencies": {
                 "@angular/cli": "^17.0.0",
+                "@angular-devkit/build-angular": "^17.0.0",
                 "typescript": "^5.2.0"
             }
         }, indent=2)
         self._write_if_changed(package_json, package_json_content)
 
-        # tsconfig.json
+        # tsconfig.json (base)
         tsconfig = self.root / "tsconfig.json"
         tsconfig_content = json.dumps({
             "compilerOptions": {
@@ -75,21 +98,37 @@ class AngularProjectScaffold:
         }, indent=2)
         self._write_if_changed(tsconfig, tsconfig_content)
 
+        # tsconfig.app.json (REQUIRED by Angular CLI)
+        tsconfig_app = self.root / "tsconfig.app.json"
+        tsconfig_app_content = json.dumps({
+            "extends": "./tsconfig.json",
+            "compilerOptions": {
+                "outDir": "./out-tsc/app",
+                "types": []
+            },
+            "files": [
+                "src/main.ts"
+            ],
+            "include": [
+                "src/**/*.ts"
+            ]
+        }, indent=2)
+        self._write_if_changed(tsconfig_app, tsconfig_app_content)
+
         # src/main.ts
         main_ts = self.src_dir / "main.ts"
-        main_ts_content = """\
+        self._write_if_changed(main_ts, """\
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule)
   .catch(err => console.error(err));
-"""
-        self._write_if_changed(main_ts, main_ts_content.strip())
+""".strip())
 
         # src/index.html
         index_html = self.src_dir / "index.html"
-        index_html_content = """\
+        self._write_if_changed(index_html, """\
 <!doctype html>
 <html lang="en">
   <head>
@@ -101,12 +140,18 @@ platformBrowserDynamic()
     <app-root></app-root>
   </body>
 </html>
-"""
-        self._write_if_changed(index_html, index_html_content.strip())
+""".strip())
+
+        # src/polyfills.ts (some Angular setups expect this)
+        polyfills = self.src_dir / "polyfills.ts"
+        self._write_if_changed(polyfills, """\
+// Polyfills placeholder (Angular CLI expects this file to exist)
+import 'zone.js';
+""".strip())
 
         # src/app/app.component.ts
         app_component = self.app_dir / "app.component.ts"
-        app_component_content = """\
+        self._write_if_changed(app_component, """\
 import { Component } from '@angular/core';
 
 @Component({
@@ -114,25 +159,21 @@ import { Component } from '@angular/core';
   template: '<h1>EVUA Angular App</h1><router-outlet></router-outlet>'
 })
 export class AppComponent {}
-"""
-        self._write_if_changed(app_component, app_component_content.strip())
+""".strip())
 
-        # src/app/app.module.ts (deterministic base)
+        # src/app/app.module.ts (NO RouterModule here; routing lives in AppRoutingModule)
         app_module = self.app_dir / "app.module.ts"
-        app_module_content = """\
+        self._write_if_changed(app_module, """\
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { RouterModule, Routes } from '@angular/router';
 import { AppComponent } from './app.component';
-
-const routes: Routes = [];
+import { AppRoutingModule } from './app-routing.module';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule, RouterModule.forRoot(routes)],
+  imports: [BrowserModule, AppRoutingModule],
   providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule {}
-"""
-        self._write_if_changed(app_module, app_module_content.strip())
+""".strip())

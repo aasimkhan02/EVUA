@@ -31,18 +31,14 @@ app.service('MetricsService', function($q, $timeout) {
   this.loadDashboardMetrics = function() {
     return this._loadCounts()
       .then(this._loadTrends)
-      .then(this._combineMetrics)
-      .catch(function(err) {
-        console.warn('MetricsService error chain', err);
-        return $q.reject(err);
-      });
+      .then(this._combineMetrics);
   };
 
   this._loadCounts = function() {
     var defer = $q.defer();
     $timeout(function() {
       defer.resolve({ users: 42, activeSessions: 7 });
-    }, 500);
+    }, 300);
     return defer.promise;
   };
 
@@ -54,7 +50,7 @@ app.service('MetricsService', function($q, $timeout) {
         sessionsGrowth: '-2%'
       };
       defer.resolve(counts);
-    }, 500);
+    }, 300);
     return defer.promise;
   };
 
@@ -63,7 +59,7 @@ app.service('MetricsService', function($q, $timeout) {
     $timeout(function() {
       metrics.generatedAt = new Date();
       defer.resolve(metrics);
-    }, 300);
+    }, 200);
     return defer.promise;
   };
 });

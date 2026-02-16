@@ -4,4 +4,4 @@ from .base import Analyzer
 
 class JavaAnalyzer(Analyzer):
     def analyze(self, paths: List[Path]):
-        return [], [], [], []
+        return [], [], [], [], []

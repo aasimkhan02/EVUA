@@ -2,55 +2,21 @@
   "angular_workspace": "out/angular-app",
   "controllers": [
     {
-      "id": "6bd462c0-9257-499b-9fef-228b17eb3e85",
-      "name": "DashboardController",
-      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js"
-    },
-    {
-      "id": "38bc56b1-e4dd-40b9-a381-1fa21319b47e",
-      "name": "UserController",
-      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js"
-    },
-    {
-      "id": "29592f72-55c2-47f0-9dee-a92023a587d6",
-      "name": "AdminController",
-      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js"
+      "id": "f618439a-0dd9-4f19-be9f-16a6079dd9a7",
+      "name": "WatcherController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark4\\controllers\\watcher.controller.js"
     }
   ],
   "changes": [
     {
-      "before_id": "6bd462c0-9257-499b-9fef-228b17eb3e85",
-      "before_name": "DashboardController",
-      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js",
-      "after_id": "component_6bd462c0-9257-499b-9fef-228b17eb3e85",
-      "reason": "Controller \u2192 Angular Component wired into Angular app at out\\angular-app (files: out\\angular-app\\src\\app\\dashboard.component.ts, out\\angular-app\\src\\app\\dashboard.component.html)",
-      "output_path": "out\\angular-app (files: out\\angular-app\\src\\app\\dashboard.component.ts, out\\angular-app\\src\\app\\dashboard.component.html)",
-      "risk": "RiskLevel.RISKY",
-      "risk_reason": "Heavy $scope mutation detected (state coupling risk)",
-      "build_passed": false,
-      "snapshot_passed": false
-    },
-    {
-      "before_id": "38bc56b1-e4dd-40b9-a381-1fa21319b47e",
-      "before_name": "UserController",
-      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js",
-      "after_id": "manual_component_38bc56b1-e4dd-40b9-a381-1fa21319b47e",
-      "reason": "Controller uses unsafe AngularJS features (directives/transclusion/$compile/nested scopes/deep $watch). Manual migration required.",
+      "before_id": "f618439a-0dd9-4f19-be9f-16a6079dd9a7",
+      "before_name": "WatcherController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark4\\controllers\\watcher.controller.js",
+      "after_id": "component_f618439a-0dd9-4f19-be9f-16a6079dd9a7",
+      "reason": "Controller \u2192 Angular Component wired + routed at /watcher (DI ready)",
       "output_path": null,
       "risk": "RiskLevel.MANUAL",
       "risk_reason": "Deep $watch detected (high behavioral coupling risk)",
-      "build_passed": false,
-      "snapshot_passed": false
-    },
-    {
-      "before_id": "29592f72-55c2-47f0-9dee-a92023a587d6",
-      "before_name": "AdminController",
-      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\controllers.js",
-      "after_id": "component_29592f72-55c2-47f0-9dee-a92023a587d6",
-      "reason": "Controller \u2192 Angular Component wired into Angular app at out\\angular-app (files: out\\angular-app\\src\\app\\admin.component.ts, out\\angular-app\\src\\app\\admin.component.html)",
-      "output_path": "out\\angular-app (files: out\\angular-app\\src\\app\\admin.component.ts, out\\angular-app\\src\\app\\admin.component.html)",
-      "risk": "RiskLevel.RISKY",
-      "risk_reason": "Heavy $scope mutation detected (state coupling risk)",
       "build_passed": false,
       "snapshot_passed": false
     }
@@ -60,7 +26,8 @@
     "snapshot_passed": false,
     "failures": [
       "Tests failed",
-      "Snapshot file(s) missing: C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\snapshots\\before.json, C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\tests\\benchmark9\\snapshots\\after.json"
+      "State mismatch in component",
+      "Missing component snapshot after migration: watchers"
     ]
   }
 }

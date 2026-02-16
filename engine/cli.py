@@ -35,30 +35,21 @@ def run_pipeline(repo_path: str) -> bool:
     files = scanner.scan(str(repo_path))
 
     classifier = FileClassifier()
-    js_files = [p for p in files if classifier.classify(p) == FileType.JS]
+    files_by_type = {
+        FileType.JS: [p for p in files if classifier.classify(p) == FileType.JS],
+        FileType.HTML: [p for p in files if classifier.classify(p) == FileType.HTML],
+        FileType.PY: [p for p in files if classifier.classify(p) == FileType.PY],
+        FileType.JAVA: [p for p in files if classifier.classify(p) == FileType.JAVA],
+    }
 
-    print(f"  Found {len(js_files)} JS files")
+    print(f"  Found {len(files_by_type[FileType.JS])} JS files")
 
-    # 2) Analysis
+    # 2) Analysis (USE DISPATCHER, NOT JSAnalyzer DIRECTLY)
     dispatcher = AnalyzerDispatcher()
-    js_analyzer = dispatcher.get_analyzer(FileType.JS)
+    analysis: AnalysisResult = dispatcher.dispatch(files_by_type)
 
-    raw_modules, raw_edges, raw_templates, raw_behaviors = js_analyzer.analyze(js_files)
-
-    builder = IRBuilder()
-    modules = builder.build_modules(raw_modules)
-    dependencies = builder.build_dependencies(raw_edges)
-    templates = builder.build_templates(raw_templates)
-    behaviors = builder.build_behaviors(raw_behaviors)
-
-    analysis = AnalysisResult(
-        modules=modules,
-        dependencies=dependencies,
-        templates=templates,
-        behaviors=behaviors,
-    )
-
-    print(f"  Analysis: {sum(len(m.classes) for m in modules)} classes found")
+    print(f"  Analysis: {sum(len(m.classes) for m in analysis.modules)} classes found")
+    print(f"  Analysis: {len(analysis.http_calls)} http/q calls extracted")
 
     # 3) Patterns
     detector = ControllerDetector()
@@ -147,7 +138,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.batch:
-        # Batch mode: just run pipeline and exit with status
         ok = run_pipeline(args.repo)
         sys.exit(0 if ok else 1)
 

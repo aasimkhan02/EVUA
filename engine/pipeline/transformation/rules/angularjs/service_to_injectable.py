@@ -21,8 +21,7 @@ class ServiceToInjectableRule:
             file_name = f"{name.lower()}.service.ts"
             ts_path = self.out_dir / file_name
 
-            if not ts_path.exists():
-                ts_code = f"""
+            ts_code = f"""
 import {{ Injectable }} from '@angular/core';
 
 @Injectable({{
@@ -32,14 +31,17 @@ export class {name} {{
   // TODO: migrate service logic manually if behavior depends on $http/$q side-effects
 }}
 """.strip()
-                ts_path.write_text(ts_code)
+
+            # idempotent write
+            if not ts_path.exists() or ts_path.read_text(encoding="utf-8") != ts_code:
+                ts_path.write_text(ts_code, encoding="utf-8")
 
             changes.append(
                 Change(
                     before_id=node_id,
                     after_id="injectable_" + node_id,
                     source=ChangeSource.RULE,
-                    reason=f"Service → @Injectable() wired into Angular app at {self.project.root} (file: {ts_path})"
+                    reason=f"Service → @Injectable(providedIn: 'root') at {ts_path}"
                 )
             )
 

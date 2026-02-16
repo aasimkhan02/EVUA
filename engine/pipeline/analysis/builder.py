@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple, Any
 from ir.code_model.module import Module
 from ir.code_model.class_ import Class
 from ir.code_model.function import Function
@@ -15,6 +15,28 @@ class IRBuilder:
     Converts raw analyzer outputs into framework-agnostic IR.
     No framework logic. No heuristics. Pure normalization.
     """
+
+    def build(self, raw_outputs: Tuple[list, list, list, list, list]):
+        """
+        raw_outputs = (
+            raw_modules,     # controllers/classes
+            raw_templates,   # html bindings/templates
+            raw_edges,       # dependency edges
+            raw_directives,  # angularjs directives (compile/link/transclude)
+            raw_http_calls,  # NEW: $http / $q extractions (currently forwarded)
+        )
+        """
+        # Unpack 5-tuple (backward compatible callers must pass 5)
+        raw_modules, raw_templates, raw_edges, raw_directives, raw_http_calls = raw_outputs
+
+        modules = self.build_modules(raw_modules)
+        dependencies = self.build_dependencies(raw_edges)
+        templates = self.build_templates(raw_templates)
+        behaviors = self.build_behaviors(raw_directives)
+
+        # NOTE: http_calls are intentionally not converted to IR nodes yet.
+        # They are forwarded through AnalysisResult for patterns/transformations.
+        return modules, dependencies, templates, behaviors
 
     def build_modules(self, raw_modules: List) -> List[Module]:
         modules: List[Module] = []
@@ -72,7 +94,7 @@ class IRBuilder:
                     SideEffect(
                         cause="directive_compile",
                         affected_symbol_id=getattr(rb, "name", "unknown"),
-                        description="AngularJS directive uses compile()"
+                        description="AngularJS directive uses compile()",
                     )
                 )
 
@@ -81,7 +103,7 @@ class IRBuilder:
                     SideEffect(
                         cause="directive_link",
                         affected_symbol_id=getattr(rb, "name", "unknown"),
-                        description="AngularJS directive uses link()"
+                        description="AngularJS directive uses link()",
                     )
                 )
 
@@ -90,7 +112,7 @@ class IRBuilder:
                     SideEffect(
                         cause="directive_transclusion",
                         affected_symbol_id=getattr(rb, "name", "unknown"),
-                        description="AngularJS directive uses transclusion"
+                        description="AngularJS directive uses transclusion",
                     )
                 )
         return behaviors

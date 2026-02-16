@@ -25,7 +25,7 @@ class WatcherRiskRule:
                 uses_compile = getattr(matched, "uses_compile", False)
                 has_nested_scopes = getattr(matched, "has_nested_scopes", False)
 
-                # 🚨 Hard edge-cases → MANUAL
+                # 🚨 Hard edge-cases → MANUAL (still blocked)
                 if "deep" in watch_depths:
                     level = RiskLevel.MANUAL
                     reason = "Deep $watch detected (high behavioral coupling risk)"
@@ -38,7 +38,16 @@ class WatcherRiskRule:
                     level = RiskLevel.MANUAL
                     reason = "Nested scope inheritance detected (non-trivial migration)"
 
-                # ⚠️ Softer risks
+                # ✅ Shallow $watch → SAFE / RISKY (now allowed for RxJS rewrite)
+                elif "shallow" in watch_depths:
+                    if len(scope_writes) >= 3:
+                        level = RiskLevel.RISKY
+                        reason = "Shallow $watch with heavy $scope mutation (state coupling risk)"
+                    else:
+                        level = RiskLevel.SAFE
+                        reason = "Shallow $watch can be safely rewritten to RxJS"
+
+                # ⚠️ Non-watch scope mutation risk
                 elif len(scope_writes) >= 3:
                     level = RiskLevel.RISKY
                     reason = "Heavy $scope mutation detected (state coupling risk)"

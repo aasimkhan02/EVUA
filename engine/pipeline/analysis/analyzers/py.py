@@ -4,4 +4,4 @@ from .base import Analyzer
 
 class PyAnalyzer(Analyzer):
     def analyze(self, paths: List[Path]):
-        return [], [], [], []
+        return [], [], [], [], []

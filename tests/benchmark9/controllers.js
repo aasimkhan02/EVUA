@@ -18,14 +18,12 @@ app.controller('DashboardController', function($scope, MetricsService) {
       });
   };
 
-  // shallow watch
   $scope.$watch('filters.showTrends', function(newVal) {
     console.log('showTrends toggled:', newVal);
   });
 
   $scope.refreshMetrics();
 });
-
 
 app.controller('UserController', function($scope, UserService) {
   $scope.users = [];
@@ -59,23 +57,19 @@ app.controller('UserController', function($scope, UserService) {
     $scope.selectedUser = angular.copy($scope.form);
   };
 
-  // deep watch on selectedUser
   $scope.$watch('selectedUser', function(newVal, oldVal) {
     if (newVal && oldVal && newVal.email !== oldVal.email) {
       console.log('User email changed (deep watch)');
     }
   }, true);
 
-  // nested scope example
   var tempScope = $scope.$new();
-  tempScope.tempFlag = true;
   tempScope.resetForm = function() {
     $scope.form = {};
   };
 
   $scope.loadUsers();
 });
-
 
 app.controller('AdminController', function($scope, UserService) {
   $scope.stats = {

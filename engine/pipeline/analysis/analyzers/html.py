@@ -46,4 +46,4 @@ class HTMLAnalyzer(Analyzer):
                 )
             )
 
-        return [], [], raw_templates, []
+        return [], raw_templates, [], [], []
