@@ -30,7 +30,7 @@ class RollbackManager:
         if not path.exists():
             return
 
-        # 🚫 Do not snapshot backup directory contents (prevents infinite nesting)
+        # Do not snapshot backup directory contents (prevents infinite nesting)
         if self._is_in_backup_dir(path):
             return
 

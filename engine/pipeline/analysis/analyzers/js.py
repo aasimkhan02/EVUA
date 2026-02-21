@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List, Dict
 from .base import Analyzer
 import esprima
+import uuid
 
 
 class RawController:
@@ -12,10 +13,11 @@ class RawController:
         di: List[str],
         scope_reads: List[str],
         scope_writes: List[str],
-        watch_depths: List[str],  # "shallow" | "deep"
+        watch_depths: List[str],
         uses_compile: bool = False,
         has_nested_scopes: bool = False,
     ):
+        self.id = str(uuid.uuid4())
         self.name = name
         self.file = file
         self.di = di
@@ -25,59 +27,109 @@ class RawController:
         self.uses_compile = uses_compile
         self.has_nested_scopes = has_nested_scopes
 
-        # IRBuilder expects these
         self.classes = []
         self.functions = []
         self.globals = []
 
 
 class RawDirective:
-    def __init__(
-        self,
-        name: str,
-        file: str,
-        has_compile: bool,
-        has_link: bool,
-        transclude: bool,
-    ):
+    def __init__(self, name: str, file: str, has_compile: bool, has_link: bool, transclude: bool):
+        self.id = str(uuid.uuid4())
         self.name = name
         self.file = file
         self.has_compile = has_compile
         self.has_link = has_link
         self.transclude = transclude
 
-        # IRBuilder expects these
         self.classes = []
         self.functions = []
         self.globals = []
 
+
 class RawHttpCall:
-    def __init__(self, file: str, method: str, url: str | None, uses_q: bool):
+    def __init__(self, file: str, method: str, url, uses_q: bool):
+        self.id = str(uuid.uuid4())
         self.file = file
-        self.method = method  # get/post/put/delete/config/q_all/q_defer
+        self.method = method
         self.url = url
         self.uses_q = uses_q
 
-        # IRBuilder expects these
         self.classes = []
         self.functions = []
         self.globals = []
 
-def _is_identifier(node, name):
-    return node is not None and getattr(node, "type", None) == "Identifier" and getattr(node, "name", None) == name
+
+def iter_children(node):
+    for key, value in vars(node).items():
+        if isinstance(value, list):
+            for v in value:
+                if hasattr(v, "type"):
+                    yield v
+        elif hasattr(value, "type"):
+            yield value
 
 
-def _member_object_name(member_node):
+def _extract_fn_from_arg(arg_node):
     """
-    Given a MemberExpression, attempt to return the "object" identifier name if simple.
-    Works for $scope.x or this.something.
+    AngularJS supports two DI syntaxes:
+
+    1. Plain function:
+       .controller('Name', function($scope) { ... })
+
+    2. DI array (minification-safe):
+       .controller('Name', ['$scope', '$http', function($scope, $http) { ... }])
+
+    This function normalises both and always returns the FunctionExpression node,
+    or None if neither pattern is matched.
     """
-    if not member_node or getattr(member_node, "type", None) != "MemberExpression":
+    if arg_node is None:
         return None
-    obj = getattr(member_node, "object", None)
-    if getattr(obj, "type", None) == "Identifier":
-        return obj.name
+
+    t = getattr(arg_node, "type", None)
+
+    # Plain function — already what we want
+    if t in ("FunctionExpression", "ArrowFunctionExpression"):
+        return arg_node
+
+    # DI array — last element must be the function
+    if t == "ArrayExpression":
+        elements = getattr(arg_node, "elements", []) or []
+        if elements:
+            last = elements[-1]
+            if getattr(last, "type", None) in ("FunctionExpression", "ArrowFunctionExpression"):
+                return last
+
     return None
+
+
+def _extract_di_names(arg_node) -> List[str]:
+    """
+    Extract DI token names from either syntax.
+
+    Plain function  → read parameter names from function params
+    DI array        → read string literals from the array (more reliable for minified code)
+    """
+    if arg_node is None:
+        return []
+
+    t = getattr(arg_node, "type", None)
+
+    if t == "ArrayExpression":
+        names = []
+        elements = getattr(arg_node, "elements", []) or []
+        for el in elements:
+            if getattr(el, "type", None) == "Literal":
+                names.append(el.value)
+        return names
+
+    if t in ("FunctionExpression", "ArrowFunctionExpression"):
+        names = []
+        for p in getattr(arg_node, "params", []) or []:
+            if getattr(p, "type", None) == "Identifier":
+                names.append(p.name)
+        return names
+
+    return []
 
 
 class JSAnalyzer(Analyzer):
@@ -86,210 +138,188 @@ class JSAnalyzer(Analyzer):
         raw_directives: List[RawDirective] = []
         raw_http_calls: List[RawHttpCall] = []
 
-
         def recurse(node, file_path: str, ctx: Dict = None):
-            """
-            Generic recursive walker that yields nothing but allows us to inspect every node.
-            """
             if node is None or not hasattr(node, "type"):
                 return
 
-            # Detect controller calls anywhere (chained or not):
             if node.type == "CallExpression":
                 callee = getattr(node, "callee", None)
+                args   = getattr(node, "arguments", []) or []
+
                 if getattr(callee, "type", None) == "MemberExpression":
                     prop = getattr(callee.property, "name", None)
-                    if prop == "controller":
-                        # controller(name, fn)
-                        args = getattr(node, "arguments", []) or []
-                        if len(args) >= 2:
-                            name_node = args[0]
-                            fn_node = args[1]
-                            if getattr(name_node, "type", None) == "Literal" and getattr(fn_node, "type", None) in ("FunctionExpression", "ArrowFunctionExpression"):
-                                _handle_controller(name_node.value, fn_node, file_path)
 
-                    if prop == "directive":
-                        args = getattr(node, "arguments", []) or []
-                        if len(args) >= 2:
-                            name_node = args[0]
-                            fn_node = args[1]
-                            # directive(name, function() { return {...}; }) OR factory function
-                            if getattr(name_node, "type", None) == "Literal" and getattr(fn_node, "type", None) in ("FunctionExpression", "ArrowFunctionExpression"):
-                                _handle_directive(name_node.value, fn_node, file_path)
+                    # .controller('Name', fn | ['$dep', fn])
+                    if prop == "controller" and len(args) >= 2:
+                        name_node = args[0]
+                        fn_node   = _extract_fn_from_arg(args[1])
+                        if (
+                            getattr(name_node, "type", None) == "Literal"
+                            and fn_node is not None
+                        ):
+                            _handle_controller(name_node.value, args[1], fn_node, file_path)
 
-                    # --- $http detection ---
-                    if getattr(callee, "type", None) == "MemberExpression":
-                        obj = getattr(callee.object, "type", None) == "Identifier" and getattr(callee.object, "name", None)
-                        prop = getattr(callee.property, "name", None)
-                        if obj == "$http" and prop in ("get", "post", "put", "delete"):
-                            args = getattr(node, "arguments", []) or []
-                            url = None
-                            if args and getattr(args[0], "type", None) == "Literal":
-                                url = args[0].value
-                            raw_http_calls.append(RawHttpCall(file_path, prop, url, uses_q=False))
+                    # .directive('Name', fn | ['$dep', fn])
+                    elif prop == "directive" and len(args) >= 2:
+                        name_node = args[0]
+                        fn_node   = _extract_fn_from_arg(args[1])
+                        if (
+                            getattr(name_node, "type", None) == "Literal"
+                            and fn_node is not None
+                        ):
+                            _handle_directive(name_node.value, fn_node, file_path)
 
-                    # --- $http({ config }) ---
-                    if getattr(callee, "type", None) == "Identifier" and getattr(callee, "name", None) == "$http":
-                        raw_http_calls.append(RawHttpCall(file_path, "config", None, uses_q=False))
+                    # .service('Name', fn | ['$dep', fn])
+                    elif prop == "service" and len(args) >= 2:
+                        name_node = args[0]
+                        fn_node   = _extract_fn_from_arg(args[1])
+                        if (
+                            getattr(name_node, "type", None) == "Literal"
+                            and fn_node is not None
+                        ):
+                            _handle_controller(name_node.value, args[1], fn_node, file_path)
 
-                    # --- $q detection ---
-                    if getattr(callee, "type", None) == "MemberExpression":
-                        obj = getattr(callee.object, "type", None) == "Identifier" and getattr(callee.object, "name", None)
-                        prop = getattr(callee.property, "name", None)
-                        if obj == "$q" and prop in ("all", "defer"):
-                            raw_http_calls.append(RawHttpCall(file_path, f"q_{prop}", None, uses_q=True))
+                    # .factory('Name', fn | ['$dep', fn])
+                    elif prop == "factory" and len(args) >= 2:
+                        name_node = args[0]
+                        fn_node   = _extract_fn_from_arg(args[1])
+                        if (
+                            getattr(name_node, "type", None) == "Literal"
+                            and fn_node is not None
+                        ):
+                            _handle_controller(name_node.value, args[1], fn_node, file_path)
 
-            # Recurse into all child nodes (lists + single nodes)
-            for attr in dir(node):
-                if attr.startswith("_"):
-                    continue
-                try:
-                    child = getattr(node, attr)
-                except Exception:
-                    continue
-                if isinstance(child, list):
-                    for c in child:
-                        if hasattr(c, "type"):
-                            recurse(c, file_path, ctx)
-                elif hasattr(child, "type"):
-                    recurse(child, file_path, ctx)
+                    # $http.get / .post / .put / .delete
+                    obj_name = (
+                        getattr(callee.object, "name", None)
+                        if getattr(callee.object, "type", None) == "Identifier"
+                        else None
+                    )
+                    if obj_name == "$http" and prop in ("get", "post", "put", "delete"):
+                        url = None
+                        if args and getattr(args[0], "type", None) == "Literal":
+                            url = args[0].value
+                        raw_http_calls.append(RawHttpCall(file_path, prop, url, uses_q=False))
 
-        def _handle_controller(name: str, fn_node, file_path: str):
-            """
-            Scan the controller function node thoroughly to find $scope mutations, watches, $compile, $new, etc.
-            """
-            di = []
-            for p in getattr(fn_node, "params", []) or []:
-                if getattr(p, "type", None) == "Identifier":
-                    di.append(p.name)
+                    # $q.all / $q.defer
+                    if obj_name == "$q" and prop in ("all", "defer"):
+                        raw_http_calls.append(RawHttpCall(file_path, f"q_{prop}", None, uses_q=True))
 
-            scope_reads: List[str] = []
+                # $http({ config })
+                if (
+                    getattr(callee, "type", None) == "Identifier"
+                    and getattr(callee, "name", None) == "$http"
+                ):
+                    raw_http_calls.append(RawHttpCall(file_path, "config", None, uses_q=False))
+
+            for child in iter_children(node):
+                recurse(child, file_path, ctx)
+
+        def _handle_controller(name: str, raw_arg, fn_node, file_path: str):
+            di = _extract_di_names(raw_arg)
+
+            scope_reads: List[str]  = []
             scope_writes: List[str] = []
             watch_depths: List[str] = []
-            uses_compile = False
+            uses_compile     = False
             has_nested_scopes = False
 
-            # inner recursive scanner for the function body
             def scan_fn(node):
                 nonlocal uses_compile, has_nested_scopes
                 if node is None or not hasattr(node, "type"):
                     return
 
-                # Assignment to $scope.something
                 if getattr(node, "type", None) == "AssignmentExpression":
                     left = getattr(node, "left", None)
                     if getattr(left, "type", None) == "MemberExpression":
-                        obj = getattr(left, "object", None)
+                        obj  = getattr(left, "object", None)
                         prop = getattr(left, "property", None)
-                        if getattr(obj, "type", None) == "Identifier" and getattr(obj, "name", None) == "$scope":
-                            # property can be Identifier or Literal
+                        if (
+                            getattr(obj, "type", None) == "Identifier"
+                            and getattr(obj, "name", None) == "$scope"
+                        ):
                             pname = getattr(prop, "name", None) or getattr(prop, "value", None)
                             if pname:
                                 scope_writes.append(pname)
 
-                # Variable declarator: var child = $scope.$new(); or var x = $compile(el)($scope);
                 if getattr(node, "type", None) == "VariableDeclarator":
                     init = getattr(node, "init", None)
                     if init:
-                        # $scope.$new()
                         if getattr(init, "type", None) == "CallExpression":
                             callee = getattr(init, "callee", None)
                             if getattr(callee, "type", None) == "MemberExpression":
-                                obj = getattr(callee.object, "type", None) == "Identifier" and getattr(callee.object, "name", None)
-                                prop_name = getattr(callee.property, "name", None)
-                                if obj == "$scope" and prop_name == "$new":
+                                if (
+                                    getattr(callee.object, "type", None) == "Identifier"
+                                    and getattr(callee.object, "name", None) == "$scope"
+                                    and getattr(callee.property, "name", None) == "$new"
+                                ):
                                     has_nested_scopes = True
-                            # $compile(...) returns function which can be immediately called; handled below as generic call
-                        # handle nested further
                         scan_fn(init)
 
-                # Calls: $scope.$watch, $compile, $scope.$new anywhere
                 if getattr(node, "type", None) == "CallExpression":
                     callee = getattr(node, "callee", None)
 
-                    # $scope.$watch(...)
                     if getattr(callee, "type", None) == "MemberExpression":
-                        obj = getattr(callee.object, "type", None)
-                        if obj == "Identifier" and getattr(callee.object, "name", None) == "$scope":
-                            pname = getattr(callee.property, "name", None)
+                        obj_type = getattr(callee.object, "type", None)
+                        obj_name = getattr(callee.object, "name", None) if obj_type == "Identifier" else None
+                        pname    = getattr(callee.property, "name", None)
+
+                        if obj_name == "$scope":
                             if pname == "$watch":
-                                args = getattr(node, "arguments", []) or []
-                                is_deep = False
-
-                                # $scope.$watch(expr, fn, true) → deep
-                                if len(args) >= 3:
-                                    third = args[2]
-                                    if getattr(third, "type", None) == "Literal" and getattr(third, "value", None) is True:
+                                call_args = getattr(node, "arguments", []) or []
+                                is_deep   = False
+                                if len(call_args) >= 3:
+                                    third = call_args[2]
+                                    if (
+                                        getattr(third, "type", None) == "Literal"
+                                        and getattr(third, "value", None) is True
+                                    ):
                                         is_deep = True
-
-                                if is_deep:
-                                    watch_depths.append("deep")
-                                else:
-                                    watch_depths.append("shallow")
-
+                                watch_depths.append("deep" if is_deep else "shallow")
 
                             if pname == "$new":
                                 has_nested_scopes = True
 
-                    # $compile(...)
-                    if getattr(callee, "type", None) == "Identifier" and getattr(callee, "name", None) == "$compile":
+                    if (
+                        getattr(callee, "type", None) == "Identifier"
+                        and getattr(callee, "name", None) == "$compile"
+                    ):
                         uses_compile = True
 
-                    # also handle case: ($compile(el)($scope)) pattern where call is nested; scanning child nodes will catch inner callee too
-
-                # MemberExpression access that might read $scope.something
                 if getattr(node, "type", None) == "MemberExpression":
-                    obj = getattr(node, "object", None)
-                    if getattr(obj, "type", None) == "Identifier" and getattr(obj, "name", None) == "$scope":
-                        prop = getattr(node, "property", None)
+                    obj  = getattr(node, "object", None)
+                    prop = getattr(node, "property", None)
+                    if (
+                        getattr(obj, "type", None) == "Identifier"
+                        and getattr(obj, "name", None) == "$scope"
+                    ):
                         pname = getattr(prop, "name", None) or getattr(prop, "value", None)
                         if pname:
                             scope_reads.append(pname)
 
-                # Recurse children
-                for attr in dir(node):
-                    if attr.startswith("_"):
-                        continue
-                    try:
-                        child = getattr(node, attr)
-                    except Exception:
-                        continue
-                    if isinstance(child, list):
-                        for c in child:
-                            if hasattr(c, "type"):
-                                scan_fn(c)
-                    elif hasattr(child, "type"):
-                        scan_fn(child)
+                for child in iter_children(node):
+                    scan_fn(child)
 
-            # start scan on function body (handles both FunctionExpression and Arrow)
             body = getattr(fn_node, "body", None)
             if body:
-                # body could be BlockStatement with .body list
                 scan_fn(body)
 
-            raw_modules.append(
-                RawController(
-                    name=name,
-                    file=file_path,
-                    di=di,
-                    scope_reads=scope_reads,
-                    scope_writes=scope_writes,
-                    watch_depths=watch_depths,
-                    uses_compile=uses_compile,
-                    has_nested_scopes=has_nested_scopes,
-                )
-            )
+            raw_modules.append(RawController(
+                name=name,
+                file=file_path,
+                di=di,
+                scope_reads=scope_reads,
+                scope_writes=scope_writes,
+                watch_depths=watch_depths,
+                uses_compile=uses_compile,
+                has_nested_scopes=has_nested_scopes,
+            ))
 
         def _handle_directive(name: str, fn_node, file_path: str):
-            """
-            Scan directive factory function for compile/link/transclude flags. The directive may return
-            an object expression or construct complex logic; we try to find returned ObjectExpression.
-            """
             has_compile = False
-            has_link = False
-            transclude = False
+            has_link    = False
+            transclude  = False
 
-            # recursively scan to find ReturnStatement whose argument is ObjectExpression
             def scan_for_return(node):
                 nonlocal has_compile, has_link, transclude
                 if node is None or not hasattr(node, "type"):
@@ -306,10 +336,12 @@ class JSAnalyzer(Analyzer):
                             if key == "link":
                                 has_link = True
                             if key == "transclude":
-                                if getattr(val, "type", None) == "Literal" and getattr(val, "value", None) is True:
+                                if (
+                                    getattr(val, "type", None) == "Literal"
+                                    and getattr(val, "value", None) is True
+                                ):
                                     transclude = True
 
-                # also detect compile/link as functions defined inside and later referenced; a conservative approach:
                 if getattr(node, "type", None) == "Property":
                     key = getattr(node.key, "name", None) or getattr(node.key, "value", None)
                     if key == "compile":
@@ -318,37 +350,25 @@ class JSAnalyzer(Analyzer):
                         has_link = True
                     if key == "transclude":
                         val = getattr(node, "value", None)
-                        if getattr(val, "type", None) == "Literal" and getattr(val, "value", None) is True:
+                        if (
+                            getattr(val, "type", None) == "Literal"
+                            and getattr(val, "value", None) is True
+                        ):
                             transclude = True
 
-                # Recurse
-                for attr in dir(node):
-                    if attr.startswith("_"):
-                        continue
-                    try:
-                        child = getattr(node, attr)
-                    except Exception:
-                        continue
-                    if isinstance(child, list):
-                        for c in child:
-                            if hasattr(c, "type"):
-                                scan_for_return(c)
-                    elif hasattr(child, "type"):
-                        scan_for_return(child)
+                for child in iter_children(node):
+                    scan_for_return(child)
 
             scan_for_return(fn_node)
 
-            raw_directives.append(
-                RawDirective(
-                    name=name,
-                    file=file_path,
-                    has_compile=has_compile,
-                    has_link=has_link,
-                    transclude=transclude,
-                )
-            )
+            raw_directives.append(RawDirective(
+                name=name,
+                file=file_path,
+                has_compile=has_compile,
+                has_link=has_link,
+                transclude=transclude,
+            ))
 
-        # Entry: parse each file and recurse entire AST
         for path in paths:
             text = path.read_text(encoding="utf-8", errors="ignore")
             try:
@@ -357,6 +377,4 @@ class JSAnalyzer(Analyzer):
                 continue
             recurse(ast, str(path))
 
-        # Return: raw_modules (controllers), raw_templates (none here), raw_dependencies (none), raw_directives
         return raw_modules, [], [], raw_directives, raw_http_calls
-

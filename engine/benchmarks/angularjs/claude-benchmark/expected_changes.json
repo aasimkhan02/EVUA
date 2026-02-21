@@ -1,0 +1,25 @@
+{
+  "_comment": "Expected file generation and CI gate thresholds for evua-benchmark-01.",
+
+  "generated_files": [
+    "out/angular-app/src/app/user.component.ts",
+    "out/angular-app/src/app/user.component.html",
+    "out/angular-app/src/app/product.component.ts",
+    "out/angular-app/src/app/product.component.html",
+    "out/angular-app/src/app/authservice.service.ts",
+    "out/angular-app/src/app/app-routing.module.ts"
+  ],
+
+  "min_auto_coverage": 0.6,
+
+  "expected_manual_ratio": 0.4,
+
+  "expected_validation": false,
+
+  "_notes": {
+    "min_auto_coverage": "At least 60% of nodes must be auto-migrated (2 of 3 = 66.7%)",
+    "expected_manual_ratio": "At most 40% of changes can be MANUAL (1 of 3 = 33.3%)",
+    "expected_validation": "false because ng test is not installed in eval environment — snapshot comparison is the real signal",
+    "generated_files": "Paths are relative to engine root where cli.py runs"
+  }
+}

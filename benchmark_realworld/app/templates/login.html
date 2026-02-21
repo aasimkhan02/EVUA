@@ -1,0 +1,6 @@
+<div ng-controller="LoginCtrl">
+  <input ng-model="user.username" focus-on-show />
+  <input type="password" ng-model="user.password" />
+  <button ng-click="login()">Login</button>
+  <div class="error">{{ error }}</div>
+</div>

@@ -1,7 +1,16 @@
+from pipeline.patterns.base import PatternDetector
 from pipeline.patterns.roles import SemanticRole
+from pipeline.patterns.confidence import Confidence
+from pipeline.patterns.result import PatternResult
 
-class ControllerDetector:
+
+class ControllerDetector(PatternDetector):
+
     def detect(self, analysis):
+        """
+        Primary API used by the pipeline orchestrator.
+        Returns (roles_by_node dict, confidence dict) directly.
+        """
         roles = {}
         confidence = {}
 
@@ -9,17 +18,12 @@ class ControllerDetector:
             for c in m.classes:
                 name = c.name.lower()
 
-                # ✅ Real AngularJS controllers only
-                if name.endswith("controller"):
+                if name.endswith("controller") or name.endswith("ctrl"):
                     roles.setdefault(c.id, []).append(SemanticRole.CONTROLLER)
-                    confidence[c.id] = max(confidence.get(c.id, 0.0), 0.95)
-
-                    # Heuristic: controllers expose component methods/state
                     roles.setdefault(c.id, []).append(SemanticRole.COMPONENT_METHOD)
                     roles.setdefault(c.id, []).append(SemanticRole.COMPONENT_STATE)
-                    confidence[c.id] = max(confidence.get(c.id, 0.0), 0.9)
+                    confidence[c.id] = max(confidence.get(c.id, 0.0), 0.95)
 
-                # 🚨 Edge-case semantics → tag as unsafe controller patterns
                 if getattr(c, "uses_compile", False):
                     roles.setdefault(c.id, []).append(SemanticRole.TEMPLATE_BINDING)
                     confidence[c.id] = max(confidence.get(c.id, 0.0), 0.9)
@@ -33,3 +37,21 @@ class ControllerDetector:
                     confidence[c.id] = max(confidence.get(c.id, 0.0), 0.8)
 
         return roles, confidence
+
+    def extract(self, analysis):
+        """
+        Required by PatternStage ABC.
+        Returns a proper PatternResult — roles_by_node dict, confidence_by_node dict.
+        Previously returned PatternResult(list) which silently corrupted roles_by_node.
+        """
+        roles, conf_floats = self.detect(analysis)
+
+        confidence_by_node = {
+            node_id: Confidence(conf_floats.get(node_id, 0.5), "Controller pattern detected")
+            for node_id in roles
+        }
+
+        return PatternResult(
+            roles_by_node=roles,
+            confidence_by_node=confidence_by_node,
+        )

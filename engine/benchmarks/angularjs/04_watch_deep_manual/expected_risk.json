@@ -1,0 +1,10 @@
+{
+  "SAFE": [
+    "controller:ProfileCtrl"
+  ],
+  "RISKY": [],
+  "MANUAL": [
+    "watch:profile (deep)",
+    "binding:nested_object_mutation"
+  ]
+}

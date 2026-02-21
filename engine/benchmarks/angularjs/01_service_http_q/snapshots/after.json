@@ -1,0 +1,10 @@
+{
+  "files": {
+    "out/angular-app/src/app/user.component.ts": {
+      "contains": ["@Component", "export class UserComponent"]
+    },
+    "out/angular-app/src/app/services.component.ts": {
+      "contains": ["@Component", "HttpClient"]
+    }
+  }
+}

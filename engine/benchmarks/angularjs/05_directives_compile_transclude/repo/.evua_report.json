@@ -1,0 +1,19 @@
+{
+  "angular_workspace": "out/angular-app",
+  "controllers": [
+    {
+      "id": "ba15b046-c4d1-4818-b61d-947e07ce21e8",
+      "name": "PanelCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\05_directives_compile_transclude\\repo\\controllers.js"
+    }
+  ],
+  "changes": [],
+  "validation": {
+    "tests_passed": false,
+    "snapshot_passed": false,
+    "failures": [
+      "Tests failed",
+      "Snapshot file(s) missing: C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\05_directives_compile_transclude\\repo\\snapshots\\before.json, C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\05_directives_compile_transclude\\repo\\snapshots\\after.json"
+    ]
+  }
+}

@@ -1,9 +1,0 @@
-repo,percent_auto_converted,risky_changes,manual_changes,test_pass_rate,exit_code
-../tests/benchmark1,100.0,2,0,0.0,1
-../tests/benchmark2,100.0,2,0,0.0,1
-../tests/benchmark3,100.0,2,0,0.0,1
-../tests/benchmark4,100.0,2,0,0.0,1
-../tests/benchmark5,100.0,2,0,0.0,1
-../tests/benchmark6,100.0,2,0,0.0,1
-../tests/benchmark7,100.0,2,0,0.0,1
-../tests/benchmark8,100.0,2,0,0.0,1

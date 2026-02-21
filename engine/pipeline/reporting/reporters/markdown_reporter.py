@@ -1,14 +1,22 @@
+from pipeline.risk.result import RiskResult
+
+
 class MarkdownReporter:
     def render(self, analysis, patterns, transformation, risk, validation=None):
-        risk_by_change, reason_by_change = risk
+        # risk is a RiskResult dataclass — not a tuple
+        if isinstance(risk, RiskResult):
+            risk_by_change   = risk.risk_by_change_id
+            reason_by_change = risk.reason_by_change_id
+        else:
+            # Graceful fallback for legacy callers passing (dict, dict) tuple
+            risk_by_change, reason_by_change = risk
 
         id_to_name = {}
         id_to_file = {}
-
         for m in analysis.modules:
             for c in m.classes:
                 id_to_name[c.id] = c.name
-                id_to_file[c.id] = m.name
+                id_to_file[c.id] = m.name   # Module.name holds the file path
 
         def extract_output_path(reason: str):
             if not reason:
@@ -31,13 +39,13 @@ class MarkdownReporter:
 
         lines.append("\n## Proposed Changes")
         for c in transformation.changes:
-            name = id_to_name.get(c.before_id, "unknown")
-            file = id_to_file.get(c.before_id, "unknown")
-            risk_level = risk_by_change.get(c.id)
-            reason = reason_by_change.get(c.id, "")
-            out_path = extract_output_path(c.reason)
+            name       = id_to_name.get(c.before_id, "unknown")
+            file       = id_to_file.get(c.before_id, "unknown")
+            risk_level = risk_by_change.get(c.id, "unknown")
+            reason     = reason_by_change.get(c.id, "")
+            out_path   = extract_output_path(c.reason)
 
-            build = validation.get("tests_passed") if validation else None
+            build    = validation.get("tests_passed")    if validation else None
             snapshot = validation.get("snapshot_passed") if validation else None
 
             lines.append(

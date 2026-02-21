@@ -1,0 +1,11 @@
+{
+  "SAFE": [
+    "controller:ParentCtrl",
+    "controller:ChildCtrl"
+  ],
+  "RISKY": [],
+  "MANUAL": [
+    "nested_scope_inheritance",
+    "shared_object_mutation"
+  ]
+}

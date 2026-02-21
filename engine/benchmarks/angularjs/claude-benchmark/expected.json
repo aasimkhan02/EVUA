@@ -1,0 +1,31 @@
+{
+  "_comment": "Ground truth for evua-benchmark-01. What the pipeline MUST produce.",
+
+  "supported_constructs": [
+    "controller",
+    "service",
+    "http_get",
+    "http_post",
+    "shallow_watch",
+    "deep_watch",
+    "q_defer"
+  ],
+
+  "auto_modernized": [
+    "UserController",
+    "AuthService"
+  ],
+
+  "manual_required": [
+    "ProductController"
+  ],
+
+  "blocked": [],
+
+  "notes": [
+    "UserController has a shallow $watch — auto-migratable to RxJS BehaviorSubject",
+    "ProductController has a deep $watch AND $q.defer — requires MANUAL review",
+    "AuthService maps cleanly to @Injectable(providedIn: 'root')",
+    "$http.get and $http.post both migrate to HttpClient equivalents"
+  ]
+}

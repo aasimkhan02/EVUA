@@ -1,0 +1,24 @@
+{
+  "angular_workspace": "out/angular-app",
+  "controllers": [
+    {
+      "id": "2b0496ea-f208-4266-84bd-a62ab28148bd",
+      "name": "ChildCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\06_nested_scopes\\repo\\controllers.js"
+    },
+    {
+      "id": "484bbdb1-9a8e-4759-8bd3-86e60a38833d",
+      "name": "ParentCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\06_nested_scopes\\repo\\controllers.js"
+    }
+  ],
+  "changes": [],
+  "validation": {
+    "tests_passed": false,
+    "snapshot_passed": false,
+    "failures": [
+      "Tests failed",
+      "Snapshot file(s) missing: C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\06_nested_scopes\\repo\\snapshots\\before.json, C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\06_nested_scopes\\repo\\snapshots\\after.json"
+    ]
+  }
+}

@@ -1,11 +1,13 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
+
 from .change import Change
-from .decision import Decision
+from .decision import MigrationDecision
 from .confidence import ConfidenceScore
+
 
 @dataclass
 class MigrationSnapshot:
     changes: List[Change] = field(default_factory=list)
-    decision: Decision | None = None
-    confidence: ConfidenceScore | None = None
+    decision: Optional[MigrationDecision] = None
+    confidence: Optional[ConfidenceScore] = None

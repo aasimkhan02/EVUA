@@ -1,0 +1,14 @@
+{
+  "SAFE": [
+    "controller:TodoCtrl",
+    "event:ng-click",
+    "template:ng-repeat"
+  ],
+  "RISKY": [
+    "binding:ng-model",
+    "binding:checkbox_two_way",
+    "filter:uppercase",
+    "ng-class:object_syntax"
+  ],
+  "MANUAL": []
+}

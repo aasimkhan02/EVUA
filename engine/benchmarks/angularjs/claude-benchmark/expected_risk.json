@@ -1,0 +1,14 @@
+{
+  "_comment": "Expected risk levels by change before_id (controller/service names used as proxy since IDs are UUIDs generated at runtime).",
+
+  "SAFE": [
+    "UserController",
+    "AuthService"
+  ],
+
+  "RISKY": [],
+
+  "MANUAL": [
+    "ProductController"
+  ]
+}

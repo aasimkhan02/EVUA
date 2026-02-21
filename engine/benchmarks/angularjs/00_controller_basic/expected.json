@@ -1,0 +1,17 @@
+{
+  "supported_constructs": [
+    "controller",
+    "scope_bindings",
+    "ng-click",
+    "template_interpolation"
+  ],
+  "auto_modernized": [
+    "MainCtrl",
+    "title_binding",
+    "count_binding",
+    "increment_method",
+    "template_bindings"
+  ],
+  "manual_required": [],
+  "blocked": []
+}

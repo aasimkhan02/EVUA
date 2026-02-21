@@ -1,6 +1,0 @@
-{
-  "component": "TodoController",
-  "state": {
-    "todos": ["Learn AngularJS", "Migrate with EVUA"]
-  }
-}

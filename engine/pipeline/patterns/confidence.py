@@ -4,3 +4,5 @@ from dataclasses import dataclass
 class PatternConfidence:
     value: float      # 0.0 → 1.0
     explanation: str
+
+Confidence = PatternConfidence

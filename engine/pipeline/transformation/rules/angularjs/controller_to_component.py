@@ -1,12 +1,9 @@
 from pathlib import Path
 from ir.migration_model.change import Change
 from ir.migration_model.base import ChangeSource
-from pipeline.patterns.roles import SemanticRole
 from pipeline.transformation.angular_project_scaffold import AngularProjectScaffold
+from pipeline.transformation.helpers import iter_controllers
 
-UNSAFE_ROLES = {
-    SemanticRole.TEMPLATE_BINDING,
-}
 
 class ControllerToComponentRule:
     def __init__(self, out_dir="out/angular-app"):
@@ -14,107 +11,95 @@ class ControllerToComponentRule:
         self.out_dir = Path(out_dir) / "src" / "app"
         self.routing_path = self.out_dir / "app-routing.module.ts"
 
-    def _ensure_routing_module(self):
-        self.routing_path.parent.mkdir(parents=True, exist_ok=True)
-        if not self.routing_path.exists():
-            self.routing_path.write_text(
-                """import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-
-const routes: Routes = [];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
-export class AppRoutingModule {}
-""",
-                encoding="utf-8"
-            )
-
     def apply(self, analysis, patterns):
+        print("\n========== ControllerToComponentRule.apply() ==========")
         changes = []
         self.project.ensure()
-        self._ensure_routing_module()
 
         routing_code = self.routing_path.read_text(encoding="utf-8")
 
-        # collect migrated services for DI
-        service_names = []
-        for node_id, roles in patterns.roles_by_node.items():
-            if SemanticRole.SERVICE in roles:
-                service_names.append(f"MigratedService{node_id[:6]}")
+        # iter_controllers uses Class.id and Class.name — both confirmed present in IR
+        # Module.name is used for debug logging (NOT .path — Module has no .path)
+        controllers = list(iter_controllers(analysis, patterns))
+        print(f"[ControllerToComponent] Controllers detected: {len(controllers)}")
 
-        for m in analysis.modules:
-            for c in m.classes:
-                if not c.name.lower().endswith("controller"):
-                    continue
+        if not controllers:
+            print("[ControllerToComponent] ⚠️  No controllers matched. "
+                  "Check patterns.roles_by_node or Module.classes names.")
+            changes.append(Change(
+                before_id="debug_controller_rule",
+                after_id="debug_controller_rule_ran",
+                source=ChangeSource.RULE,
+                reason="ControllerToComponentRule ran but matched 0 controllers"
+            ))
+            return changes
 
-                roles = patterns.roles_by_node.get(c.id, [])
-                if SemanticRole.CONTROLLER not in roles:
-                    continue
-
-                if any(r in roles for r in UNSAFE_ROLES):
-                    changes.append(
-                        Change(
-                            before_id=c.id,
-                            after_id=f"manual_component_{c.id}",
-                            source=ChangeSource.RULE,
-                            reason="Unsafe AngularJS semantics detected; manual migration required.",
-                        )
-                    )
-                    continue
-
-                base = c.name.replace("Controller", "").lower()
-                class_name = c.name.replace("Controller", "") + "Component"
-                selector = f"app-{base}"
-
-                ts_path = self.out_dir / f"{base}.component.ts"
-                html_path = self.out_dir / f"{base}.component.html"
-
-                imports = ["import { Component } from '@angular/core';"]
-                ctor_params = []
-
-                for svc in service_names:
-                    imports.append(f"import {{ {svc} }} from './{svc.lower()}.service';")
-                    ctor_params.append(f"private {svc[0].lower() + svc[1:]}: {svc}")
-
-                ctor_block = ""
-                if ctor_params:
-                    ctor_block = f"\n  constructor({', '.join(ctor_params)}) {{}}\n"
-
-                ts_code = f"""\
-{chr(10).join(imports)}
-
-@Component({{
-  selector: '{selector}',
-  templateUrl: './{base}.component.html'
-}})
-export class {class_name} {{{ctor_block}}}
-""".strip()
-
-                ts_path.write_text(ts_code, encoding="utf-8")
-                html_path.write_text(f"<h2>{class_name}</h2>", encoding="utf-8")
-
-                import_line = f"import {{ {class_name} }} from './{base}.component';"
-                if import_line not in routing_code:
-                    routing_code = import_line + "\n" + routing_code
-
-                route_entry = f"{{ path: '{base}', component: {class_name} }}"
-                if route_entry not in routing_code:
-                    routing_code = routing_code.replace(
-                        "const routes: Routes = [];",
-                        f"const routes: Routes = [\n  {route_entry}\n];"
-                    )
-
-                changes.append(
-                    Change(
-                        before_id=c.id,
-                        after_id=f"component_{c.id}",
-                        source=ChangeSource.RULE,
-                        reason=f"Controller → Angular Component wired + routed at /{base} (DI ready)",
-                    )
-                )
+        for c in controllers:
+            routing_code = self._emit_component(c, routing_code, changes)
 
         self.routing_path.write_text(routing_code, encoding="utf-8")
+        print("[ControllerToComponent] Routing module updated")
+        print("========== ControllerToComponentRule DONE ==========\n")
         return changes
+
+    def _emit_component(self, c, routing_code: str, changes: list) -> str:
+        """
+        c is ir.code_model.class_.Class — has .id (uuid str) and .name (str).
+        """
+        base = (
+            c.name
+            .replace("Controller", "")
+            .replace("Ctrl", "")
+            .lower()
+        )
+        class_name = (
+            c.name
+            .replace("Controller", "")
+            .replace("Ctrl", "")
+        ) + "Component"
+        selector = f"app-{base}"
+
+        ts_path   = self.out_dir / f"{base}.component.ts"
+        html_path = self.out_dir / f"{base}.component.html"
+
+        ts_code = (
+            f"import {{ Component }} from '@angular/core';\n\n"
+            f"@Component({{\n"
+            f"  selector: '{selector}',\n"
+            f"  templateUrl: './{base}.component.html'\n"
+            f"}})\n"
+            f"export class {class_name} {{}}\n"
+        )
+
+        ts_path.parent.mkdir(parents=True, exist_ok=True)
+        if not ts_path.exists() or ts_path.read_text(encoding="utf-8") != ts_code:
+            ts_path.write_text(ts_code, encoding="utf-8")
+            print(f"[ControllerToComponent] ✅ Written: {ts_path}")
+
+        if not html_path.exists():
+            html_path.write_text(f"<h2>{class_name}</h2>\n", encoding="utf-8")
+
+        import_line = f"import {{ {class_name} }} from './{base}.component';"
+        if import_line not in routing_code:
+            routing_code = import_line + "\n" + routing_code
+
+        route_entry = f"{{ path: '{base}', component: {class_name} }}"
+        if route_entry not in routing_code:
+            if "const routes: Routes = [];" in routing_code:
+                routing_code = routing_code.replace(
+                    "const routes: Routes = [];",
+                    f"const routes: Routes = [\n  {route_entry}\n];"
+                )
+            else:
+                routing_code = routing_code.replace(
+                    "const routes: Routes = [",
+                    f"const routes: Routes = [\n  {route_entry},"
+                )
+
+        changes.append(Change(
+            before_id=c.id,
+            after_id=f"component_{c.id}",
+            source=ChangeSource.RULE,
+            reason=f"Controller → Angular Component written to {ts_path}",
+        ))
+        return routing_code

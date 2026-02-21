@@ -1,0 +1,12 @@
+{
+  "SAFE": [
+    "controller:PanelCtrl"
+  ],
+  "RISKY": [],
+  "MANUAL": [
+    "directive:myPanel",
+    "compile:runtime_html",
+    "transclusion",
+    "isolated_scope_binding:@title"
+  ]
+}

@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 
 class ProgressTracker:
     def __init__(self, log_path="out/progress.json"):
@@ -12,7 +12,7 @@ class ProgressTracker:
             "path": str(path),
             "action": action,  # created | updated | unchanged | removed | rolled_back | skipped
             "info": info,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(UTC).isoformat()
         })
 
     def save(self):

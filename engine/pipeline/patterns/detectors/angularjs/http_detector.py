@@ -3,13 +3,14 @@ from pipeline.patterns.roles import SemanticRole
 from pipeline.patterns.confidence import Confidence
 
 class HttpDetector(PatternDetector):
-    def detect(self, ir):
+    def extract(self, analysis_result):
         matches = []
 
-        for call in getattr(ir, "http_calls", []):
-            if call.method in ("get", "post", "put", "delete"):
-                matches.append((call, SemanticRole.HTTP_CALL, Confidence.HIGH))
-            elif call.method.startswith("q_"):
-                matches.append((call, SemanticRole.PROMISE_CHAIN, Confidence.MEDIUM))
+        for call in getattr(analysis_result, "http_calls", []):
+            matches.append((
+                call,
+                SemanticRole.HTTP_CALL,
+                Confidence(0.9, "$http/$q call detected")
+            ))
 
         return matches

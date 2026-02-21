@@ -1,0 +1,10 @@
+{
+  "SAFE": [
+    "controller:MainCtrl",
+    "binding:title",
+    "binding:count",
+    "event:ng-click"
+  ],
+  "RISKY": [],
+  "MANUAL": []
+}

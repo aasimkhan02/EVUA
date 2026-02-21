@@ -1,0 +1,14 @@
+{
+  "routes": ["/login", "/dashboard"],
+  "features": {
+    "login": true,
+    "dashboard": true,
+    "userCardDirective": true,
+    "transclusion": true,
+    "httpCalls": ["/api/users", "/api/a", "/api/b", "/api/login"]
+  },
+  "watchers": {
+    "shallow": 0,
+    "deep": 1
+  }
+}

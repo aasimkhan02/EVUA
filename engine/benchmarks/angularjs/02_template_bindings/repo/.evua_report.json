@@ -1,0 +1,19 @@
+{
+  "angular_workspace": "out/angular-app",
+  "controllers": [
+    {
+      "id": "e03e10be-a6e8-4ee1-8647-93ffa8c635a6",
+      "name": "TodoCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\02_template_bindings\\repo\\controllers.js"
+    }
+  ],
+  "changes": [],
+  "validation": {
+    "tests_passed": false,
+    "snapshot_passed": false,
+    "failures": [
+      "Tests failed",
+      "Snapshot file(s) missing: C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\02_template_bindings\\repo\\snapshots\\before.json, C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\02_template_bindings\\repo\\snapshots\\after.json"
+    ]
+  }
+}

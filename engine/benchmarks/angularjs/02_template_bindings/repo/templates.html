@@ -1,0 +1,11 @@
+<div ng-controller="TodoCtrl">
+  <input ng-model="newTodo" placeholder="New todo" />
+  <button ng-click="addTodo()">Add</button>
+
+  <ul>
+    <li ng-repeat="t in todos">
+      <input type="checkbox" ng-model="t.done" />
+      <span ng-class="{ done: t.done }">{{ t.text | uppercase }}</span>
+    </li>
+  </ul>
+</div>

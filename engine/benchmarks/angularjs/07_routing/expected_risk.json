@@ -1,0 +1,13 @@
+{
+  "SAFE": [
+    "ui-view",
+    "ui-sref_basic",
+    "url_param_mapping"
+  ],
+  "RISKY": [
+    "inline_state_template",
+    "state_to_route_mapping",
+    "state_param_injection"
+  ],
+  "MANUAL": []
+}

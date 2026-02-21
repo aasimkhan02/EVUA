@@ -23,11 +23,11 @@ class PipelineRunner:
         return h.hexdigest()
 
     def run(self):
-        # ✅ Determinism: stable, sorted traversal
+        # Determinism: stable, sorted traversal
         files_before = sorted([p for p in self.out_root.rglob("*") if p.is_file()])
         before_hashes = {str(p): self._hash(p) for p in files_before}
 
-        # ✅ Snapshot files before run (for rollback)
+        # Snapshot files before run (for rollback)
         for p in files_before:
             self.rollback.snapshot(p)
 
@@ -35,10 +35,10 @@ class PipelineRunner:
         try:
             validation_passed = self.pipeline_fn()
         except Exception as e:
-            print("❌ Pipeline crashed:", e)
+            print("Pipeline crashed:", e)
             validation_passed = False
 
-        # ✅ Determinism + idempotency: stable traversal, compare hashes
+        # Determinism + idempotency: stable traversal, compare hashes
         files_after = sorted([p for p in self.out_root.rglob("*") if p.is_file()])
 
         for p in files_after:
@@ -52,14 +52,14 @@ class PipelineRunner:
             else:
                 self.progress.record(p, "updated")
 
-        # ✅ Record files that existed before but were removed
+        # Record files that existed before but were removed
         removed = set(before_hashes.keys()) - set(str(p) for p in files_after)
         for p in removed:
             self.progress.record(p, "removed")
 
-        # ✅ Safe rollback on failure
+        # Safe rollback on failure
         if not validation_passed:
-            print("↩️ Validation failed → rolling back generated files")
+            print("Validation failed -> rolling back generated files")
             self.rollback.rollback()
             for p in files_after:
                 self.progress.record(p, "rolled_back")

@@ -1,0 +1,239 @@
+{
+  "angular_workspace": "out/angular-app",
+  "controllers": [
+    {
+      "id": "c29128b3-db05-44eb-8d46-f450f785f984",
+      "name": "ProductController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js"
+    },
+    {
+      "id": "ee73b41f-a0c0-4c79-a9fa-755fbf2375bf",
+      "name": "UserController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js"
+    },
+    {
+      "id": "64fa36c6-f546-4bb6-9ad7-5996abeb3fc3",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "98479ccc-698f-4ae9-bb3b-6da952936233",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "e24d9899-2440-4e28-ba86-c83c7ad37f33",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "f74fc6a8-6f3c-4c82-8d67-58affbd67fb9",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "709e0627-5ce8-4242-8c54-7f39e8e29382",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "2f1db92c-cf7b-4c36-b8ae-20b3629bec58",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "005b3fa4-8660-4429-b8e8-74451dda796c",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "9982448d-ace2-4a7a-a6d2-274d6d9a8532",
+      "name": "AuthService",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js"
+    }
+  ],
+  "changes": [
+    {
+      "before_id": "c29128b3-db05-44eb-8d46-f450f785f984",
+      "before_name": "ProductController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js",
+      "after_id": "component_c29128b3-db05-44eb-8d46-f450f785f984",
+      "reason": "Controller \u2192 Angular Component written to out\\angular-app\\src\\app\\product.component.ts",
+      "output_path": "out\\angular-app\\src\\app\\product.component.ts",
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "Deep $watch detected (high behavioral coupling risk)",
+      "build_passed": false,
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "ee73b41f-a0c0-4c79-a9fa-755fbf2375bf",
+      "before_name": "UserController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js",
+      "after_id": "component_ee73b41f-a0c0-4c79-a9fa-755fbf2375bf",
+      "reason": "Controller \u2192 Angular Component written to out\\angular-app\\src\\app\\user.component.ts",
+      "output_path": "out\\angular-app\\src\\app\\user.component.ts",
+      "risk": "RiskLevel.RISKY",
+      "risk_reason": "Shallow $watch with heavy $scope mutation (state coupling risk)",
+      "build_passed": false,
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "9982448d-ace2-4a7a-a6d2-274d6d9a8532",
+      "before_name": "AuthService",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js",
+      "after_id": "injectable_9982448d-ace2-4a7a-a6d2-274d6d9a8532",
+      "reason": "Service \u2192 @Injectable(providedIn: 'root') at out\\angular-app\\src\\app\\authservice.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "64fa36c6-f546-4bb6-9ad7-5996abeb3fc3",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js_get",
+      "reason": "$http.get \u2192 HttpClient.get() migrated into out\\angular-app\\src\\app\\app.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "98479ccc-698f-4ae9-bb3b-6da952936233",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js_get",
+      "reason": "$http.get \u2192 HttpClient.get() migrated into out\\angular-app\\src\\app\\app.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "e24d9899-2440-4e28-ba86-c83c7ad37f33",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js_q_defer",
+      "reason": "$http.q_defer \u2192 HttpClient.q_defer() migrated into out\\angular-app\\src\\app\\app.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "f74fc6a8-6f3c-4c82-8d67-58affbd67fb9",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js_post",
+      "reason": "$http.post \u2192 HttpClient.post() migrated into out\\angular-app\\src\\app\\app.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "709e0627-5ce8-4242-8c54-7f39e8e29382",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js_post",
+      "reason": "$http.post \u2192 HttpClient.post() migrated into out\\angular-app\\src\\app\\app.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "2f1db92c-cf7b-4c36-b8ae-20b3629bec58",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js_post",
+      "reason": "$http.post \u2192 HttpClient.post() migrated into out\\angular-app\\src\\app\\app.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "005b3fa4-8660-4429-b8e8-74451dda796c",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js_get",
+      "reason": "$http.get \u2192 HttpClient.get() migrated into out\\angular-app\\src\\app\\app.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false
+    },
+    {
+      "before_id": "ee73b41f-a0c0-4c79-a9fa-755fbf2375bf",
+      "before_name": "UserController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\repo\\src\\app.js",
+      "after_id": "rx_ee73b41f-a0c0-4c79-a9fa-755fbf2375bf",
+      "reason": "Shallow $watch \u2192 RxJS BehaviorSubject rewrite",
+      "output_path": null,
+      "risk": "RiskLevel.RISKY",
+      "risk_reason": "Shallow $watch with heavy $scope mutation (state coupling risk)",
+      "build_passed": false,
+      "snapshot_passed": false
+    }
+  ],
+  "validation": {
+    "tests_passed": false,
+    "snapshot_passed": false,
+    "failures": [
+      "Tests failed",
+      "Snapshot file(s) missing: C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\snapshots\\before.json, C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\claude-benchmark\\snapshots\\after.json"
+    ]
+  },
+  "risk": {
+    "by_level": {
+      "SAFE": [
+        "9982448d-ace2-4a7a-a6d2-274d6d9a8532",
+        "64fa36c6-f546-4bb6-9ad7-5996abeb3fc3",
+        "98479ccc-698f-4ae9-bb3b-6da952936233",
+        "e24d9899-2440-4e28-ba86-c83c7ad37f33",
+        "f74fc6a8-6f3c-4c82-8d67-58affbd67fb9",
+        "709e0627-5ce8-4242-8c54-7f39e8e29382",
+        "2f1db92c-cf7b-4c36-b8ae-20b3629bec58",
+        "005b3fa4-8660-4429-b8e8-74451dda796c"
+      ],
+      "RISKY": [
+        "ee73b41f-a0c0-4c79-a9fa-755fbf2375bf",
+        "ee73b41f-a0c0-4c79-a9fa-755fbf2375bf"
+      ],
+      "MANUAL": [
+        "c29128b3-db05-44eb-8d46-f450f785f984"
+      ]
+    }
+  },
+  "transformation": {
+    "generated_files": [
+      "out\\angular-app\\src\\app\\product.component.ts",
+      "out\\angular-app\\src\\app\\user.component.ts"
+    ],
+    "auto_modernized": [
+      "ee73b41f-a0c0-4c79-a9fa-755fbf2375bf",
+      "9982448d-ace2-4a7a-a6d2-274d6d9a8532",
+      "64fa36c6-f546-4bb6-9ad7-5996abeb3fc3",
+      "98479ccc-698f-4ae9-bb3b-6da952936233",
+      "e24d9899-2440-4e28-ba86-c83c7ad37f33",
+      "f74fc6a8-6f3c-4c82-8d67-58affbd67fb9",
+      "709e0627-5ce8-4242-8c54-7f39e8e29382",
+      "2f1db92c-cf7b-4c36-b8ae-20b3629bec58",
+      "005b3fa4-8660-4429-b8e8-74451dda796c",
+      "ee73b41f-a0c0-4c79-a9fa-755fbf2375bf"
+    ],
+    "manual_required": [
+      "c29128b3-db05-44eb-8d46-f450f785f984"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "generated_files": [
+    "src/app/app.module.ts",
+    "src/app/todo/todo.component.ts",
+    "src/app/todo/todo.component.html"
+  ],
+  "file_level_changes": {
+    "controllers.js": "migrated_to_component",
+    "templates.html": "migrated_with_risky_template_bindings",
+    "app.js": "migrated_to_ng_module"
+  },
+  "min_auto_coverage": 0.9,
+  "expected_risky_ratio": 0.4
+}

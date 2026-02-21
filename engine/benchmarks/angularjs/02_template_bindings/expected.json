@@ -1,0 +1,24 @@
+{
+  "supported_constructs": [
+    "controller",
+    "ng-repeat",
+    "ng-click",
+    "ng-model",
+    "ng-class",
+    "filters"
+  ],
+  "auto_modernized": [
+    "TodoCtrl -> Angular Component",
+    "ng-repeat -> *ngFor",
+    "ng-click -> (click)",
+    "ng-model -> [(ngModel)]",
+    "ng-class -> [ngClass]",
+    "uppercase filter -> uppercase pipe"
+  ],
+  "manual_required": [],
+  "blocked": [],
+  "notes": [
+    "Two-way binding semantics differ between AngularJS and Angular",
+    "Filters to pipes may change behavior in edge cases"
+  ]
+}

@@ -1,8 +1,0 @@
-{
-  "directive": "legacyPanel",
-  "features": ["transclusion", "scope inheritance", "attribute binding (@)"],
-  "parentState": {
-    "user": { "name": "Alice" },
-    "clicks": 0
-  }
-}

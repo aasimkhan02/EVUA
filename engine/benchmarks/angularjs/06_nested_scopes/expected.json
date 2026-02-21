@@ -1,0 +1,23 @@
+{
+  "supported_constructs": [
+    "controller",
+    "nested_controllers",
+    "scope_inheritance",
+    "object_mutation"
+  ],
+  "auto_modernized": [
+    "ParentCtrl -> Angular Component",
+    "ChildCtrl -> Angular Component (shell only)"
+  ],
+  "manual_required": [
+    "scope_inheritance",
+    "shared_state_mutation_across_scopes"
+  ],
+  "blocked": [
+    "nested_scope_mutation"
+  ],
+  "notes": [
+    "AngularJS prototypal scope inheritance has no direct equivalent in modern Angular",
+    "Shared mutable state across nested controllers must be refactored into services or inputs/outputs"
+  ]
+}

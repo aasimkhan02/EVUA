@@ -1,0 +1,10 @@
+{
+  "SAFE": [
+    "watch:price",
+    "binding:price",
+    "binding:total",
+    "template:interpolation"
+  ],
+  "RISKY": [],
+  "MANUAL": []
+}
