@@ -1,182 +1,226 @@
-🚀 EVUA — Automated Legacy Upgrade Engine
+# 🚀 EVUA — Automated Legacy Upgrade Engine  
+**AngularJS (1.x) → Modern Angular (v15+)**
 
-AngularJS (1.x) → Modern Angular (v15+)
-
-EVUA is an automated modernization engine that migrates legacy AngularJS (1.x) codebases to modern Angular.
+EVUA is an automated modernization engine that migrates legacy AngularJS (1.x) codebases to modern Angular.  
 It converts most application logic automatically, flags risky or ambiguous cases for manual review, and measures accuracy using a benchmark harness.
 
-🎯 Goal: 80–90% automated migration for real-world AngularJS projects.
+**🎯 Goal:** 80–90% automated migration for real-world AngularJS projects.
 
-✨ What EVUA Does (Today)
+---
+
+## ✨ What EVUA Does
 
 EVUA runs a full end-to-end pipeline on a legacy repo:
 
-Ingestion → Analysis → Pattern Detection → Transformation → Risk Assessment → Validation → Reporting → Benchmarking
+> **Ingestion → Analysis → Pattern Detection → Transformation → Risk Assessment → Validation → Reporting → Benchmarking**
 
-✅ Currently Supported (Working)
+---
 
-Controllers → Angular Components
+## ✅ Working Features
 
-Services / Factories → Angular Injectable Services
+| Feature | Status |
+|--------|--------|
+| Controllers → Angular Components | ✅ |
+| Services / Factories → Angular Injectable Services | ✅ |
+| `$http` → `HttpClient` | ✅ |
+| Simple `$scope.$watch` → RxJS (`BehaviorSubject`) | ✅ |
+| Angular workspace scaffold | ✅ |
+| JSON + Markdown reports | ✅ |
+| Benchmark harness | ✅ |
+| Risk classification (SAFE / RISKY / MANUAL) | ✅ |
 
-$http → HttpClient
+---
 
-Simple $scope.$watch → RxJS (BehaviorSubject)
+## ⚠️ In Progress
 
-Angular workspace scaffold (out/angular-app)
+| Feature | Status |
+|--------|--------|
+| HTML template generation (`.component.html`) | 🚧 |
+| Routing module generation (`app-routing.module.ts`) | 🚧 |
+| Directive detection | 🚧 |
+| Directive auto-migration | ⏳ |
+| Naming normalization | 🚧 |
+| Deep watcher handling | ⏳ |
+| Complex template binding migration | ⏳ |
 
-Risk classification: SAFE / RISKY / MANUAL
+---
 
-JSON + Markdown reports (.evua_report.json, .evua_report.md)
+## 📊 Current Accuracy (Benchmarks)
 
-Benchmark harness with measurable accuracy metrics
+| Metric | Current Result |
+|--------|----------------|
+| Auto coverage | ~100% |
+| Manual recall | ~100% (directives pending) |
+| File accuracy | ~33% – 60% |
+| Validation | ❌ (no real tests yet) |
 
-⚠️ In Progress (Active Work)
+**Interpretation:**  
+EVUA migrates the right things, but does not yet generate all required Angular files.
 
-HTML template generation (.component.html)
+**📈 Project status:** ~75% complete (MVP)
 
-Routing module generation (app-routing.module.ts)
+---
 
-Directive detection + manual-risk classification
+## 🧠 Architecture Overview
 
-Naming normalization (ConfigFactory → configfactory.service.ts)
-
-More complete risk rules (deep watches, complex bindings)
-
-📊 Current Accuracy (Benchmarks)
-
-On internal AngularJS benchmarks:
-
-Auto coverage: ~100%
-
-Manual recall: ~100% (directives pending)
-
-File accuracy: ~33% – 60% (missing HTML + routing files)
-
-Validation: currently failing (no real tests wired yet)
-
-Interpretation:
-EVUA correctly migrates what should be migrated, but is still improving how complete the generated Angular project is.
-
-📈 Project status: ~75% complete (MVP stage)
-
-🧠 How It Works (Architecture)
 engine/
-  ingestion/        # reads legacy repo
-  analysis/         # builds IR (controllers, services, http, watchers)
-  patterns/         # detects AngularJS patterns
-  transforms/       # migration rules (controller → component, etc.)
-  risk/             # SAFE / RISKY / MANUAL classification
-  reporting/        # JSON + Markdown reports
-  cli.py            # entrypoint
+├── .gitignore
+├── cli.py
+├── package-lock.json
+├── __init__.py
+│
+├── benchmarks/
+│   └── angularjs/
+│       ├── bench-02-multi-service/
+│       ├── bench-03-directive-hazard/
+│       ├── bench-04-nested-scope/
+│       ├── bench-05-mixed-realistic/
+│       └── evua-benchmark-01/
+│
+├── evaluation/
+│   ├── config.py
+│   ├── harness.py
+│   ├── metrics.py
+│   ├── reporters.py
+│   ├── runners.py
+│   └── schemas.py
+│
+├── ir/
+│   ├── behavior_model/
+│   ├── code_model/
+│   ├── dependency_model/
+│   ├── migration_model/
+│   ├── template_model/
+│   └── tests/
+│
+├── orchestration/
+│   ├── pipeline_runner.py
+│   ├── progress_tracker.py
+│   ├── rollback_manager.py
+│   ├── stage_controller.py
+│   └── __init__.py
+│
+├── out/
+│   └── angular-app/          # Generated Angular workspace output
+│
+├── pipeline/
+│   ├── ai/
+│   │   └── adapters/
+│   │       └── openai.py
+│   │
+│   ├── analysis/
+│   │   └── analyzers/
+│   │       ├── html.py
+│   │       ├── js.py
+│   │       └── py.py
+│   │
+│   ├── ingestion/
+│   ├── patterns/
+│   │   └── detectors/angularjs/
+│   │       ├── controller_detector.py
+│   │       ├── http_detector.py
+│   │       ├── service_detector.py
+│   │       ├── simple_watch_detector.py
+│   │       └── template_binding_detector.py
+│   │
+│   ├── reporting/
+│   │   └── reporters/
+│   │       ├── json_reporter.py
+│   │       └── markdown_reporter.py
+│   │
+│   ├── risk/
+│   │   └── rules/angularjs/
+│   │       ├── template_binding_risk.py
+│   │       └── watcher_risk.py
+│   │
+│   ├── transformation/
+│   │   └── rules/angularjs/
+│   │       ├── controller_to_component.py
+│   │       ├── http_to_httpclient.py
+│   │       ├── service_to_injectable.py
+│   │       └── simple_watch_to_rxjs.py
+│   │
+│   ├── validation/
+│   │   └── runners/
+│   │       ├── lint.py
+│   │       └── tests.py
+│   │
+│   └── tests/
+│
+└── reports/
 
-evaluation/
-  harness.py        # runs benchmarks
-  metrics.py        # accuracy metrics
-  schemas.py        # report schemas
-  reporters.py      # benchmark output
+## ▶️ Usage
 
-benchmarks/
-  angularjs/        # test repos + expected outputs
+### Run migration
 
-EVUA converts legacy code into an Intermediate Representation (IR).
-All transformations and risk decisions operate on this IR, making the engine extensible to other tech stacks later.
-
-▶️ Usage
-Run EVUA on a project
+```bash
 python engine/cli.py path/to/angularjs-repo
+```
 
-Outputs:
+## Outputs:
 
-Migrated Angular workspace: out/angular-app/
-
+Migrated Angular app: out/angular-app/
 Report: .evua_report.json, .evua_report.md
 
-Run benchmarks + accuracy evaluation
+## Run benchmarks
+```bash
 python -m evaluation.harness
+```
 
-Outputs:
+## Outputs:
 
-Per-benchmark metrics
-
+Metrics per benchmark
 Reports in /reports
 
-🧪 Metrics Explained
-Metric	Meaning
-auto_coverage	% of expected components/services auto-migrated
-manual_recall	% of expected manual cases correctly flagged
-file_accuracy	% of expected Angular files generated
-validation	Whether tests/snapshots passed
+## 🧪 Metrics Explained
 
-These metrics make progress measurable and prevent regressions.
+| Metric        | Meaning |
+|---------------|---------|
+| auto_coverage | % of expected components/services auto-migrated |
+| manual_recall | % of expected manual cases correctly flagged |
+| file_accuracy | % of expected Angular files generated |
+| validation    | Snapshot/test validation result |
 
-🛠️ Roadmap
-Short-Term (MVP Completion)
+---
 
- Generate .component.html files
+## 🛠️ Roadmap
 
- Always generate app-routing.module.ts
+### MVP Completion
 
- Directive detection + manual-risk flag
+- [ ] Generate `.component.html` files  
+- [ ] Always generate `app-routing.module.ts`  
+- [ ] Directive detection + manual-risk flag  
+- [ ] Naming normalization  
+- [ ] File accuracy ≥ 85%  
 
- Naming normalization
+### Next Phase
 
- Improve file accuracy to 85%+
+- [ ] `$routeProvider` → Angular Router  
+- [ ] Filters → Pipes  
+- [ ] Template binding rewrite  
+- [ ] Deep `$scope.$watch` handling  
+- [ ] `ng build` passes on output  
 
-Mid-Term
+---
 
- $routeProvider → Angular Router
+## 🤝 Contributing
 
- Filters → Pipes
+Good first contributions:
 
- Template binding rewrite
-
- Deep $scope.$watch handling
-
- Buildable Angular output (ng build)
-
-Long-Term (EVUA Vision)
-
-EVUA is designed to support multi-stack modernization:
-
-AngularJS → Angular
-
-Python 2 → Python 3
-
-Java 8 → Java 17
-
-CommonJS → ES Modules
-
-.NET Framework → modern .NET
-
-AngularJS is the proving ground.
-
-🤝 Contributing
-
-Good first issues:
-
-Add new pattern detectors (directives, filters)
-
-Add new transformation rules
-
-Improve Angular file generation
-
-Add new benchmarks
-
-Improve risk heuristics
-
-Improve template conversion
+- Add AngularJS detectors (directives, filters)  
+- Add transformation rules  
+- Improve Angular file generation  
+- Add benchmarks  
+- Improve risk heuristics  
 
 PRs welcome.
 
-📌 TL;DR
+---
 
-EVUA already migrates most AngularJS logic automatically
+## 📌 TL;DR
 
-The pipeline is stable and benchmarked
-
-Accuracy is measurable
-
-Remaining work is mainly Angular scaffolding + directives
-
-This is a real modernization engine, not a demo script
+- EVUA already migrates most AngularJS logic automatically  
+- The pipeline is real and benchmarked  
+- Accuracy is measurable  
+- Remaining work is mostly Angular scaffolding + directives  
+- This is a real modernization engine, not a toy script  
