@@ -63,6 +63,7 @@ EVUA migrates the right things, but does not yet generate all required Angular f
 
 ## 🧠 Architecture Overview
 
+```
 engine/
 ├── .gitignore
 ├── cli.py
@@ -148,6 +149,7 @@ engine/
 │   └── tests/
 │
 └── reports/
+```
 
 ## ▶️ Usage
 
