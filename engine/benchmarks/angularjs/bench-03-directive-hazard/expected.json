@@ -1,0 +1,15 @@
+{
+  "_comment": "bench-03: Directive hazard test. Precision test for risk isolation between safe controller and MANUAL directives.",
+  "supported_constructs": ["controller", "directive_compile", "directive_link", "directive_transclude", "http_get"],
+  "auto_modernized": ["SafeController"],
+  "manual_required": ["modalDirective", "tooltipDirective"],
+  "blocked": [],
+  "notes": [
+    "SafeController has no watch/compile — must be SAFE despite dangerous directives in same file",
+    "modalDirective uses compile() AND transclude — double MANUAL signal",
+    "tooltipDirective uses link() — MANUAL",
+    "KEY PRECISION TEST: risk must not bleed from directives onto SafeController",
+    "Engine currently does not emit changes for directives directly — they appear as behaviors",
+    "If engine flags SafeController as MANUAL it is a false positive"
+  ]
+}

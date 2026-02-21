@@ -1,0 +1,13 @@
+{
+  "UserController": {
+    "users": [],
+    "query": "",
+    "loading": false,
+    "filteredUsers": []
+  },
+  "ProductController": {
+    "products": [],
+    "cart": [],
+    "total": 0
+  }
+}

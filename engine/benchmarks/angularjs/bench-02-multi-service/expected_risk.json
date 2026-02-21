@@ -1,0 +1,6 @@
+{
+  "_comment": "All services/factory are SAFE. AppController is SAFE (no watch, no compile).",
+  "SAFE": ["UserService", "NotificationService", "ConfigFactory", "AppController"],
+  "RISKY": [],
+  "MANUAL": []
+}

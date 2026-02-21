@@ -35,8 +35,10 @@ class JSONReporter:
         def extract_output_path(reason: str):
             if not reason:
                 return None
-            if "written to " in reason:
-                return reason.split("written to ")[-1]
+            if "Written:" in reason:
+                return reason.split("Written:", 1)[-1].strip()
+            if "Migrating:" in reason:
+                return reason.split("Migrating:", 1)[-1].strip()
             if "wired into Angular app at " in reason:
                 return reason.split("wired into Angular app at ")[-1]
             if "files:" in reason:
@@ -71,4 +73,4 @@ class JSONReporter:
             "validation": validation or {},
         }
 
-        return json.dumps(self._to_json_safe(report), indent=2)
+        return json.dumps(self._to_json_safe(report), indent=2, ensure_ascii=False)

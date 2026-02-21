@@ -1,0 +1,66 @@
+{
+  "angular_workspace": "out/angular-app",
+  "controllers": [
+    {
+      "id": "db4d93f0-4aac-448c-88c0-b70c29baf28e",
+      "name": "SafeController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-03-directive-hazard\\repo\\src\\app.js"
+    },
+    {
+      "id": "3d5faa6d-bfd8-4f74-8ee7-56026dd4873e",
+      "name": "unknown",
+      "file": "unknown"
+    }
+  ],
+  "changes": [
+    {
+      "before_id": "db4d93f0-4aac-448c-88c0-b70c29baf28e",
+      "before_name": "SafeController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-03-directive-hazard\\repo\\src\\app.js",
+      "after_id": "component_db4d93f0-4aac-448c-88c0-b70c29baf28e",
+      "reason": "Controller → Angular Component written to out\\angular-app\\src\\app\\safe.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "3d5faa6d-bfd8-4f74-8ee7-56026dd4873e",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_safe_get",
+      "reason": "$http.get(/api/items) -> HttpClient.get() migrated into out\\angular-app\\src\\app\\safe.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    }
+  ],
+  "validation": {
+    "tests_passed": false,
+    "snapshot_passed": true,
+    "failures": [
+      "Tests failed"
+    ]
+  },
+  "risk": {
+    "by_level": {
+      "SAFE": [
+        "SafeController"
+      ],
+      "RISKY": [],
+      "MANUAL": []
+    }
+  },
+  "transformation": {
+    "generated_files": [
+      "app\\src\\app\\safe.component.ts"
+    ],
+    "auto_modernized": [
+      "SafeController"
+    ],
+    "manual_required": []
+  }
+}

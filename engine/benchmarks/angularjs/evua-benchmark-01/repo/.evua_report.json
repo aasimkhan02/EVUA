@@ -1,0 +1,225 @@
+{
+  "angular_workspace": "out/angular-app",
+  "controllers": [
+    {
+      "id": "9fca0888-6f6d-460f-936e-31027785c83b",
+      "name": "ProductController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\evua-benchmark-01\\repo\\src\\app.js"
+    },
+    {
+      "id": "7a3ffde6-cb0e-4f7a-bf3e-aff88f356cb4",
+      "name": "UserController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\evua-benchmark-01\\repo\\src\\app.js"
+    },
+    {
+      "id": "433d0cbf-95a4-4498-99b0-2cf61bc9a02c",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "93a33de5-f1ad-4248-b610-50dfa0930919",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "8c6c6d99-eef5-4b42-a027-bd8025097084",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "472a5f9f-98f8-48ab-ad8a-42f0ffbdeda2",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "47d56de6-b2a9-4240-a7ee-d108078782cb",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "c95b196c-e869-4e4e-918f-e52c0e1f7710",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "103f0d9f-236a-49d3-b2fd-a8eda947e740",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "dfb0877a-81c3-43a9-acb5-432a53986b65",
+      "name": "AuthService",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\evua-benchmark-01\\repo\\src\\app.js"
+    }
+  ],
+  "changes": [
+    {
+      "before_id": "9fca0888-6f6d-460f-936e-31027785c83b",
+      "before_name": "ProductController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\evua-benchmark-01\\repo\\src\\app.js",
+      "after_id": "component_9fca0888-6f6d-460f-936e-31027785c83b",
+      "reason": "Controller → Angular Component written to out\\angular-app\\src\\app\\product.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "Deep $watch detected (high behavioral coupling risk)",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "7a3ffde6-cb0e-4f7a-bf3e-aff88f356cb4",
+      "before_name": "UserController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\evua-benchmark-01\\repo\\src\\app.js",
+      "after_id": "component_7a3ffde6-cb0e-4f7a-bf3e-aff88f356cb4",
+      "reason": "Controller → Angular Component written to out\\angular-app\\src\\app\\user.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "Shallow $watch → safe RxJS BehaviorSubject rewrite",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "dfb0877a-81c3-43a9-acb5-432a53986b65",
+      "before_name": "AuthService",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\evua-benchmark-01\\repo\\src\\app.js",
+      "after_id": "injectable_dfb0877a-81c3-43a9-acb5-432a53986b65",
+      "reason": "Service → @Injectable(providedIn: 'root') at out\\angular-app\\src\\app\\authservice.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "433d0cbf-95a4-4498-99b0-2cf61bc9a02c",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_auth_post",
+      "reason": "$http.post(/api/login) -> HttpClient.post() migrated into out\\angular-app\\src\\app\\auth.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "93a33de5-f1ad-4248-b610-50dfa0930919",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_auth_post",
+      "reason": "$http.post(/api/logout) -> HttpClient.post() migrated into out\\angular-app\\src\\app\\auth.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "8c6c6d99-eef5-4b42-a027-bd8025097084",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_auth_get",
+      "reason": "$http.get(/api/profile) -> HttpClient.get() migrated into out\\angular-app\\src\\app\\auth.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "472a5f9f-98f8-48ab-ad8a-42f0ffbdeda2",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_product_get",
+      "reason": "$http.get(/api/products) -> HttpClient.get() migrated into out\\angular-app\\src\\app\\product.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "47d56de6-b2a9-4240-a7ee-d108078782cb",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_product_q_defer",
+      "reason": "$q.q_defer() detected in ProductController — q_defer stub written to out\\angular-app\\src\\app\\product.component.ts (MANUAL review required)",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "$q.defer() detected — Promise chain requires manual RxJS migration",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "c95b196c-e869-4e4e-918f-e52c0e1f7710",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_product_post",
+      "reason": "$http.post(/api/checkout) -> HttpClient.post() migrated into out\\angular-app\\src\\app\\product.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "103f0d9f-236a-49d3-b2fd-a8eda947e740",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_user_get",
+      "reason": "$http.get(/api/users) -> HttpClient.get() migrated into out\\angular-app\\src\\app\\user.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "7a3ffde6-cb0e-4f7a-bf3e-aff88f356cb4",
+      "before_name": "UserController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\evua-benchmark-01\\repo\\src\\app.js",
+      "after_id": "rx_7a3ffde6-cb0e-4f7a-bf3e-aff88f356cb4",
+      "reason": "Shallow $watch → RxJS BehaviorSubject rewrite",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "Shallow $watch → safe RxJS BehaviorSubject rewrite",
+      "build_passed": false,
+      "snapshot_passed": true
+    }
+  ],
+  "validation": {
+    "tests_passed": false,
+    "snapshot_passed": true,
+    "failures": [
+      "Tests failed"
+    ]
+  },
+  "risk": {
+    "by_level": {
+      "SAFE": [
+        "UserController",
+        "AuthService",
+        "ProductController"
+      ],
+      "RISKY": [],
+      "MANUAL": [
+        "ProductController"
+      ]
+    }
+  },
+  "transformation": {
+    "generated_files": [
+      "app\\src\\app\\product.component.ts",
+      "app\\src\\app\\user.component.ts",
+      "app\\src\\app\\authservice.service.ts",
+      "app\\src\\app\\auth.component.ts"
+    ],
+    "auto_modernized": [
+      "UserController",
+      "AuthService",
+      "ProductController"
+    ],
+    "manual_required": [
+      "ProductController"
+    ]
+  }
+}

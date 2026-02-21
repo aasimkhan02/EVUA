@@ -1,0 +1,22 @@
+{
+  "_comment": "bench-05 file generation expectations. 3 auto-migrated components + 1 service.",
+  "generated_files": [
+    "out/angular-app/src/app/notificationservice.service.ts",
+    "out/angular-app/src/app/search.component.ts",
+    "out/angular-app/src/app/search.component.html",
+    "out/angular-app/src/app/admin.component.ts",
+    "out/angular-app/src/app/admin.component.html",
+    "out/angular-app/src/app/app-routing.module.ts"
+  ],
+  "min_auto_coverage": 0.6,
+  "expected_manual_ratio": 0.25,
+  "expected_validation": false,
+  "_engine_failure_modes": {
+    "q_defer_not_manual": "If OrderController is SAFE/RISKY, WatcherRiskRule is not reading q_defer from change.reason",
+    "risk_contamination": "If SearchController or AdminController is MANUAL, risk isolation is broken",
+    "shallow_watch_safe": "SearchController has 2 writes — must be SAFE not RISKY (threshold is 6)",
+    "behaviorsubject_injected": "SearchController shallow watch must trigger SimpleWatchToRxjsRule",
+    "http_attribution": "Admin $http.get calls must go to admin.component.ts not app.component.ts",
+    "threshold_sensitivity": "AdminController 5 writes at threshold=6 is SAFE. Changing threshold to 5 flips it to RISKY. Benchmark is written for threshold=6."
+  }
+}

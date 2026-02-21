@@ -1,0 +1,18 @@
+{
+  "_comment": "bench-05: Full realistic app. Every rule fires. Tests isolation — MANUAL must not contaminate adjacent SAFE changes.",
+  "supported_constructs": [
+    "service", "controller", "shallow_watch", "deep_watch",
+    "q_defer", "http_get", "http_post", "http_put"
+  ],
+  "auto_modernized": ["NotificationService", "SearchController", "AdminController"],
+  "manual_required": ["OrderController"],
+  "blocked": [],
+  "notes": [
+    "NotificationService: clean service — SAFE",
+    "SearchController: shallow $watch, only 2 scope writes — SAFE + BehaviorSubject injected",
+    "OrderController: $q.defer AND deep $watch — MANUAL on both counts",
+    "AdminController: 5 scope writes, no watch. With threshold=6 (current default) → SAFE",
+    "CRITICAL: OrderController MANUAL must not bleed into SearchController or AdminController",
+    "This is the hardest benchmark — tests rule isolation under realistic load"
+  ]
+}

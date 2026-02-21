@@ -1,0 +1,14 @@
+{
+  "_comment": "bench-04: Nested scope + deep watch compound MANUAL test. StatusController must stay SAFE.",
+  "supported_constructs": ["controller", "deep_watch", "nested_scope", "http_get"],
+  "auto_modernized": ["StatusController"],
+  "manual_required": ["DashboardController", "ReportController"],
+  "blocked": [],
+  "notes": [
+    "DashboardController: deep $watch (true) AND $scope.$new() — both MANUAL signals",
+    "ReportController: $scope.$new() only — still MANUAL",
+    "StatusController: no watch, no nested scope, only 1 scope write — SAFE",
+    "KEY TEST: engine must isolate risk per controller, not per file",
+    "If StatusController is flagged MANUAL, risk isolation is broken"
+  ]
+}

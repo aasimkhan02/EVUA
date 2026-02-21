@@ -3,192 +3,432 @@
     "path": "out\\.backup\\out\\angular-app\\angular.json",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.160823+00:00"
+    "timestamp": "2026-02-21T14:31:52.970133+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\package.json",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.161042+00:00"
+    "timestamp": "2026-02-21T14:31:52.970357+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\admin.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.970551+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\admin.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.970749+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\app\\app-routing.module.ts",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.161239+00:00"
+    "timestamp": "2026-02-21T14:31:52.970942+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\app.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.971127+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\app\\app.component.ts",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.161426+00:00"
+    "timestamp": "2026-02-21T14:31:52.971314+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\app\\app.module.ts",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.161610+00:00"
+    "timestamp": "2026-02-21T14:31:52.971495+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\auth.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.971681+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\app\\authservice.service.ts",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.161795+00:00"
+    "timestamp": "2026-02-21T14:31:52.971901+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\config.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.972092+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\dashboard.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.972282+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\dashboard.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.972533+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\notification.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.972835+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\notificationservice.service.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.973056+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\order.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.973246+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\order.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.973436+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\app\\product.component.html",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.161976+00:00"
+    "timestamp": "2026-02-21T14:31:52.973625+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\app\\product.component.ts",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.162158+00:00"
+    "timestamp": "2026-02-21T14:31:52.973816+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\report.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.973998+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\report.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.974183+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\safe.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.974363+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\safe.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.974543+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\search.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.974727+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\search.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.974910+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\status.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.975089+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\status.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.975268+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\app\\user.component.html",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.162336+00:00"
+    "timestamp": "2026-02-21T14:31:52.975446+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\app\\user.component.ts",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.162514+00:00"
+    "timestamp": "2026-02-21T14:31:52.975631+00:00"
+  },
+  {
+    "path": "out\\.backup\\out\\angular-app\\src\\app\\userservice.service.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.975871+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\index.html",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.162692+00:00"
+    "timestamp": "2026-02-21T14:31:52.976072+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\main.ts",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.162869+00:00"
+    "timestamp": "2026-02-21T14:31:52.976253+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\src\\polyfills.ts",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.163049+00:00"
+    "timestamp": "2026-02-21T14:31:52.976466+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\tsconfig.app.json",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.163227+00:00"
+    "timestamp": "2026-02-21T14:31:52.976651+00:00"
   },
   {
     "path": "out\\.backup\\out\\angular-app\\tsconfig.json",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.163404+00:00"
+    "timestamp": "2026-02-21T14:31:52.976840+00:00"
   },
   {
     "path": "out\\.backup\\out\\progress.json",
     "action": "created",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.163601+00:00"
+    "timestamp": "2026-02-21T14:31:52.977063+00:00"
   },
   {
     "path": "out\\angular-app\\angular.json",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.163793+00:00"
+    "timestamp": "2026-02-21T14:31:52.977256+00:00"
   },
   {
     "path": "out\\angular-app\\package.json",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.163979+00:00"
+    "timestamp": "2026-02-21T14:31:52.977448+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\admin.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.977631+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\admin.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.977823+00:00"
   },
   {
     "path": "out\\angular-app\\src\\app\\app-routing.module.ts",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.164168+00:00"
+    "timestamp": "2026-02-21T14:31:52.978011+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\app.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.978195+00:00"
   },
   {
     "path": "out\\angular-app\\src\\app\\app.component.ts",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.164351+00:00"
+    "timestamp": "2026-02-21T14:31:52.978376+00:00"
   },
   {
     "path": "out\\angular-app\\src\\app\\app.module.ts",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.164533+00:00"
+    "timestamp": "2026-02-21T14:31:52.978559+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\auth.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.978750+00:00"
   },
   {
     "path": "out\\angular-app\\src\\app\\authservice.service.ts",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.164728+00:00"
+    "timestamp": "2026-02-21T14:31:52.978932+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\config.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.979114+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\dashboard.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.979295+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\dashboard.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.979475+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\notification.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.979658+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\notificationservice.service.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.979848+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\order.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.980030+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\order.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.980212+00:00"
   },
   {
     "path": "out\\angular-app\\src\\app\\product.component.html",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.164910+00:00"
+    "timestamp": "2026-02-21T14:31:52.980394+00:00"
   },
   {
     "path": "out\\angular-app\\src\\app\\product.component.ts",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.165092+00:00"
+    "timestamp": "2026-02-21T14:31:52.980579+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\report.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.980804+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\report.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.981030+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\safe.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.981217+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\safe.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.981646+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\search.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.982121+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\search.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.982393+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\status.component.html",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.982670+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\status.component.ts",
+    "action": "unchanged",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.983039+00:00"
   },
   {
     "path": "out\\angular-app\\src\\app\\user.component.html",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.165272+00:00"
+    "timestamp": "2026-02-21T14:31:52.983281+00:00"
   },
   {
     "path": "out\\angular-app\\src\\app\\user.component.ts",
+    "action": "updated",
+    "info": "",
+    "timestamp": "2026-02-21T14:31:52.983476+00:00"
+  },
+  {
+    "path": "out\\angular-app\\src\\app\\userservice.service.ts",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.165455+00:00"
+    "timestamp": "2026-02-21T14:31:52.983663+00:00"
   },
   {
     "path": "out\\angular-app\\src\\index.html",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.165635+00:00"
+    "timestamp": "2026-02-21T14:31:52.983848+00:00"
   },
   {
     "path": "out\\angular-app\\src\\main.ts",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.165817+00:00"
+    "timestamp": "2026-02-21T14:31:52.984037+00:00"
   },
   {
     "path": "out\\angular-app\\src\\polyfills.ts",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.165994+00:00"
+    "timestamp": "2026-02-21T14:31:52.984219+00:00"
   },
   {
     "path": "out\\angular-app\\tsconfig.app.json",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.166173+00:00"
+    "timestamp": "2026-02-21T14:31:52.984402+00:00"
   },
   {
     "path": "out\\angular-app\\tsconfig.json",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.166353+00:00"
+    "timestamp": "2026-02-21T14:31:52.984583+00:00"
   },
   {
     "path": "out\\progress.json",
     "action": "unchanged",
     "info": "",
-    "timestamp": "2026-02-21T11:22:53.166548+00:00"
+    "timestamp": "2026-02-21T14:31:52.984800+00:00"
   }
 ]

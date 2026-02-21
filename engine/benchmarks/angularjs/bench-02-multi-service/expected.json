@@ -1,0 +1,13 @@
+{
+  "_comment": "bench-02: 2 services + 1 factory. Tests factory keyword support and multi-service detection.",
+  "supported_constructs": ["service", "factory", "http_get", "http_post", "controller"],
+  "auto_modernized": ["UserService", "NotificationService", "ConfigFactory", "AppController"],
+  "manual_required": [],
+  "blocked": [],
+  "notes": [
+    "All 3 service/factory registrations should be detected and migrated to @Injectable()",
+    "factory keyword must be treated same as service",
+    "AppController has no watches or compile — should be SAFE",
+    "HTTP calls inside services should be attributed to the correct service component"
+  ]
+}

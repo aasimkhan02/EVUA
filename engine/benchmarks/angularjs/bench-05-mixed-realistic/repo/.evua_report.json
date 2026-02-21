@@ -1,0 +1,279 @@
+{
+  "angular_workspace": "out/angular-app",
+  "controllers": [
+    {
+      "id": "b451570c-5ab3-4700-ad51-73a72c389c59",
+      "name": "AdminController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-05-mixed-realistic\\repo\\src\\app.js"
+    },
+    {
+      "id": "e6f79043-4b76-41ca-8e0d-ea3a850622c1",
+      "name": "OrderController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-05-mixed-realistic\\repo\\src\\app.js"
+    },
+    {
+      "id": "a82d8afe-33c9-4367-88e8-2a3813a7776d",
+      "name": "SearchController",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-05-mixed-realistic\\repo\\src\\app.js"
+    },
+    {
+      "id": "e731fe1c-16af-4f1e-9848-460a902ecbd1",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "a8ec3dd1-f123-4e3e-a180-15e40cd981a9",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "2a79b0b6-d0db-45e7-8dd5-5e1913c3f688",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "0168cb65-bdc9-433c-8db1-655f03a18f71",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "d10c721e-fbb5-4a04-adea-ece226e8f220",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "34277369-44d6-4a5f-975d-10f9709ea486",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "6d60f77e-f75d-452c-8e48-87a8ec28b48e",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "850d7519-1642-4113-9f20-4f5a109ccad3",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "0612791f-512f-48da-be4c-27deec05e0f5",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "b5615418-7e7c-4fcc-aadf-6632f08d4403",
+      "name": "NotificationService",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-05-mixed-realistic\\repo\\src\\app.js"
+    }
+  ],
+  "changes": [
+    {
+      "before_id": "b451570c-5ab3-4700-ad51-73a72c389c59",
+      "before_name": "AdminController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-05-mixed-realistic\\repo\\src\\app.js",
+      "after_id": "component_b451570c-5ab3-4700-ad51-73a72c389c59",
+      "reason": "Controller → Angular Component written to out\\angular-app\\src\\app\\admin.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "e6f79043-4b76-41ca-8e0d-ea3a850622c1",
+      "before_name": "OrderController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-05-mixed-realistic\\repo\\src\\app.js",
+      "after_id": "component_e6f79043-4b76-41ca-8e0d-ea3a850622c1",
+      "reason": "Controller → Angular Component written to out\\angular-app\\src\\app\\order.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "Deep $watch detected (high behavioral coupling risk)",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "a82d8afe-33c9-4367-88e8-2a3813a7776d",
+      "before_name": "SearchController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-05-mixed-realistic\\repo\\src\\app.js",
+      "after_id": "component_a82d8afe-33c9-4367-88e8-2a3813a7776d",
+      "reason": "Controller → Angular Component written to out\\angular-app\\src\\app\\search.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "Shallow $watch → safe RxJS BehaviorSubject rewrite",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "b5615418-7e7c-4fcc-aadf-6632f08d4403",
+      "before_name": "NotificationService",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-05-mixed-realistic\\repo\\src\\app.js",
+      "after_id": "injectable_b5615418-7e7c-4fcc-aadf-6632f08d4403",
+      "reason": "Service → @Injectable(providedIn: 'root') at out\\angular-app\\src\\app\\notificationservice.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "e731fe1c-16af-4f1e-9848-460a902ecbd1",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_admin_get",
+      "reason": "$http.get(/api/admin/users) -> HttpClient.get() migrated into out\\angular-app\\src\\app\\admin.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "a8ec3dd1-f123-4e3e-a180-15e40cd981a9",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_admin_get",
+      "reason": "$http.get(/api/admin/roles) -> HttpClient.get() migrated into out\\angular-app\\src\\app\\admin.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "2a79b0b6-d0db-45e7-8dd5-5e1913c3f688",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_admin_get",
+      "reason": "$http.get(/api/admin/settings) -> HttpClient.get() migrated into out\\angular-app\\src\\app\\admin.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "0168cb65-bdc9-433c-8db1-655f03a18f71",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_admin_get",
+      "reason": "$http.get(/api/admin/audit) -> HttpClient.get() migrated into out\\angular-app\\src\\app\\admin.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "d10c721e-fbb5-4a04-adea-ece226e8f220",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_order_q_defer",
+      "reason": "$q.q_defer() detected in OrderController — q_defer stub written to out\\angular-app\\src\\app\\order.component.ts (MANUAL review required)",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "$q.defer() detected — Promise chain requires manual RxJS migration",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "34277369-44d6-4a5f-975d-10f9709ea486",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_order_post",
+      "reason": "$http.post(/api/orders) -> HttpClient.post() migrated into out\\angular-app\\src\\app\\order.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "6d60f77e-f75d-452c-8e48-87a8ec28b48e",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_search_get",
+      "reason": "$http.get(/api/search) -> HttpClient.get() migrated into out\\angular-app\\src\\app\\search.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "850d7519-1642-4113-9f20-4f5a109ccad3",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_notification_get",
+      "reason": "$http.get(/api/notifications) -> HttpClient.get() migrated into out\\angular-app\\src\\app\\notification.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "0612791f-512f-48da-be4c-27deec05e0f5",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_notification_put",
+      "reason": "$http.put(None) -> HttpClient.put() migrated into out\\angular-app\\src\\app\\notification.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": true
+    },
+    {
+      "before_id": "a82d8afe-33c9-4367-88e8-2a3813a7776d",
+      "before_name": "SearchController",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\bench-05-mixed-realistic\\repo\\src\\app.js",
+      "after_id": "rx_a82d8afe-33c9-4367-88e8-2a3813a7776d",
+      "reason": "Shallow $watch → RxJS BehaviorSubject rewrite",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "Shallow $watch → safe RxJS BehaviorSubject rewrite",
+      "build_passed": false,
+      "snapshot_passed": true
+    }
+  ],
+  "validation": {
+    "tests_passed": false,
+    "snapshot_passed": true,
+    "failures": [
+      "Tests failed"
+    ]
+  },
+  "risk": {
+    "by_level": {
+      "SAFE": [
+        "AdminController",
+        "SearchController",
+        "NotificationService",
+        "OrderController"
+      ],
+      "RISKY": [],
+      "MANUAL": [
+        "OrderController"
+      ]
+    }
+  },
+  "transformation": {
+    "generated_files": [
+      "app\\src\\app\\admin.component.ts",
+      "app\\src\\app\\order.component.ts",
+      "app\\src\\app\\search.component.ts",
+      "app\\src\\app\\notificationservice.service.ts",
+      "app\\src\\app\\notification.component.ts"
+    ],
+    "auto_modernized": [
+      "AdminController",
+      "SearchController",
+      "NotificationService",
+      "OrderController"
+    ],
+    "manual_required": [
+      "OrderController"
+    ]
+  }
+}

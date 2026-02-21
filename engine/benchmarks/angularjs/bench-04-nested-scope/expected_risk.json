@@ -1,0 +1,6 @@
+{
+  "_comment": "DashboardController and ReportController MANUAL. StatusController SAFE.",
+  "SAFE": ["StatusController"],
+  "RISKY": [],
+  "MANUAL": ["DashboardController", "ReportController"]
+}

@@ -27,7 +27,7 @@ class SimpleWatchToRxjsRule:
         print(f"[SimpleWatchToRxjs] Shallow watches detected: {len(watches)}")
 
         if not watches:
-            print("[SimpleWatchToRxjs] ⚠️  No shallow watches matched. "
+            print("[SimpleWatchToRxjs]  No shallow watches matched. "
                   "Check SemanticRole.SHALLOW_WATCH in patterns or analysis.watches.")
 
         for node in watches:
@@ -44,7 +44,7 @@ class SimpleWatchToRxjsRule:
                     owner = resolve_owner_class(analysis, sym_id)
 
             if owner is None:
-                print(f"[SimpleWatchToRxjs] ℹ️  Cannot resolve owner class for watch {node_id}, skipping injection")
+                print(f"[SimpleWatchToRxjs]  Cannot resolve owner class for watch {node_id}, skipping injection")
             else:
                 base = (
                     owner.name
@@ -58,7 +58,7 @@ class SimpleWatchToRxjsRule:
                     self._inject_behavior_subject(component_ts, base)
                     injected_files.add(component_ts)
                 else:
-                    print(f"[SimpleWatchToRxjs] ℹ️  Already injected into {component_ts.name}, skipping duplicate")
+                    print(f"[SimpleWatchToRxjs]   Already injected into {component_ts.name}, skipping duplicate")
 
             changes.append(Change(
                 before_id=node_id,
@@ -72,7 +72,7 @@ class SimpleWatchToRxjsRule:
 
     def _inject_behavior_subject(self, component_ts: Path, base: str):
         if not component_ts.exists():
-            print(f"[SimpleWatchToRxjs] ℹ️  Component file not found, skipping: {component_ts}")
+            print(f"[SimpleWatchToRxjs]  Component file not found, skipping: {component_ts}")
             return
 
         text = component_ts.read_text(encoding="utf-8")
@@ -88,4 +88,4 @@ class SimpleWatchToRxjsRule:
                 text = text[: idx + 1] + f"\n{subject_prop}\n" + text[idx + 1:]
 
         component_ts.write_text(text, encoding="utf-8")
-        print(f"[SimpleWatchToRxjs] ✅ BehaviorSubject injected into: {component_ts}")
+        print(f"[SimpleWatchToRxjs] BehaviorSubject injected into: {component_ts}")

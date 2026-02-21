@@ -1,0 +1,28 @@
+{
+  "benchmark": "bench-04-nested-scope",
+  "metrics": {
+    "auto_coverage": 1.0,
+    "manual_recall": 1.0,
+    "risk": {
+      "SAFE": {
+        "precision": 0.3333333333333333,
+        "recall": 1.0
+      },
+      "RISKY": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "MANUAL": {
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    },
+    "file_accuracy": 0.3333333333333333,
+    "meets_min_auto_coverage": true,
+    "meets_manual_ratio": true,
+    "validation_expected": false,
+    "validation_passed": false
+  },
+  "validation_passed": false,
+  "raw_returncode": 0
+}

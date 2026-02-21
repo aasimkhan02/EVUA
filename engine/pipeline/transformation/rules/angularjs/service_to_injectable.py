@@ -21,7 +21,7 @@ class ServiceToInjectableRule:
         print(f"[ServiceToInjectable] Services detected: {len(services)}")
 
         if not services:
-            print("[ServiceToInjectable] ⚠️  No services matched. "
+            print("[ServiceToInjectable]  No services matched. "
                   "Check SemanticRole.SERVICE in patterns or class names ending with 'Service'/'Svc'.")
 
         for node in services:
@@ -45,7 +45,7 @@ class ServiceToInjectableRule:
             if not ts_path.exists() or ts_path.read_text(encoding="utf-8") != ts_code:
                 ts_path.parent.mkdir(parents=True, exist_ok=True)
                 ts_path.write_text(ts_code, encoding="utf-8")
-                print(f"[ServiceToInjectable] ✅ Written: {ts_path}")
+                print(f"[ServiceToInjectable]  Written: {ts_path}")
 
             # node.id is the uuid from IRNode — valid Change.before_id
             changes.append(Change(

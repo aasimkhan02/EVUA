@@ -1,0 +1,6 @@
+{
+  "_comment": "SafeController SAFE. Directives don't currently emit IR changes directly so they won't appear in risk_by_change. This benchmark tests that SafeController is NOT contaminated.",
+  "SAFE": ["SafeController"],
+  "RISKY": [],
+  "MANUAL": ["modalDirective", "tooltipDirective"]
+}

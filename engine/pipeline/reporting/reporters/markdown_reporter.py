@@ -49,7 +49,7 @@ class MarkdownReporter:
             snapshot = validation.get("snapshot_passed") if validation else None
 
             lines.append(
-                f"- **{name}** (`{file}`) → Angular Component  \n"
+                f"- **{name}** (`{file}`) => Angular Component  \n"
                 f"  Output: `{out_path}`  \n"
                 f"  Risk: **{risk_level}** — {reason}  \n"
                 f"  Build: **{build}**, Snapshot: **{snapshot}**"
@@ -60,7 +60,7 @@ class MarkdownReporter:
             lines.append(f"- Tests passed: **{validation.get('tests_passed')}**")
             lines.append(f"- Snapshot passed: **{validation.get('snapshot_passed')}**")
             for f in validation.get("failures", []):
-                lines.append(f"  - ❌ {f}")
+                lines.append(f"  - x {f}")
 
         lines.append("\n## Run the migrated Angular app")
         lines.append("```bash")

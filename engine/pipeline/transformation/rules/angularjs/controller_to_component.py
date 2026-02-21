@@ -24,7 +24,7 @@ class ControllerToComponentRule:
         print(f"[ControllerToComponent] Controllers detected: {len(controllers)}")
 
         if not controllers:
-            print("[ControllerToComponent] ⚠️  No controllers matched. "
+            print("[ControllerToComponent]  No controllers matched. "
                   "Check patterns.roles_by_node or Module.classes names.")
             changes.append(Change(
                 before_id="debug_controller_rule",
@@ -74,7 +74,7 @@ class ControllerToComponentRule:
         ts_path.parent.mkdir(parents=True, exist_ok=True)
         if not ts_path.exists() or ts_path.read_text(encoding="utf-8") != ts_code:
             ts_path.write_text(ts_code, encoding="utf-8")
-            print(f"[ControllerToComponent] ✅ Written: {ts_path}")
+            print(f"[ControllerToComponent] Written: {ts_path}")
 
         if not html_path.exists():
             html_path.write_text(f"<h2>{class_name}</h2>\n", encoding="utf-8")

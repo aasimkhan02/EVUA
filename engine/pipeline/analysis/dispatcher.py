@@ -52,7 +52,7 @@ class AnalyzerDispatcher:
             raw_directives.extend(rd)
             raw_http_calls.extend(rh)
 
-        # ✅ Sanitize analyzer outputs (important for robustness + test mocks)
+        # Sanitize analyzer outputs (important for robustness + test mocks)
         raw_modules = self._filter_raw_modules(raw_modules)
         raw_templates = self._filter_raw_templates(raw_templates)
         raw_edges = self._filter_raw_edges(raw_edges)

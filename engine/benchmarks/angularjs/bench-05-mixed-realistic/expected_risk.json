@@ -1,0 +1,6 @@
+{
+  "_comment": "bench-05 risk ground truth. With _HEAVY_SCOPE_WRITE_THRESHOLD=6, AdminController is SAFE (5 writes < 6). OrderController MANUAL on two independent signals.",
+  "SAFE": ["NotificationService", "SearchController", "AdminController"],
+  "RISKY": [],
+  "MANUAL": ["OrderController"]
+}
