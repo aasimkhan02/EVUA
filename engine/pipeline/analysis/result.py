@@ -10,8 +10,9 @@ from ir.behavior_model.base import Behavior
 class AnalysisResult:
     modules:       List[Module]
     dependencies:  DependencyGraph
-    templates:     List[Template]   # IR Template objects (for IR-layer consumers)
+    templates:     List[Template]   # IR Template objects
     behaviors:     List[Behavior]
     http_calls:    List[Any]        # RawHttpCall — untyped for IR-agnostic access
     directives:    List[Any] = field(default_factory=list)   # RawDirective objects
     raw_templates: List[Any] = field(default_factory=list)   # RawTemplate objects (with raw_html)
+    routes:        List[Any] = field(default_factory=list)   # RawRoute objects

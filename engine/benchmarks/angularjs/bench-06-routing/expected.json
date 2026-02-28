@@ -1,0 +1,29 @@
+{
+  "description": "Comprehensive routing benchmark — ngRoute + uiRouter + params + resolve + abstract + otherwise",
+  "expected_auto": [
+    "HomeController",
+    "UserListController",
+    "UserDetailController",
+    "UserEditController",
+    "DashboardController",
+    "AdminController"
+  ],
+  "expected_manual": [],
+  "expected_files": [
+    "home.component.ts",
+    "home.component.html",
+    "userlist.component.ts",
+    "userlist.component.html",
+    "userdetail.component.ts",
+    "userdetail.component.html",
+    "useredit.component.ts",
+    "useredit.component.html",
+    "dashboard.component.ts",
+    "dashboard.component.html",
+    "admin.component.ts",
+    "admin.component.html",
+    "app-routing.module.ts",
+    "userdata.resolver.ts",
+    "adminprofile.resolver.ts"
+  ]
+}

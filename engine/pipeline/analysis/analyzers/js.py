@@ -58,12 +58,58 @@ class RawHttpCall:
         self.method = method
         self.url = url
         self.uses_q = uses_q
-        # Name of the controller/service that owns this call (e.g. "UserController")
-        # Used by HttpToHttpClientRule to route the call to the correct component file.
         self.owner_controller = owner_controller
         self.classes = []
         self.functions = []
         self.globals = []
+
+
+class RawRoute:
+    """
+    Represents a single AngularJS route extracted from $routeProvider or $stateProvider.
+
+    Attributes
+    ----------
+    path          : URL path string  e.g. '/users/:id'
+    controller    : Controller name  e.g. 'UserController'  (may be None)
+    template_url  : templateUrl string (may be None)
+    template      : inline template string (may be None)
+    resolve       : dict of resolve keys → expression strings (may be empty)
+    state_name    : ui-router state name  e.g. 'app.users'  (None for ngRoute)
+    params        : path params extracted from path  e.g. ['id']
+    is_otherwise  : True if this is the default/otherwise/catch-all route
+    is_abstract   : True for ui-router abstract states
+    router_type   : 'ngRoute' | 'uiRouter'
+    file          : source file path
+    """
+
+    def __init__(
+        self,
+        path: str,
+        controller: Optional[str],
+        template_url: Optional[str],
+        template: Optional[str],
+        resolve: dict,
+        state_name: Optional[str],
+        is_otherwise: bool,
+        is_abstract: bool,
+        router_type: str,
+        file: str,
+    ):
+        self.id           = str(uuid.uuid4())
+        self.path         = path
+        self.controller   = controller
+        self.template_url = template_url
+        self.template     = template
+        self.resolve      = resolve      # {key: expr_str}
+        self.state_name   = state_name
+        self.is_otherwise = is_otherwise
+        self.is_abstract  = is_abstract
+        self.router_type  = router_type
+        self.file         = file
+        # Extract :param tokens from the path
+        import re
+        self.params = re.findall(r':(\w+)', path or '')
 
 
 def iter_children(node):
@@ -120,11 +166,228 @@ def _extract_di_names(arg_node) -> List[str]:
     return []
 
 
+def _extract_string(node) -> Optional[str]:
+    """Return the string value of a Literal node, or None."""
+    if node is None:
+        return None
+    if getattr(node, "type", None) == "Literal":
+        v = getattr(node, "value", None)
+        return str(v) if v is not None else None
+    return None
+
+
+def _extract_object_prop(obj_node, key: str):
+    """Return the value node for a named property in an ObjectExpression, or None."""
+    if obj_node is None or getattr(obj_node, "type", None) != "ObjectExpression":
+        return None
+    for prop in getattr(obj_node, "properties", []) or []:
+        prop_key = getattr(prop.key, "name", None) or getattr(prop.key, "value", None)
+        if prop_key == key:
+            return prop.value
+    return None
+
+
+def _extract_resolve_keys(resolve_node) -> dict:
+    """
+    Extract resolve block keys as {key: '<expression>'} for annotation purposes.
+    We don't try to migrate the resolve logic — just capture the key names.
+    """
+    result = {}
+    if resolve_node is None or getattr(resolve_node, "type", None) != "ObjectExpression":
+        return result
+    for prop in getattr(resolve_node, "properties", []) or []:
+        key = getattr(prop.key, "name", None) or getattr(prop.key, "value", None)
+        if key:
+            result[key] = "<expression>"
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Route extraction helpers
+# ---------------------------------------------------------------------------
+
+def _parse_ngroute_config(fn_node, file_path: str) -> List[RawRoute]:
+    """
+    Parse a .config() function body for $routeProvider chains.
+
+    Handles:
+      $routeProvider
+        .when('/path', { controller: 'Ctrl', templateUrl: '...' })
+        .when('/other/:id', { ... })
+        .otherwise({ redirectTo: '/path' })
+    """
+    routes: List[RawRoute] = []
+
+    def scan(node):
+        if node is None or not hasattr(node, "type"):
+            return
+
+        if node.type == "CallExpression":
+            callee = getattr(node, "callee", None)
+            args   = getattr(node, "arguments", []) or []
+
+            if getattr(callee, "type", None) == "MemberExpression":
+                method = getattr(callee.property, "name", None)
+
+                # .when('/path', { ... })
+                if method == "when" and len(args) >= 2:
+                    path = _extract_string(args[0])
+                    cfg  = args[1] if getattr(args[1], "type", None) == "ObjectExpression" else None
+
+                    controller   = _extract_string(_extract_object_prop(cfg, "controller"))
+                    template_url = _extract_string(_extract_object_prop(cfg, "templateUrl"))
+                    template     = _extract_string(_extract_object_prop(cfg, "template"))
+                    resolve_node = _extract_object_prop(cfg, "resolve")
+                    resolve      = _extract_resolve_keys(resolve_node)
+
+                    routes.append(RawRoute(
+                        path=path or "/unknown",
+                        controller=controller,
+                        template_url=template_url,
+                        template=template,
+                        resolve=resolve,
+                        state_name=None,
+                        is_otherwise=False,
+                        is_abstract=False,
+                        router_type="ngRoute",
+                        file=file_path,
+                    ))
+
+                # .otherwise({ redirectTo: '/path' })
+                elif method == "otherwise" and len(args) >= 1:
+                    cfg          = args[0] if getattr(args[0], "type", None) == "ObjectExpression" else None
+                    redirect_to  = _extract_string(_extract_object_prop(cfg, "redirectTo"))
+                    routes.append(RawRoute(
+                        path=redirect_to or "**",
+                        controller=None,
+                        template_url=None,
+                        template=None,
+                        resolve={},
+                        state_name=None,
+                        is_otherwise=True,
+                        is_abstract=False,
+                        router_type="ngRoute",
+                        file=file_path,
+                    ))
+
+                # Only follow the chain — do NOT recurse into args
+                # (prevents every route being discovered O(n^2) times)
+                scan(callee.object)
+                return  # handled this CallExpression — skip iter_children
+
+        # Non-CallExpression nodes: recurse normally (function body, blocks)
+        for child in iter_children(node):
+            scan(child)
+
+    body = getattr(fn_node, "body", None)
+    if body:
+        scan(body)
+    return routes
+
+
+def _parse_uirouter_config(fn_node, file_path: str) -> List[RawRoute]:
+    """
+    Parse a .config() function body for $stateProvider chains (ui-router).
+
+    Handles:
+      $stateProvider
+        .state('stateName', {
+          url: '/path/:id',
+          controller: 'Ctrl',
+          templateUrl: '...',
+          abstract: true,
+          resolve: { ... }
+        })
+    """
+    routes: List[RawRoute] = []
+
+    def scan(node):
+        if node is None or not hasattr(node, "type"):
+            return
+
+        if node.type == "CallExpression":
+            callee = getattr(node, "callee", None)
+            args   = getattr(node, "arguments", []) or []
+
+            if getattr(callee, "type", None) == "MemberExpression":
+                method = getattr(callee.property, "name", None)
+
+                # .state('name', { ... })
+                if method == "state" and len(args) >= 2:
+                    state_name = _extract_string(args[0])
+                    cfg        = args[1] if getattr(args[1], "type", None) == "ObjectExpression" else None
+
+                    url          = _extract_string(_extract_object_prop(cfg, "url"))
+                    controller   = _extract_string(_extract_object_prop(cfg, "controller"))
+                    template_url = _extract_string(_extract_object_prop(cfg, "templateUrl"))
+                    template     = _extract_string(_extract_object_prop(cfg, "template"))
+                    resolve_node = _extract_object_prop(cfg, "resolve")
+                    resolve      = _extract_resolve_keys(resolve_node)
+
+                    # abstract: true
+                    abstract_node = _extract_object_prop(cfg, "abstract")
+                    is_abstract   = (
+                        getattr(abstract_node, "type", None) == "Literal"
+                        and getattr(abstract_node, "value", None) is True
+                    )
+
+                    routes.append(RawRoute(
+                        path=url or f"/{state_name or 'unknown'}",
+                        controller=controller,
+                        template_url=template_url,
+                        template=template,
+                        resolve=resolve,
+                        state_name=state_name,
+                        is_otherwise=False,
+                        is_abstract=is_abstract,
+                        router_type="uiRouter",
+                        file=file_path,
+                    ))
+
+                # Only follow the chain — do NOT recurse into args
+                scan(callee.object)
+                return  # handled this CallExpression — skip iter_children
+
+        # Non-CallExpression nodes: recurse normally
+        for child in iter_children(node):
+            scan(child)
+
+    body = getattr(fn_node, "body", None)
+    if body:
+        scan(body)
+    return routes
+
+
+def _handle_config_block(args, file_path: str) -> List[RawRoute]:
+    """
+    Given the arguments of a .config([...]) call, find the function body
+    and determine which router is being configured ($routeProvider vs $stateProvider).
+    """
+    fn_node = _extract_fn_from_arg(args[0] if args else None)
+    if fn_node is None:
+        return []
+
+    di = _extract_di_names(args[0] if args else None)
+    di_lower = [d.lower() for d in di]
+
+    if "$routeprovider" in di_lower:
+        return _parse_ngroute_config(fn_node, file_path)
+    elif "$stateprovider" in di_lower:
+        return _parse_uirouter_config(fn_node, file_path)
+    else:
+        # Unknown config block — try both parsers and take whichever produces routes
+        ngroute = _parse_ngroute_config(fn_node, file_path)
+        if ngroute:
+            return ngroute
+        return _parse_uirouter_config(fn_node, file_path)
+
+
 class JSAnalyzer(Analyzer):
     def analyze(self, paths: List[Path]):
         raw_modules:    List[RawController] = []
         raw_directives: List[RawDirective]  = []
         raw_http_calls: List[RawHttpCall]   = []
+        raw_routes:     List[RawRoute]      = []
 
         # ── top-level AST traversal ────────────────────────────────────────
         def recurse(node, file_path: str, current_owner: Optional[str] = None):
@@ -152,8 +415,6 @@ class JSAnalyzer(Analyzer):
                         if getattr(name_node, "type", None) == "Literal" and fn_node is not None:
                             ctrl_name = name_node.value
                             _handle_controller(ctrl_name, args[1], fn_node, file_path)
-                            # Recurse remaining siblings, but NOT the fn body —
-                            # _handle_controller scans it internally with owner set.
                             for child in iter_children(node):
                                 if child is not args[1] and child is not fn_node:
                                     recurse(child, file_path, current_owner)
@@ -165,6 +426,17 @@ class JSAnalyzer(Analyzer):
                         fn_node   = _extract_fn_from_arg(args[1])
                         if getattr(name_node, "type", None) == "Literal" and fn_node is not None:
                             _handle_directive(name_node.value, fn_node, file_path)
+
+                    # ── .config([...]) — route configuration ───────────────
+                    elif prop == "config" and len(args) >= 1:
+                        found = _handle_config_block(args, file_path)
+                        raw_routes.extend(found)
+                        if found:
+                            # Don't recurse further into config body — already scanned
+                            for child in iter_children(node):
+                                if child is not args[0]:
+                                    recurse(child, file_path, current_owner)
+                            return
 
                     # ── $http.get / post / put / delete (top-level) ─────────
                     if obj_name == "$http" and prop in ("get", "post", "put", "delete"):
@@ -365,20 +637,17 @@ class JSAnalyzer(Analyzer):
             recurse(ast, str(path), current_owner=None)
 
         # ── deduplicate http calls ─────────────────────────────────────────
-        # scan_fn (inside _handle_controller) AND the outer recurse() can both
-        # fire for the same $http node. Keep the version with an owner when both exist.
         deduped: List[RawHttpCall] = []
-        seen: Dict[tuple, int] = {}   # (file, method, url) -> index in deduped
+        seen: Dict[tuple, int] = {}
 
         for call in raw_http_calls:
             sig = (call.file, call.method, call.url)
             if sig in seen:
                 existing = deduped[seen[sig]]
-                # Upgrade to the version with owner attribution
                 if call.owner_controller and not existing.owner_controller:
                     deduped[seen[sig]] = call
             else:
                 seen[sig] = len(deduped)
                 deduped.append(call)
 
-        return raw_modules, [], [], raw_directives, deduped
+        return raw_modules, [], [], raw_directives, deduped, raw_routes

@@ -41,13 +41,22 @@ class AnalyzerDispatcher:
         raw_edges      = []
         raw_directives = []
         raw_http_calls = []
+        raw_routes     = []
 
         for ftype, paths in files_by_type.items():
             analyzer = self.get_analyzer(ftype)
             if not analyzer:
                 continue
 
-            rm, rt, re, rd, rh = analyzer.analyze(paths)
+            result = analyzer.analyze(paths)
+
+            # JSAnalyzer returns 6-tuple (adds raw_routes); others return 5-tuple
+            if len(result) == 6:
+                rm, rt, re, rd, rh, rr = result
+                raw_routes.extend(rr)
+            else:
+                rm, rt, re, rd, rh = result
+
             raw_modules.extend(rm)
             raw_templates.extend(rt)
             raw_edges.extend(re)
@@ -59,11 +68,9 @@ class AnalyzerDispatcher:
         raw_edges      = self._filter_raw_edges(raw_edges)
         raw_directives = self._filter_raw_directives(raw_directives)
 
-        # Keep a copy of raw_templates BEFORE IRBuilder discards raw_html
+        # Preserve raw_templates before IRBuilder strips raw_html
         preserved_raw_templates = list(raw_templates)
-
-        # IRBuilder needs the filtered set for IR Template construction
-        ir_ready_templates = self._filter_raw_templates(raw_templates)
+        ir_ready_templates      = self._filter_raw_templates(raw_templates)
 
         builder = IRBuilder()
         modules, dependencies, templates, behaviors = builder.build(
@@ -77,5 +84,6 @@ class AnalyzerDispatcher:
             behaviors=behaviors,
             http_calls=raw_http_calls,
             directives=raw_directives,
-            raw_templates=preserved_raw_templates,   # full RawTemplate objects with raw_html
+            raw_templates=preserved_raw_templates,
+            routes=raw_routes,
         )

@@ -30,6 +30,7 @@ from pipeline.transformation.rules.angularjs.controller_to_component import Cont
 from pipeline.transformation.rules.angularjs.http_to_httpclient import HttpToHttpClientRule
 from pipeline.transformation.rules.angularjs.simple_watch_to_rxjs import SimpleWatchToRxjsRule
 from pipeline.transformation.rules.angularjs.service_to_injectable import ServiceToInjectableRule
+from pipeline.transformation.rules.angularjs.route_migrator import RouteMigratorRule
 from pipeline.transformation.applier import RuleApplier
 from pipeline.transformation.result import TransformationResult
 
@@ -160,13 +161,16 @@ def _collect_diffs(out_dir: Path, shadow_dir: Path) -> list[dict]:
 
 def run_pipeline(
     repo_path: str,
+    out_root: Path | str = "out",
     dry_run: bool = False,
     show_diff: bool = False,
     only: list[str] | None = None,
     batch: bool = False,
-    out_root: Path | None = None,   # ADD THIS
 ) -> bool:
     repo_path = Path(repo_path).resolve()
+    out_root = Path(out_root).resolve()
+    real_out_dir = out_root / "angular-app"
+
     print(f"\n{'='*60}")
     print(f"Running migration pipeline on: {repo_path}")
     if dry_run:
@@ -179,15 +183,11 @@ def run_pipeline(
 
     # In diff mode we write to a temp shadow directory, then compare
     shadow_dir = None
-
-    # base output root
-    base_out_root = Path(out_root) if out_root else Path("out")
-    final_out_dir = base_out_root / "angular-app"
-    effective_out_dir = str(final_out_dir)
+    effective_out_dir = real_out_dir
 
     if show_diff or dry_run:
         shadow_dir = Path(tempfile.mkdtemp(prefix="evua_shadow_"))
-        effective_out_dir = str(shadow_dir / "angular-app")
+        effective_out_dir = shadow_dir / "angular-app"
         print(f"  Shadow dir: {shadow_dir}")
 
     scanner    = FileScanner()
@@ -208,7 +208,8 @@ def run_pipeline(
     n_classes    = sum(len(m.classes) for m in analysis.modules)
     n_http       = len(analysis.http_calls)
     n_directives = len(getattr(analysis, "directives", []) or [])
-    print(f"  Analysis  : {n_classes} classes, {n_http} http calls, {n_directives} directives")
+    n_routes     = len(getattr(analysis, "routes", []) or [])
+    print(f"  Analysis  : {n_classes} classes, {n_http} http calls, {n_directives} directives, {n_routes} routes")
 
     id_to_name           = _build_id_to_name(analysis)
     directive_id_to_name = _build_directive_id_to_name(analysis)
@@ -232,7 +233,10 @@ def run_pipeline(
     print(f"  Patterns  : {len(roles)} nodes matched")
 
     # Build rule list — respect --only filter
+    # RouteMigratorRule runs FIRST — it owns app-routing.module.ts entirely.
+    # ControllerToComponentRule no longer touches routing.
     _all_rules = {
+        "routing":     RouteMigratorRule(out_dir=effective_out_dir, dry_run=dry_run),
         "controllers": ControllerToComponentRule(out_dir=effective_out_dir, dry_run=dry_run),
         "services":    ServiceToInjectableRule(out_dir=effective_out_dir, dry_run=dry_run),
         "http":        HttpToHttpClientRule(out_dir=effective_out_dir, dry_run=dry_run),
@@ -316,7 +320,7 @@ def run_pipeline(
 
     # ── Diff output ────────────────────────────────────────────────────────
     if show_diff and shadow_dir:
-        real_out_dir = final_out_dir
+        real_out_dir = out_root / "angular-app"
         shadow_app   = shadow_dir / "angular-app"
         diffs = _collect_diffs(real_out_dir, shadow_app)
 
@@ -444,14 +448,14 @@ Examples:
 
     only_list = [s.strip() for s in args.only.split(",")] if args.only else None
 
-    def _run(out_root=None):
+    def _run(out_root):
         return run_pipeline(
             repo_path=args.repo,
+            out_root=out_root,
             dry_run=args.dry_run,
             show_diff=args.diff,
             only=only_list,
             batch=args.batch,
-            out_root=out_root,
         )
 
     runner = PipelineRunner(_run)
