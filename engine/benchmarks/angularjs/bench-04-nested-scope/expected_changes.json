@@ -1,17 +1,19 @@
 {
-  "_comment": "bench-04: Only StatusController produces auto-migrated output.",
+  "_comment": "bench-04: 3 controllers. StatusController auto, Dashboard+Report MANUAL.",
   "generated_files": [
-    "out/angular-app/src/app/status.component.ts",
-    "out/angular-app/src/app/status.component.html",
-    "out/angular-app/src/app/app-routing.module.ts"
+    "status.component.ts",
+    "status.component.html",
+    "report.component.ts",
+    "report.component.html",
+    "dashboard.component.ts",
+    "dashboard.component.html",
+    "app-routing.module.ts"
   ],
   "min_auto_coverage": 0.25,
   "expected_manual_ratio": 0.66,
   "expected_validation": false,
   "_engine_failure_modes": {
-    "nested_scope_detection": "$scope.$new() inside a VariableDeclarator must set has_nested_scopes=true",
-    "deep_watch_detection": "Third arg true to $scope.$watch must set watch_depths=['deep'] not ['shallow']",
-    "risk_isolation": "StatusController must be SAFE — if MANUAL, per-file contamination is happening",
-    "compound_manual": "DashboardController has both signals — engine must not require both to flag MANUAL"
+    "risk_isolation": "StatusController must stay SAFE, Dashboard+Report MANUAL",
+    "html_generation": "All 3 controllers must emit .component.html stubs"
   }
 }

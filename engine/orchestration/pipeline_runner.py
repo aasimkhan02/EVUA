@@ -1,19 +1,21 @@
 import hashlib
+import shutil
+import uuid
 from pathlib import Path
 
 from orchestration.progress_tracker import ProgressTracker
-from orchestration.rollback_manager import RollbackManager
 
 
 class PipelineRunner:
     def __init__(self, pipeline_fn, out_root="out"):
         """
         pipeline_fn: callable that runs the full pipeline and returns (validation_passed: bool)
+                     MUST accept out_root kwarg: pipeline_fn(out_root=Path)
         """
         self.pipeline_fn = pipeline_fn
         self.out_root = Path(out_root)
+        self.final_root = self.out_root / "angular-app"
         self.progress = ProgressTracker(self.out_root / "progress.json")
-        self.rollback = RollbackManager(self.out_root / ".backup")
 
     def _hash(self, path: Path):
         if not path.exists():
@@ -23,23 +25,38 @@ class PipelineRunner:
         return h.hexdigest()
 
     def run(self):
-        # Determinism: stable, sorted traversal
-        files_before = sorted([p for p in self.out_root.rglob("*") if p.is_file()])
-        before_hashes = {str(p): self._hash(p) for p in files_before}
+        run_id = uuid.uuid4().hex[:8]
+        tmp_root = self.out_root / f".tmp_{run_id}"
+        tmp_root.mkdir(parents=True, exist_ok=True)
 
-        # Snapshot files before run (for rollback)
-        for p in files_before:
-            self.rollback.snapshot(p)
+        # Snapshot final output state for progress diffing
+        files_before = []
+        before_hashes = {}
+        if self.final_root.exists():
+            files_before = sorted([p for p in self.final_root.rglob("*") if p.is_file()])
+            before_hashes = {str(p): self._hash(p) for p in files_before}
 
         validation_passed = False
         try:
-            validation_passed = self.pipeline_fn()
+            validation_passed = self.pipeline_fn(out_root=tmp_root)
         except Exception as e:
             print("Pipeline crashed:", e)
             validation_passed = False
 
-        # Determinism + idempotency: stable traversal, compare hashes
-        files_after = sorted([p for p in self.out_root.rglob("*") if p.is_file()])
+        if validation_passed:
+            if self.final_root.exists():
+                shutil.rmtree(self.final_root)
+            shutil.move(str(tmp_root), str(self.final_root))
+            print("Committed output atomically")
+        else:
+            shutil.rmtree(tmp_root, ignore_errors=True)
+            print("Validation failed -> temp workspace discarded")
+
+        # Progress tracking (only on final output)
+        if self.final_root.exists():
+            files_after = sorted([p for p in self.final_root.rglob("*") if p.is_file()])
+        else:
+            files_after = []
 
         for p in files_after:
             old_hash = before_hashes.get(str(p))
@@ -52,19 +69,9 @@ class PipelineRunner:
             else:
                 self.progress.record(p, "updated")
 
-        # Record files that existed before but were removed
         removed = set(before_hashes.keys()) - set(str(p) for p in files_after)
         for p in removed:
             self.progress.record(p, "removed")
-
-        # Safe rollback on failure
-        if not validation_passed:
-            print("Validation failed -> rolling back generated files")
-            self.rollback.rollback()
-            for p in files_after:
-                self.progress.record(p, "rolled_back")
-        else:
-            self.rollback.clear()
 
         self.progress.save()
         return validation_passed

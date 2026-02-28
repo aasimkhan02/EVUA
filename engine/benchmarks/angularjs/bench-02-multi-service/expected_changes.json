@@ -1,18 +1,18 @@
 {
-  "_comment": "bench-02 file generation expectations.",
+  "_comment": "bench-02: UserService + NotificationService + ConfigFactory + AppController",
   "generated_files": [
-    "out/angular-app/src/app/userservice.service.ts",
-    "out/angular-app/src/app/notificationservice.service.ts",
-    "out/angular-app/src/app/configfactory.service.ts",
-    "out/angular-app/src/app/app.component.ts",
-    "out/angular-app/src/app/app-routing.module.ts"
+    "userservice.service.ts",
+    "notificationservice.service.ts",
+    "configfactory.service.ts",
+    "app.component.ts",
+    "app.component.html",
+    "app-routing.module.ts"
   ],
   "min_auto_coverage": 1.0,
   "expected_manual_ratio": 0.0,
   "expected_validation": false,
   "_engine_failure_modes": {
-    "factory_not_detected": "ConfigFactory won't appear in modules -> 0 service changes for it",
-    "plain_di_service": "UserService uses plain fn syntax — tests non-array path in _extract_fn_from_arg",
-    "http_attribution": "HTTP calls inside services must route to service component not app.component.ts"
+    "factory_detection": "ConfigFactory HTTP calls -> configfactory.service.ts via HttpToHttpClientRule",
+    "service_naming": "Services must generate .service.ts not .component.ts"
   }
 }

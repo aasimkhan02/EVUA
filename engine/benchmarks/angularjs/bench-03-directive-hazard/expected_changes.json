@@ -1,16 +1,14 @@
 {
-  "_comment": "bench-03 file generation. Only SafeController produces a component file. Directives are behaviors only.",
+  "_comment": "bench-03: SafeController only. Directives not yet migrated by engine.",
   "generated_files": [
-    "out/angular-app/src/app/safe.component.ts",
-    "out/angular-app/src/app/safe.component.html",
-    "out/angular-app/src/app/app-routing.module.ts"
+    "safe.component.ts",
+    "safe.component.html",
+    "app-routing.module.ts"
   ],
   "min_auto_coverage": 0.33,
   "expected_manual_ratio": 0.66,
   "expected_validation": false,
   "_engine_failure_modes": {
-    "risk_bleeding": "If SafeController is MANUAL, TemplateBindingRiskRule is incorrectly contaminating based on directives in same file",
-    "directive_detection": "modalDirective must have has_compile=true AND transclude=true set on RawDirective",
-    "tooltip_link": "tooltipDirective must have has_link=true"
+    "directive_detection": "modalDirective and tooltipDirective produce no Change objects — directive rule missing"
   }
 }

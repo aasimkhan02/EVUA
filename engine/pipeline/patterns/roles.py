@@ -12,3 +12,5 @@ class SemanticRole(str, Enum):
     HTTP_CALL = "http_call"
     PROMISE_CHAIN = "promise_chain"
     SHALLOW_WATCH = "shallow_watch"
+    DIRECTIVE = "directive"
+    COMPILE_USAGE = "compile_usage"
