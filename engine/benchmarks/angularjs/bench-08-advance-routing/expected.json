@@ -1,0 +1,193 @@
+{
+  "description": "Advanced routing — nested children, lazy loading, guards, redirects, lifecycle hooks, route ordering",
+  "router_type": "uiRouter",
+
+  "expected_route_count": 10,
+
+  "expected_files": [
+    "app-routing.module.ts",
+    "auth.guard.ts",
+    "session.guard.ts",
+    "userdata.resolver.ts",
+    "stats.resolver.ts",
+    "prefs.resolver.ts",
+    "userdetail.component.ts",
+    "userdetail.component.html",
+    "useredit.component.ts",
+    "useredit.component.html",
+    "admindashboard.component.ts",
+    "admindashboard.component.html",
+    "orders.component.ts",
+    "orders.component.html",
+    "login.component.ts",
+    "login.component.html",
+    "home.component.ts",
+    "home.component.html",
+    "profile.component.ts",
+    "profile.component.html",
+    "settings.component.ts",
+    "settings.component.html"
+  ],
+
+  "app_routing_module": {
+    "has_redirect_to_home": true,
+    "imports_required": [
+      "UserDetailComponent",
+      "UserEditComponent",
+      "AdminDashboardComponent",
+      "OrdersComponent",
+      "LoginComponent",
+      "HomeComponent",
+      "ProfileComponent",
+      "SettingsComponent",
+      "AuthGuard",
+      "SessionGuard",
+      "UserDataResolver",
+      "StatsResolver",
+      "PrefsResolver"
+    ],
+    "routes": [
+      {
+        "description": "Default redirect from $urlRouterProvider.otherwise",
+        "path": "",
+        "redirectTo": "/home",
+        "pathMatch": "full"
+      },
+      {
+        "description": "Feature 2: abstract 'app' state → lazy-loaded feature module",
+        "path": "",
+        "is_lazy": true,
+        "loadChildren_contains": "app.module",
+        "has_children": true,
+        "children": [
+          {
+            "description": "Feature 1 + 3: componentless parent 'app.users' with children",
+            "path": "users",
+            "has_component": false,
+            "has_children": true,
+            "children": [
+              {
+                "description": "Feature 1 + 5: deep leaf with auth guard + data resolver",
+                "path": ":userId",
+                "component": "UserDetailComponent",
+                "canActivate": ["AuthGuard"],
+                "resolve": {
+                  "userData": "UserDataResolver"
+                }
+              },
+              {
+                "description": "Feature 1 + 5: sibling leaf with auth guard only",
+                "path": ":userId/edit",
+                "component": "UserEditComponent",
+                "canActivate": ["AuthGuard"]
+              }
+            ]
+          },
+          {
+            "description": "Feature 2: abstract 'app.admin' state → lazy-loaded AdminModule",
+            "path": "admin",
+            "is_lazy": true,
+            "loadChildren_contains": "admin.module",
+            "has_children": true,
+            "children": [
+              {
+                "description": "Feature 5: admin dashboard with session guard + stats resolver",
+                "path": "dashboard",
+                "component": "AdminDashboardComponent",
+                "canActivate": ["SessionGuard"],
+                "resolve": {
+                  "stats": "StatsResolver"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "description": "Feature 7: static route — must appear before param routes",
+        "path": "home",
+        "component": "HomeComponent",
+        "order_constraint": "before_profile"
+      },
+      {
+        "description": "Feature 6: login state has redirectTo annotation",
+        "path": "login",
+        "component": "LoginComponent",
+        "note": "redirectTo:'home' noted — state still rendered for direct nav"
+      },
+      {
+        "description": "Feature 6: orders state has onEnter + onExit → TODO comments",
+        "path": "orders",
+        "component": "OrdersComponent",
+        "has_on_enter_comment": true,
+        "has_on_exit_comment": true
+      },
+      {
+        "description": "Feature 5: data resolver only (no guard)",
+        "path": "settings",
+        "component": "SettingsComponent",
+        "resolve": {
+          "prefs": "PrefsResolver"
+        }
+      },
+      {
+        "description": "Feature 7: param route — must appear AFTER all static routes",
+        "path": "profile/:username",
+        "component": "ProfileComponent",
+        "order_constraint": "after_home"
+      }
+    ]
+  },
+
+  "expected_guard_files": {
+    "auth.guard.ts": {
+      "class": "AuthGuard",
+      "implements": "CanActivate",
+      "source_resolve_key": "auth",
+      "has_constructor_with_router": true
+    },
+    "session.guard.ts": {
+      "class": "SessionGuard",
+      "implements": "CanActivate",
+      "source_resolve_key": "session",
+      "has_constructor_with_router": true
+    }
+  },
+
+  "expected_resolver_files": {
+    "userdata.resolver.ts": {
+      "class": "UserDataResolver",
+      "implements": "Resolve",
+      "source_resolve_key": "userData"
+    },
+    "stats.resolver.ts": {
+      "class": "StatsResolver",
+      "implements": "Resolve",
+      "source_resolve_key": "stats"
+    },
+    "prefs.resolver.ts": {
+      "class": "PrefsResolver",
+      "implements": "Resolve",
+      "source_resolve_key": "prefs"
+    }
+  },
+
+  "expected_di": {
+    "userdetail.component.ts": [],
+    "admindashboard.component.ts": [],
+    "orders.component.ts": [],
+    "home.component.ts": [],
+    "profile.component.ts": [],
+    "settings.component.ts": []
+  },
+
+  "feature_checklist": {
+    "1_nested_children":        "app.users.detail nested under app.users nested under app",
+    "2_lazy_loading":           "app and app.admin abstract states → loadChildren",
+    "3_componentless_parent":   "app.users has no component field, only children[]",
+    "4_template_binding":       "templateUrl extracted and available on RawRoute (wired in ControllerToComponent)",
+    "5_guard_migration":        "auth/session resolve keys → canActivate guards; userData/stats/prefs → resolvers",
+    "6_redirect_and_hooks":     "login redirectTo noted; orders onEnter/onExit → TODO comments in route",
+    "7_route_order":            "home (static) before profile/:username (param) in flat section"
+  }
+}

@@ -17,16 +17,6 @@ class IRBuilder:
     """
 
     def build(self, raw_outputs: Tuple[list, list, list, list, list]):
-        """
-        raw_outputs = (
-            raw_modules,     # controllers/classes
-            raw_templates,   # html bindings/templates
-            raw_edges,       # dependency edges
-            raw_directives,  # angularjs directives (compile/link/transclude)
-            raw_http_calls,  # NEW: $http / $q extractions (currently forwarded)
-        )
-        """
-        # Unpack 5-tuple (backward compatible callers must pass 5)
         raw_modules, raw_templates, raw_edges, raw_directives, raw_http_calls = raw_outputs
 
         modules = self.build_modules(raw_modules)
@@ -34,8 +24,6 @@ class IRBuilder:
         templates = self.build_templates(raw_templates)
         behaviors = self.build_behaviors(raw_directives)
 
-        # NOTE: http_calls are intentionally not converted to IR nodes yet.
-        # They are forwarded through AnalysisResult for patterns/transformations.
         return modules, dependencies, templates, behaviors
 
     def build_modules(self, raw_modules: List) -> List[Module]:
@@ -49,6 +37,11 @@ class IRBuilder:
             cls.watch_depths = getattr(rm, "watch_depths", [])
             cls.uses_compile = getattr(rm, "uses_compile", False)
             cls.has_nested_scopes = getattr(rm, "has_nested_scopes", False)
+
+            # ── DI tokens (NEW) ────────────────────────────────────────────
+            # RawController.di is a list like ['$scope', '$http', '$routeParams']
+            # Store it on the Class so transformation rules can generate constructors.
+            cls.di = getattr(rm, "di", [])
 
             module = Module(
                 name=rm.file,
@@ -83,10 +76,6 @@ class IRBuilder:
         return templates
 
     def build_behaviors(self, raw_behaviors: List) -> List[Behavior]:
-        """
-        Normalize analyzer-side behavioral hazards into IR behaviors.
-        SideEffect signature: (cause, affected_symbol_id, description)
-        """
         behaviors: List[Behavior] = []
         for rb in raw_behaviors:
             if getattr(rb, "has_compile", False):
@@ -97,7 +86,6 @@ class IRBuilder:
                         description="AngularJS directive uses compile()",
                     )
                 )
-
             if getattr(rb, "has_link", False):
                 behaviors.append(
                     SideEffect(
@@ -106,7 +94,6 @@ class IRBuilder:
                         description="AngularJS directive uses link()",
                     )
                 )
-
             if getattr(rb, "transclude", False):
                 behaviors.append(
                     SideEffect(
@@ -117,7 +104,6 @@ class IRBuilder:
                 )
         return behaviors
 
-    # Helpers for future languages
     def _build_class(self, rc) -> Class:
         return Class(
             name=rc.name,

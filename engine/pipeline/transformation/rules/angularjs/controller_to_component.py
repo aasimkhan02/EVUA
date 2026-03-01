@@ -9,6 +9,107 @@ from pipeline.transformation.template_migrator import (
     migrate_template,
     migrate_template_from_raw,
 )
+from pipeline.transformation.di_mapper import resolve_di_tokens
+
+
+def _build_component_ts(base: str, class_name: str, selector: str, di_tokens: list[str]) -> str:
+    """
+    Generate the TypeScript component file with a properly typed constructor.
+
+    Examples
+    --------
+    No DI:
+        export class HomeComponent {}
+
+    With DI:
+        import { HttpClient } from '@angular/common/http';
+        import { ActivatedRoute } from '@angular/router';
+
+        export class UserDetailComponent {
+          constructor(private http: HttpClient, private route: ActivatedRoute) {}
+        }
+
+    With custom services:
+        import { UserService } from './user.service';
+        // $scope removed — use component properties directly
+
+        export class UserListComponent {
+          constructor(private userService: UserService) {}
+        }
+    """
+    resolution = resolve_di_tokens(di_tokens)
+
+    # ── Collect all imports ───────────────────────────────────────────────
+    # Start with the mandatory Component import
+    # Group by module so we emit one import line per module
+    from collections import defaultdict
+    imports_by_module: dict[str, list[str]] = defaultdict(list)
+    imports_by_module["@angular/core"].append("Component")
+
+    for symbol, module in resolution.imports:
+        if symbol not in imports_by_module[module]:
+            imports_by_module[module].append(symbol)
+
+    # Custom services — import from sibling .service.ts
+    custom_params: list[str] = []
+    for svc_token in resolution.custom_services:
+        # 'UserService' → param='userService', file='./user.service'
+        # 'AuthFactory' → param='authFactory', file='./authfactory.service'
+        svc_class = svc_token  # preserve original casing
+        svc_param = svc_class[0].lower() + svc_class[1:]
+        svc_file  = f"./{svc_token.lower()}.service"
+        imports_by_module[svc_file].append(svc_class)
+        custom_params.append(f"private {svc_param}: {svc_class}")
+
+    # Build import lines — @angular/* first, then local
+    import_lines: list[str] = []
+    angular_modules = sorted(k for k in imports_by_module if k.startswith("@"))
+    local_modules   = sorted(k for k in imports_by_module if not k.startswith("@"))
+
+    for mod in angular_modules + local_modules:
+        symbols = imports_by_module[mod]
+        import_lines.append(f"import {{ {', '.join(symbols)} }} from '{mod}';")
+
+    # ── Constructor ───────────────────────────────────────────────────────
+    all_params = resolution.constructor_params + custom_params
+
+    if all_params:
+        param_str = ", ".join(all_params)
+        # Wrap long constructors
+        if len(param_str) > 72:
+            inner = ",\n    ".join(all_params)
+            ctor  = f"  constructor(\n    {inner}\n  ) {{}}"
+        else:
+            ctor = f"  constructor({param_str}) {{}}"
+    else:
+        ctor = None
+
+    # ── Migration comments ────────────────────────────────────────────────
+    comment_lines: list[str] = []
+    for comment in resolution.comments:
+        comment_lines.append(f"  // {comment}")
+
+    # ── Assemble ──────────────────────────────────────────────────────────
+    lines: list[str] = import_lines
+    lines.append("")
+    lines.append("@Component({")
+    lines.append(f"  selector: '{selector}',")
+    lines.append(f"  templateUrl: './{base}.component.html'")
+    lines.append("})")
+    lines.append(f"export class {class_name} {{")
+
+    if comment_lines or ctor:
+        if comment_lines:
+            lines.extend(comment_lines)
+        if ctor:
+            lines.append(ctor)
+    else:
+        pass  # empty class body — closing brace on same logical line
+
+    lines.append("}")
+    lines.append("")  # trailing newline
+
+    return "\n".join(lines)
 
 
 class ControllerToComponentRule:
@@ -27,7 +128,7 @@ class ControllerToComponentRule:
         if not self.dry_run:
             self.project.ensure()
 
-        # ── Build template lookup from raw_templates (preserves raw_html) ──
+        # ── Build template lookup from raw_templates ───────────────────────
         raw_templates = getattr(analysis, "raw_templates", []) or []
 
         template_html_by_controller: dict[str, str] = {}
@@ -37,7 +138,7 @@ class ControllerToComponentRule:
             if ctrl and raw_html.strip():
                 template_html_by_controller[ctrl] = raw_html
 
-        # Monolithic index.html: scan all files for ng-controller references
+        # Monolithic index.html: scan for ng-controller references
         for t in raw_templates:
             raw_html = getattr(t, "raw_html", "") or ""
             if not raw_html.strip():
@@ -74,7 +175,7 @@ class ControllerToComponentRule:
 
     # -----------------------------------------------------------------------
 
-    def _resolve_html_content(self, c, source_html: str | None, raw_template) -> tuple[str, str]:
+    def _resolve_html_content(self, c, source_html, raw_template) -> tuple[str, str]:
         class_name = c.name.replace("Controller", "").replace("Ctrl", "") + "Component"
 
         if source_html:
@@ -110,25 +211,27 @@ class ControllerToComponentRule:
         )
         return content, "stub"
 
-    def _emit_component(self, c, changes: list, source_html: str | None, raw_template) -> None:
+    def _emit_component(self, c, changes: list, source_html, raw_template) -> None:
         base       = c.name.replace("Controller", "").replace("Ctrl", "").lower()
         class_name = c.name.replace("Controller", "").replace("Ctrl", "") + "Component"
         selector   = f"app-{base}"
         ts_path    = self.out_dir / f"{base}.component.ts"
         html_path  = self.out_dir / f"{base}.component.html"
 
+        # ── DI tokens from the IR Class node ─────────────────────────────
+        di_tokens: list[str] = getattr(c, "di", [])
+
+        if di_tokens:
+            print(f"[ControllerToComponent] DI for {c.name}: {di_tokens}")
+        else:
+            print(f"[ControllerToComponent] DI for {c.name}: (none detected)")
+
         # ── TypeScript component ──────────────────────────────────────────
-        ts_code = (
-            f"import {{ Component }} from '@angular/core';\n\n"
-            f"@Component({{\n"
-            f"  selector: '{selector}',\n"
-            f"  templateUrl: './{base}.component.html'\n"
-            f"}})\n"
-            f"export class {class_name} {{}}\n"
-        )
+        ts_code = _build_component_ts(base, class_name, selector, di_tokens)
 
         if self.dry_run:
             print(f"[DRY RUN] Would write: {ts_path}")
+            print(f"[DRY RUN] Preview:\n{ts_code[:400]}")
         else:
             ts_path.parent.mkdir(parents=True, exist_ok=True)
             if not ts_path.exists() or ts_path.read_text(encoding="utf-8") != ts_code:

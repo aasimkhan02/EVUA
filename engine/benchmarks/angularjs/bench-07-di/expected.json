@@ -1,0 +1,61 @@
+{
+  "description": "DI constructor generation — all DI patterns",
+  "expected_auto": [
+    "UserListController",
+    "HomeController",
+    "NavController",
+    "DashboardController",
+    "ProductController"
+  ],
+  "expected_manual": [],
+  "expected_files": [
+    "userlist.component.ts",
+    "userlist.component.html",
+    "home.component.ts",
+    "home.component.html",
+    "nav.component.ts",
+    "nav.component.html",
+    "dashboard.component.ts",
+    "dashboard.component.html",
+    "product.component.ts",
+    "product.component.html",
+    "userservice.service.ts",
+    "dataservice.service.ts",
+    "app-routing.module.ts"
+  ],
+  "expected_constructor_patterns": {
+    "userlist.component.ts": [
+      "private http: HttpClient",
+      "private route: ActivatedRoute",
+      "private userService: UserService"
+    ],
+    "home.component.ts": [
+      "no constructor"
+    ],
+    "nav.component.ts": [
+      "private router: Router"
+    ],
+    "dashboard.component.ts": [
+      "private http: HttpClient",
+      "private dataService: DataService"
+    ],
+    "product.component.ts": [
+      "private route: ActivatedRoute",
+      "private http: HttpClient"
+    ],
+    "userservice.service.ts": [
+      "private http: HttpClient"
+    ],
+    "dataservice.service.ts": [
+      "private http: HttpClient",
+      "private userService: UserService"
+    ]
+  },
+  "expected_omitted_tokens": {
+    "userlist.component.ts": ["$scope"],
+    "home.component.ts": ["$scope"],
+    "nav.component.ts": ["$scope"],
+    "dashboard.component.ts": ["$scope", "$q"],
+    "product.component.ts": ["$scope"]
+  }
+}

@@ -95,6 +95,9 @@ class RawRoute:
         is_abstract: bool,
         router_type: str,
         file: str,
+        redirect_to: Optional[str] = None,
+        on_enter: Optional[str] = None,
+        on_exit: Optional[str] = None,
     ):
         self.id           = str(uuid.uuid4())
         self.path         = path
@@ -107,6 +110,10 @@ class RawRoute:
         self.is_abstract  = is_abstract
         self.router_type  = router_type
         self.file         = file
+        # uiRouter redirect / lifecycle hooks
+        self.redirect_to  = redirect_to  # redirectTo string value (if present)
+        self.on_enter     = on_enter      # onEnter function name/description (if present)
+        self.on_exit      = on_exit       # onExit function name/description (if present)
         # Extract :param tokens from the path
         import re
         self.params = re.findall(r':(\w+)', path or '')
@@ -331,6 +338,22 @@ def _parse_uirouter_config(fn_node, file_path: str) -> List[RawRoute]:
                         and getattr(abstract_node, "value", None) is True
                     )
 
+                    # redirectTo (string or state name)
+                    redirect_node = _extract_object_prop(cfg, "redirectTo")
+                    redirect_to   = _extract_string(redirect_node)
+
+                    # onEnter / onExit — capture presence (function ref or inline fn)
+                    on_enter_node = _extract_object_prop(cfg, "onEnter")
+                    on_exit_node  = _extract_object_prop(cfg, "onExit")
+                    on_enter = (
+                        getattr(on_enter_node, "name", None)
+                        or ("<inline>" if on_enter_node is not None else None)
+                    )
+                    on_exit = (
+                        getattr(on_exit_node, "name", None)
+                        or ("<inline>" if on_exit_node is not None else None)
+                    )
+
                     routes.append(RawRoute(
                         path=url or f"/{state_name or 'unknown'}",
                         controller=controller,
@@ -342,6 +365,9 @@ def _parse_uirouter_config(fn_node, file_path: str) -> List[RawRoute]:
                         is_abstract=is_abstract,
                         router_type="uiRouter",
                         file=file_path,
+                        redirect_to=redirect_to,
+                        on_enter=on_enter,
+                        on_exit=on_exit,
                     ))
 
                 # Only follow the chain — do NOT recurse into args
