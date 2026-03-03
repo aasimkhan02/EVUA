@@ -160,12 +160,15 @@ import { Component } from '@angular/core';
 export class AppComponent {}""")
 
             # src/app/app.module.ts
+            # Minimal placeholder — AppModuleUpdaterRule rewrites this after all
+            # other rules have run, adding every generated component/service/guard.
             self._write_if_changed(self.app_dir / "app.module.ts", """\
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 
+// Auto-updated by AppModuleUpdaterRule — do not edit manually.
 @NgModule({
   declarations: [AppComponent],
   imports: [BrowserModule, AppRoutingModule],

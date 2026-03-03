@@ -1,1 +1,128 @@
-[]
+[
+  {
+    "path": "out\\angular-app\\angular-app\\angular.json",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.492337+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\package.json",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.492683+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\admin.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.492897+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\admin.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.493098+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\app-routing.module.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.493293+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\app.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.493489+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\app.module.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.493686+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\dashboard.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.493875+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\dashboard.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.494062+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\notificationservice.service.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.494255+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\order.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.494442+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\order.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.494628+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\productcard.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.494818+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\productcard.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.495005+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\search.component.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.495199+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\app\\search.component.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.495417+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\index.html",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.495788+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\main.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.496338+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\src\\polyfills.ts",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.496760+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\tsconfig.app.json",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.497040+00:00"
+  },
+  {
+    "path": "out\\angular-app\\angular-app\\tsconfig.json",
+    "action": "created",
+    "info": "",
+    "timestamp": "2026-03-03T16:18:56.497240+00:00"
+  }
+]

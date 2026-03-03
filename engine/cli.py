@@ -31,6 +31,8 @@ from pipeline.transformation.rules.angularjs.http_to_httpclient import HttpToHtt
 from pipeline.transformation.rules.angularjs.simple_watch_to_rxjs import SimpleWatchToRxjsRule
 from pipeline.transformation.rules.angularjs.service_to_injectable import ServiceToInjectableRule
 from pipeline.transformation.rules.angularjs.route_migrator import RouteMigratorRule
+from pipeline.transformation.rules.angularjs.app_module_updater import AppModuleUpdaterRule
+from pipeline.transformation.rules.angularjs.component_interaction import ComponentInteractionRule
 from pipeline.transformation.applier import RuleApplier
 from pipeline.transformation.result import TransformationResult
 
@@ -236,11 +238,13 @@ def run_pipeline(
     # RouteMigratorRule runs FIRST — it owns app-routing.module.ts entirely.
     # ControllerToComponentRule no longer touches routing.
     _all_rules = {
-        "routing":     RouteMigratorRule(out_dir=effective_out_dir, dry_run=dry_run),
-        "controllers": ControllerToComponentRule(out_dir=effective_out_dir, dry_run=dry_run),
-        "services":    ServiceToInjectableRule(out_dir=effective_out_dir, dry_run=dry_run),
-        "http":        HttpToHttpClientRule(out_dir=effective_out_dir, dry_run=dry_run),
-        "watch":       SimpleWatchToRxjsRule(out_dir=effective_out_dir, dry_run=dry_run),
+        "routing":      RouteMigratorRule(out_dir=effective_out_dir, dry_run=dry_run),
+        "controllers":  ControllerToComponentRule(out_dir=effective_out_dir, dry_run=dry_run),
+        "services":     ServiceToInjectableRule(out_dir=effective_out_dir, dry_run=dry_run),
+        "http":         HttpToHttpClientRule(out_dir=effective_out_dir, dry_run=dry_run),
+        "watch":        SimpleWatchToRxjsRule(out_dir=effective_out_dir, dry_run=dry_run),
+        "interaction":  ComponentInteractionRule(out_dir=effective_out_dir, dry_run=dry_run),
+        "module":       AppModuleUpdaterRule(out_dir=effective_out_dir, dry_run=dry_run),
     }
 
     if only:

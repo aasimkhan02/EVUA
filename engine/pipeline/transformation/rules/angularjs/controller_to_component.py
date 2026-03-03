@@ -12,50 +12,52 @@ from pipeline.transformation.template_migrator import (
 from pipeline.transformation.di_mapper import resolve_di_tokens
 
 
-def _build_component_ts(base: str, class_name: str, selector: str, di_tokens: list[str]) -> str:
+def _to_camel(name: str) -> str:
+    """Convert a property name to camelCase if it contains underscores."""
+    parts = name.split("_")
+    return parts[0] + "".join(p.capitalize() for p in parts[1:])
+
+
+def _build_component_ts(
+    base: str,
+    class_name: str,
+    selector: str,
+    di_tokens: list[str],
+    scope_properties: list[str] | None = None,
+    scope_methods: list[dict] | None = None,
+    init_calls: list[str] | None = None,
+    http_calls_by_method: dict[str, list[str]] | None = None,
+) -> str:
     """
-    Generate the TypeScript component file with a properly typed constructor.
-
-    Examples
-    --------
-    No DI:
-        export class HomeComponent {}
-
-    With DI:
-        import { HttpClient } from '@angular/common/http';
-        import { ActivatedRoute } from '@angular/router';
-
-        export class UserDetailComponent {
-          constructor(private http: HttpClient, private route: ActivatedRoute) {}
-        }
-
-    With custom services:
-        import { UserService } from './user.service';
-        // $scope removed — use component properties directly
-
-        export class UserListComponent {
-          constructor(private userService: UserService) {}
-        }
+    Generate the TypeScript component file with:
+      - Properly typed constructor (from DI tokens)
+      - Class properties migrated from $scope.x = value
+      - Class method stubs migrated from $scope.fn = function(...)
+      - ngOnInit() that calls startup methods (from top-level $scope.fn() calls)
+      - Method bodies that call their own fetch methods
     """
     resolution = resolve_di_tokens(di_tokens)
+    scope_properties    = scope_properties    or []
+    scope_methods       = scope_methods       or []
+    init_calls          = init_calls          or []
+    http_calls_by_method = http_calls_by_method or {}
 
-    # ── Collect all imports ───────────────────────────────────────────────
-    # Start with the mandatory Component import
-    # Group by module so we emit one import line per module
+    # ── Collect imports ───────────────────────────────────────────────────
     from collections import defaultdict
     imports_by_module: dict[str, list[str]] = defaultdict(list)
+    needs_oninit = bool(init_calls)
     imports_by_module["@angular/core"].append("Component")
+    if needs_oninit:
+        imports_by_module["@angular/core"].append("OnInit")
 
     for symbol, module in resolution.imports:
         if symbol not in imports_by_module[module]:
             imports_by_module[module].append(symbol)
 
-    # Custom services — import from sibling .service.ts
+    # Custom services
     custom_params: list[str] = []
     for svc_token in resolution.custom_services:
-        # 'UserService' → param='userService', file='./user.service'
-        # 'AuthFactory' → param='authFactory', file='./authfactory.service'
-        svc_class = svc_token  # preserve original casing
+        svc_class = svc_token
         svc_param = svc_class[0].lower() + svc_class[1:]
         svc_file  = f"./{svc_token.lower()}.service"
         imports_by_module[svc_file].append(svc_class)
@@ -65,17 +67,14 @@ def _build_component_ts(base: str, class_name: str, selector: str, di_tokens: li
     import_lines: list[str] = []
     angular_modules = sorted(k for k in imports_by_module if k.startswith("@"))
     local_modules   = sorted(k for k in imports_by_module if not k.startswith("@"))
-
     for mod in angular_modules + local_modules:
         symbols = imports_by_module[mod]
         import_lines.append(f"import {{ {', '.join(symbols)} }} from '{mod}';")
 
     # ── Constructor ───────────────────────────────────────────────────────
     all_params = resolution.constructor_params + custom_params
-
     if all_params:
         param_str = ", ".join(all_params)
-        # Wrap long constructors
         if len(param_str) > 72:
             inner = ",\n    ".join(all_params)
             ctor  = f"  constructor(\n    {inner}\n  ) {{}}"
@@ -84,10 +83,48 @@ def _build_component_ts(base: str, class_name: str, selector: str, di_tokens: li
     else:
         ctor = None
 
-    # ── Migration comments ────────────────────────────────────────────────
+    # ── Migration comments ($scope removed, etc.) ─────────────────────────
     comment_lines: list[str] = []
     for comment in resolution.comments:
         comment_lines.append(f"  // {comment}")
+
+    # ── Class properties from $scope.x = value ────────────────────────────
+    # Deduplicate preserving order, skip internal $scope props and method names
+    method_names = {m["name"] for m in scope_methods}
+    seen_props: set[str] = set()
+    prop_lines: list[str] = []
+    for pname in scope_properties:
+        if pname.startswith("$") or pname in method_names or pname in seen_props:
+            continue
+        seen_props.add(pname)
+        prop_lines.append(f"  {pname}: any;  // TODO: add proper type")
+
+    # ── Class methods from $scope.fn = function(...) ──────────────────────
+    method_lines: list[str] = []
+    seen_methods: set[str] = set()
+    for m in scope_methods:
+        mname = m["name"]
+        if mname.startswith("$") or mname in seen_methods:
+            continue
+        seen_methods.add(mname)
+        params = ", ".join(f"{p}: any" for p in m["params"])
+        method_lines.append(f"\n  {mname}({params}): void {{")
+        # If this method owns HTTP calls, call the generated fetch methods
+        owned_calls = http_calls_by_method.get(mname, [])
+        if owned_calls:
+            for fetch_fn in owned_calls:
+                method_lines.append(f"    this.{fetch_fn}();")
+        else:
+            method_lines.append(f"    // TODO: migrate from $scope.{mname}")
+        method_lines.append(f"  }}")
+
+    # ── ngOnInit from top-level $scope.fn() calls ─────────────────────────
+    oninit_lines: list[str] = []
+    if init_calls:
+        oninit_lines.append("\n  ngOnInit(): void {")
+        for call_name in init_calls:
+            oninit_lines.append(f"    this.{call_name}();")
+        oninit_lines.append("  }")
 
     # ── Assemble ──────────────────────────────────────────────────────────
     lines: list[str] = import_lines
@@ -96,27 +133,38 @@ def _build_component_ts(base: str, class_name: str, selector: str, di_tokens: li
     lines.append(f"  selector: '{selector}',")
     lines.append(f"  templateUrl: './{base}.component.html'")
     lines.append("})")
-    lines.append(f"export class {class_name} {{")
+    implements_clause = " implements OnInit" if needs_oninit else ""
+    lines.append(f"export class {class_name}{implements_clause} {{")
 
-    if comment_lines or ctor:
+    has_body = comment_lines or ctor or prop_lines or method_lines or oninit_lines
+
+    if has_body:
+        if prop_lines:
+            lines.extend(prop_lines)
+            lines.append("")
         if comment_lines:
             lines.extend(comment_lines)
         if ctor:
             lines.append(ctor)
-    else:
-        pass  # empty class body — closing brace on same logical line
+        if method_lines:
+            lines.extend(method_lines)
+            lines.append("")
+        if oninit_lines:
+            lines.extend(oninit_lines)
+            lines.append("")
 
     lines.append("}")
-    lines.append("")  # trailing newline
+    lines.append("")
 
     return "\n".join(lines)
 
 
 class ControllerToComponentRule:
     def __init__(self, out_dir: str = "out/angular-app", dry_run: bool = False):
-        self.project  = AngularProjectScaffold(out_dir)
-        self.out_dir  = Path(out_dir) / "src" / "app"
-        self.dry_run  = dry_run
+        self.project     = AngularProjectScaffold(out_dir)
+        self.out_dir     = Path(out_dir) / "src" / "app"
+        self.dry_run     = dry_run
+        self._http_calls = []
 
     def apply(self, analysis, patterns):
         print("\n========== ControllerToComponentRule.apply() ==========")
@@ -147,6 +195,9 @@ class ControllerToComponentRule:
                 ctrl_name = ctrl_match.group(1)
                 if ctrl_name not in template_html_by_controller:
                     template_html_by_controller[ctrl_name] = raw_html
+
+        # Store http_calls for use in _emit_component
+        self._http_calls = getattr(analysis, "http_calls", []) or []
 
         controllers = list(iter_controllers(analysis, patterns))
         print(f"[ControllerToComponent] Controllers detected: {len(controllers)}")
@@ -227,7 +278,42 @@ class ControllerToComponentRule:
             print(f"[ControllerToComponent] DI for {c.name}: (none detected)")
 
         # ── TypeScript component ──────────────────────────────────────────
-        ts_code = _build_component_ts(base, class_name, selector, di_tokens)
+        scope_properties: list[str] = getattr(c, "scope_writes",  []) or []
+        scope_methods:    list[dict] = getattr(c, "scope_methods", []) or []
+        init_calls_list:  list[str]  = getattr(c, "init_calls",   []) or []
+
+        # Build map of {method_name: [fetch_fn_names]} from http calls
+        # so method stubs can call their own fetch methods
+        http_calls_by_method: dict[str, list[str]] = {}
+        for call in (self._http_calls or []):
+            om = getattr(call, "owner_method", None)
+            if not om or getattr(call, "owner_controller", None) != c.name:
+                continue
+            method = getattr(call, "method", "get")
+            url    = getattr(call, "url", None)
+            if url:
+                segments = [s for s in url.strip("/").split("/") if s and s != "api"]
+                if segments:
+                    clean = [s for s in segments if not s.startswith(":")][-2:]
+                    name_part = "".join(w.capitalize() for w in "_".join(clean).replace("-","_").split("_"))
+                else:
+                    name_part = method.capitalize()
+                verb = "fetch" if method == "get" else method.lower()
+                fn_name = f"{verb}{name_part}"
+            else:
+                fn_name = None
+            if fn_name:
+                http_calls_by_method.setdefault(om, [])
+                if fn_name not in http_calls_by_method[om]:
+                    http_calls_by_method[om].append(fn_name)
+
+        ts_code = _build_component_ts(
+            base, class_name, selector, di_tokens,
+            scope_properties=scope_properties,
+            scope_methods=scope_methods,
+            init_calls=init_calls_list,
+            http_calls_by_method=http_calls_by_method,
+        )
 
         if self.dry_run:
             print(f"[DRY RUN] Would write: {ts_path}")

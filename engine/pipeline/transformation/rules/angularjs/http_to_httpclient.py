@@ -48,6 +48,29 @@ def _owner_to_file_base(call) -> tuple:
     return base, "component"
 
 
+
+def _infer_prop_name(url) -> str:
+    """
+    Infer the most likely $scope property name from a URL.
+    /api/products        → products
+    /api/admin/users     → users
+    /api/admin/settings  → settings
+    /api/orders          → orders
+    None                 → data
+    """
+    if not url:
+        return "data"
+    segments = [s for s in url.strip("/").split("/") if s and s != "api"]
+    # Skip path params like :id
+    clean = [s for s in segments if not s.startswith(":")]
+    if not clean:
+        return "data"
+    last = clean[-1].replace("-", "_")
+    # camelCase if contains underscore
+    parts = last.split("_")
+    return parts[0] + "".join(p.capitalize() for p in parts[1:])
+
+
 class HttpToHttpClientRule:
     def __init__(self, out_dir: str = "out/angular-app", dry_run: bool = False):
         self.project  = AngularProjectScaffold(out_dir)
@@ -120,8 +143,10 @@ class HttpToHttpClientRule:
             if not self.dry_run:
                 self._ensure_component_base(target_ts, selector, class_name)
 
+        owner_method = getattr(call, "owner_method", None)
         print(f"[HttpToHttpClient] {'(dry) ' if self.dry_run else ''}Migrating: "
-              f"{owner or file_attr} -> {method} {url} -> {target_ts.name}")
+              f"{owner or file_attr} -> {method} {url} -> {target_ts.name}"
+              + (f" [inside {owner_method}()]" if owner_method else ""))
 
         if not self.dry_run:
             if not is_q_defer:
@@ -203,8 +228,19 @@ class HttpToHttpClientRule:
             text = HTTP_CLIENT_IMPORT + text
 
         if url:
-            slug    = url.strip("/").replace("/", "_").replace("-", "_")
-            fn_name = f"load_{method}_{slug}"
+            # Build a readable method name from the last 1-2 URL segments
+            # /api/admin/users → fetchAdminUsers
+            # /api/products    → fetchProducts
+            # /api/orders      → postOrders (for POST)
+            segments = [s for s in url.strip("/").split("/") if s and s != "api"]
+            if segments:
+                # Use last 2 non-param segments (skip :id style params)
+                clean = [s for s in segments if not s.startswith(":")][-2:]
+                name_part = "".join(w.capitalize() for w in "_".join(clean).replace("-", "_").split("_"))
+            else:
+                name_part = method.capitalize()
+            verb = "fetch" if method == "get" else method.lower()
+            fn_name = f"{verb}{name_part}"
         else:
             fn_name = f"load_{method}"
 
@@ -220,10 +256,13 @@ class HttpToHttpClientRule:
                 f"  }}\n"
             )
         else:
+            # Infer the property name from the URL's last meaningful segment
+            # /api/products → products, /api/admin/users → users
+            prop_name = _infer_prop_name(url)
             method_code = (
                 f"\n  {fn_name}() {{\n"
                 f"    this.http.{method}({url_literal}).subscribe((res: any) => {{\n"
-                f"      this.data = res;\n"
+                f"      this.{prop_name} = res;\n"
                 f"    }});\n"
                 f"  }}\n"
             )

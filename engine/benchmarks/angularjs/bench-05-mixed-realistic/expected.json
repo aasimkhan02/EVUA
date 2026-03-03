@@ -1,18 +1,61 @@
 {
-  "_comment": "bench-05: Full realistic app. Every rule fires. Tests isolation — MANUAL must not contaminate adjacent SAFE changes.",
-  "supported_constructs": [
-    "service", "controller", "shallow_watch", "deep_watch",
-    "q_defer", "http_get", "http_post", "http_put"
-  ],
-  "auto_modernized": ["NotificationService", "SearchController", "AdminController"],
-  "manual_required": ["OrderController"],
-  "blocked": [],
-  "notes": [
-    "NotificationService: clean service — SAFE",
-    "SearchController: shallow $watch, only 2 scope writes — SAFE + BehaviorSubject injected",
-    "OrderController: $q.defer AND deep $watch — MANUAL on both counts",
-    "AdminController: 5 scope writes, no watch. With threshold=6 (current default) → SAFE",
-    "CRITICAL: OrderController MANUAL must not bleed into SearchController or AdminController",
-    "This is the hardest benchmark — tests rule isolation under realistic load"
+  "description": "Mixed realistic — all rule types + AppModuleUpdater + ComponentInteraction",
+
+  "expected_classes": 6,
+  "expected_services": 1,
+  "expected_components": 5,
+
+  "risk_expectations": {
+    "NotificationService":   "SAFE",
+    "SearchController":      "SAFE",
+    "OrderController":       "MANUAL",
+    "AdminController":       "SAFE",
+    "ProductCardController": "SAFE",
+    "DashboardController":   "SAFE"
+  },
+
+  "app_module": {
+    "must_declare": [
+      "AppComponent",
+      "SearchComponent",
+      "OrderComponent",
+      "AdminComponent",
+      "ProductCardComponent",
+      "DashboardComponent"
+    ],
+    "must_provide": [
+      "NotificationService"
+    ],
+    "must_import": [
+      "BrowserModule",
+      "AppRoutingModule",
+      "HttpClientModule"
+    ]
+  },
+
+  "component_interaction": {
+    "parent": "DashboardComponent",
+    "child":  "ProductCardComponent",
+    "expected_inputs":  ["product"],
+    "expected_outputs": ["saved"],
+    "child_ts_must_contain": [
+      "@Input() product",
+      "@Output() saved"
+    ]
+  },
+
+  "generated_files": [
+    "app.module.ts",
+    "search.component.ts",
+    "search.component.html",
+    "order.component.ts",
+    "order.component.html",
+    "admin.component.ts",
+    "admin.component.html",
+    "productcard.component.ts",
+    "productcard.component.html",
+    "dashboard.component.ts",
+    "dashboard.component.html",
+    "notification.service.ts"
   ]
 }

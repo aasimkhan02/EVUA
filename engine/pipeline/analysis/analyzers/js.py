@@ -13,6 +13,8 @@ class RawController:
         di: List[str],
         scope_reads: List[str],
         scope_writes: List[str],
+        scope_methods: List[dict],
+        init_calls: List[str],
         watch_depths: List[str],
         uses_compile: bool = False,
         has_nested_scopes: bool = False,
@@ -22,7 +24,9 @@ class RawController:
         self.file = file
         self.di = di
         self.scope_reads = scope_reads
-        self.scope_writes = scope_writes
+        self.scope_writes = scope_writes   # plain property assignments: $scope.x = value
+        self.scope_methods = scope_methods # function assignments: $scope.fn = function(a,b){...}
+        self.init_calls = init_calls       # top-level $scope.fn() calls → ngOnInit
         self.watch_depths = watch_depths
         self.uses_compile = uses_compile
         self.has_nested_scopes = has_nested_scopes
@@ -52,6 +56,7 @@ class RawHttpCall:
         url,
         uses_q: bool,
         owner_controller: Optional[str] = None,
+        owner_method: Optional[str] = None,
     ):
         self.id = str(uuid.uuid4())
         self.file = file
@@ -59,6 +64,7 @@ class RawHttpCall:
         self.url = url
         self.uses_q = uses_q
         self.owner_controller = owner_controller
+        self.owner_method = owner_method   # $scope method name that contains this call
         self.classes = []
         self.functions = []
         self.globals = []
@@ -496,21 +502,72 @@ class JSAnalyzer(Analyzer):
 
         # ── controller / service / factory body scanner ────────────────────
         def _handle_controller(name: str, raw_arg, fn_node, file_path: str):
-            di             = _extract_di_names(raw_arg)
-            scope_reads:  List[str] = []
-            scope_writes: List[str] = []
-            watch_depths: List[str] = []
+            di              = _extract_di_names(raw_arg)
+            scope_reads:   List[str]  = []
+            scope_writes:  List[str]  = []   # plain value properties
+            scope_methods: List[dict] = []   # function-valued properties
+            init_calls:    List[str]  = []   # top-level $scope.fn() calls → ngOnInit
+            watch_depths:  List[str]  = []
             uses_compile      = False
             has_nested_scopes = False
 
-            def scan_fn(node):
+            def _scan_method_http(fn_body, method_name: str, ctrl_name: str, fpath: str):
+                """
+                Scan a $scope method's function body for $http calls and record
+                them with owner_method=method_name so http rule can inline them.
+                """
+                print("[js.py DEBUG] _scan_method_http called: ctrl=" + repr(ctrl_name) + " method=" + repr(method_name))
+                def _walk(n):
+                    if n is None or not hasattr(n, "type"):
+                        return
+                    if getattr(n, "type", None) == "CallExpression":
+                        cal   = getattr(n, "callee", None)
+                        cargs = getattr(n, "arguments", []) or []
+                        if getattr(cal, "type", None) == "MemberExpression":
+                            cobj  = getattr(cal.object, "type", None)
+                            cname = getattr(cal.object, "name", None) if cobj == "Identifier" else None
+                            cprop = getattr(cal.property, "name", None)
+                            if cname == "$http" and cprop in ("get", "post", "put", "delete", "patch"):
+                                url = None
+                                if cargs and getattr(cargs[0], "type", None) == "Literal":
+                                    url = cargs[0].value
+                                print("[js.py DEBUG] _scan_method_http ADDING " + ctrl_name + "." + method_name + " <- $http." + cprop + "(" + repr(url) + ")")
+                                raw_http_calls.append(
+                                    RawHttpCall(fpath, cprop, url,
+                                                uses_q=False,
+                                                owner_controller=ctrl_name,
+                                                owner_method=method_name)
+                                )
+                                return
+                            if cname == "$q" and cprop in ("defer", "all"):
+                                raw_http_calls.append(
+                                    RawHttpCall(fpath, f"q_{cprop}", None,
+                                                uses_q=True,
+                                                owner_controller=ctrl_name,
+                                                owner_method=method_name)
+                                )
+                                return
+                    for key in ["body", "expression", "callee", "object", "property",
+                                "left", "right", "arguments", "params",
+                                "declarations", "init", "consequent", "alternate", "block"]:
+                        val = getattr(n, key, None)
+                        if val is None: continue
+                        if hasattr(val, "type"): _walk(val)
+                        elif isinstance(val, list):
+                            for item in val:
+                                if hasattr(item, "type"): _walk(item)
+
+                _walk(fn_body)
+
+            def scan_fn(node, _current_method=None):
                 nonlocal uses_compile, has_nested_scopes
                 if node is None or not hasattr(node, "type"):
                     return
 
-                # $scope.x = ...  → scope write
+                # $scope.x = ...  → scope write (property or method)
                 if getattr(node, "type", None) == "AssignmentExpression":
-                    left = getattr(node, "left", None)
+                    left  = getattr(node, "left", None)
+                    right = getattr(node, "right", None)
                     if getattr(left, "type", None) == "MemberExpression":
                         obj  = getattr(left, "object", None)
                         prop = getattr(left, "property", None)
@@ -519,8 +576,45 @@ class JSAnalyzer(Analyzer):
                             and getattr(obj, "name", None) == "$scope"
                         ):
                             pname = getattr(prop, "name", None) or getattr(prop, "value", None)
-                            if pname:
-                                scope_writes.append(pname)
+                            if pname and not pname.startswith("$"):
+                                rtype = getattr(right, "type", None)
+                                if rtype in ("FunctionExpression", "ArrowFunctionExpression"):
+                                    # $scope.fn = function(a, b) {...}  → class method
+                                    params = [
+                                        getattr(p, "name", "arg")
+                                        for p in (getattr(right, "params", []) or [])
+                                        if getattr(p, "type", None) == "Identifier"
+                                    ]
+                                    scope_methods.append({"name": pname, "params": params})
+                                    # ── Scan method body for $http calls ─────
+                                    # Tag each with owner_method so http rule can
+                                    # inline them into the right method stub.
+                                    fn_body = getattr(right, "body", None)
+                                    if fn_body:
+                                        _scan_method_http(fn_body, pname, name, file_path)
+                                else:
+                                    # $scope.x = value  → class property
+                                    scope_writes.append(pname)
+
+                # $scope.fn()  → top-level call → ngOnInit
+                # Pattern: ExpressionStatement > CallExpression where callee is
+                # MemberExpression($scope, fn) with no arguments or simple args
+                if getattr(node, "type", None) == "CallExpression":
+                    callee_node = getattr(node, "callee", None)
+                    if getattr(callee_node, "type", None) == "MemberExpression":
+                        cobj  = getattr(callee_node, "object", None)
+                        cprop = getattr(callee_node, "property", None)
+                        if (
+                            getattr(cobj, "type", None) == "Identifier"
+                            and getattr(cobj, "name", None) == "$scope"
+                        ):
+                            fn_called = getattr(cprop, "name", None)
+                            if fn_called and not fn_called.startswith("$"):
+                                # Only record if this method was defined on $scope
+                                # (i.e. it's in scope_methods). We check post-scan
+                                # but store all for now — filter in constructor call.
+                                if fn_called not in init_calls:
+                                    init_calls.append(fn_called)
 
                 # var x = $scope.$new()  → nested scope
                 if getattr(node, "type", None) == "VariableDeclarator":
@@ -561,22 +655,27 @@ class JSAnalyzer(Analyzer):
                             if pname == "$new":
                                 has_nested_scopes = True
 
-                        # $http calls INSIDE controller body → attribute to this controller
+                        # $http calls INSIDE controller body
+                        # Skip if inside a $scope method (_scan_method_http handles those)
                         if obj_name == "$http" and pname in ("get", "post", "put", "delete"):
-                            url = None
+                            url_dbg = None
                             if callargs and getattr(callargs[0], "type", None) == "Literal":
-                                url = callargs[0].value
-                            raw_http_calls.append(
-                                RawHttpCall(file_path, pname, url,
-                                            uses_q=False, owner_controller=name)
-                            )
+                                url_dbg = callargs[0].value
+                            print("[js.py DEBUG] $http." + pname + "(" + str(url_dbg) + ") in " + name + " _current_method=" + repr(_current_method) + (" -> SKIPPED" if _current_method else " -> ADDED"))
+                            if _current_method is None:
+                                raw_http_calls.append(
+                                    RawHttpCall(file_path, pname, url_dbg,
+                                                uses_q=False, owner_controller=name)
+                                )
 
                         # $q.defer / $q.all INSIDE controller body
                         if obj_name == "$q" and pname in ("defer", "all"):
-                            raw_http_calls.append(
-                                RawHttpCall(file_path, f"q_{pname}", None,
-                                            uses_q=True, owner_controller=name)
-                            )
+                            print("[js.py DEBUG] $q." + pname + "() in " + name + " _current_method=" + repr(_current_method))
+                            if _current_method is None:
+                                raw_http_calls.append(
+                                    RawHttpCall(file_path, f"q_{pname}", None,
+                                                uses_q=True, owner_controller=name)
+                                )
 
                     # $compile(...)
                     if (
@@ -597,12 +696,40 @@ class JSAnalyzer(Analyzer):
                         if pname:
                             scope_reads.append(pname)
 
+                _nt = getattr(node, "type", None)
+                if _nt == "AssignmentExpression":
+                    _lft = getattr(node, "left", None)
+                    _rgt = getattr(node, "right", None)
+                    if getattr(_lft, "type", None) == "MemberExpression":
+                        _ot = getattr(_lft.object, "type", None) if _lft else None
+                        _on = getattr(_lft.object, "name", None) if _ot == "Identifier" else None
+                        _pn = getattr(_lft.property, "name", None) if _lft else None
+                        _rt = getattr(_rgt, "type", None)
+                        if (_on == "$scope" and _pn and not _pn.startswith("$") and
+                                _rt in ("FunctionExpression", "ArrowFunctionExpression")):
+                            _fb = getattr(_rgt, "body", None)
+                            if _fb:
+                                scan_fn(_fb, _current_method=_pn)
+                            for _c in iter_children(_rgt):
+                                if _c is not _fb:
+                                    scan_fn(_c, _current_method)
+                            for _c in iter_children(_lft):
+                                scan_fn(_c, _current_method)
+                            return
+
                 for child in iter_children(node):
-                    scan_fn(child)
+                    scan_fn(child, _current_method)
 
             body = getattr(fn_node, "body", None)
             if body:
                 scan_fn(body)
+
+            _owned=[c for c in raw_http_calls if getattr(c,"owner_method",None) and getattr(c,"owner_controller",None)==name]
+            _unowned=[c for c in raw_http_calls if not getattr(c,"owner_method",None) and getattr(c,"owner_controller",None)==name]
+            print("[js.py DEBUG] Controller " + repr(name) + ": " + str(len(_owned)) + " method-owned, " + str(len(_unowned)) + " top-level, scope_methods=" + str([m["name"] for m in scope_methods]) + ", init_calls_raw=" + str(init_calls))
+            # Filter init_calls: only keep calls to methods actually defined on $scope
+            method_names_set = {m["name"] for m in scope_methods}
+            filtered_init_calls = [c for c in init_calls if c in method_names_set]
 
             raw_modules.append(RawController(
                 name=name,
@@ -610,6 +737,8 @@ class JSAnalyzer(Analyzer):
                 di=di,
                 scope_reads=scope_reads,
                 scope_writes=scope_writes,
+                scope_methods=scope_methods,
+                init_calls=filtered_init_calls,
                 watch_depths=watch_depths,
                 uses_compile=uses_compile,
                 has_nested_scopes=has_nested_scopes,

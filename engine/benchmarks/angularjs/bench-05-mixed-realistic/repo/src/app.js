@@ -1,16 +1,22 @@
 // bench-05-mixed-realistic/repo/src/app.js
-// The hardest benchmark. Every transformation rule fires. Every risk level appears.
-// Tests that changes are isolated — a MANUAL change must not make adjacent SAFE changes RISKY.
+// Tests every transformation rule. Every risk level appears.
+// Feature coverage:
+//   Feature #1: HTTP calls merged into owning method body (not disconnected)
+//   Feature #2: ngOnInit generated from top-level $scope.fn() calls
+//   AppModuleUpdaterRule  → app.module.ts declares all components + services
+//   ComponentInteractionRule → @Input/@Output stubs when parent uses child in template
 //
 // Expected outcome:
 //   NotificationService  → SAFE  (clean service, $http only)
 //   SearchController     → SAFE  (shallow watch, few writes, no compile)
 //   OrderController      → MANUAL ($q.defer + deep watch)
-//   AdminController      → RISKY (5 scope writes, no watch — heavy mutation)
+//   AdminController      → SAFE  (load() body calls fetchAdminUsers etc, ngOnInit calls load)
+//   ProductCardController → SAFE (child component — receives @Input from parent)
+//   DashboardController  → SAFE (ngOnInit calls loadProducts which calls fetchProducts)
 
 angular.module('realisticApp', [])
 
-// ── NotificationService ───────────────────────────────────────
+// ── NotificationService ──────────────────────────────────────────────────
 // Clean service. Should auto-migrate to @Injectable() as SAFE.
 .service('NotificationService', ['$http', function($http) {
 
@@ -23,15 +29,13 @@ angular.module('realisticApp', [])
   };
 }])
 
-// ── SearchController ──────────────────────────────────────────
+// ── SearchController ─────────────────────────────────────────────────────
 // Shallow $watch on query string → safe RxJS BehaviorSubject migration
-// Only 2 scope writes → SAFE (under threshold of 5)
 .controller('SearchController', ['$scope', '$http', function($scope, $http) {
 
   $scope.query   = '';
   $scope.results = [];
 
-  // Shallow watch — safe for BehaviorSubject rewrite
   $scope.$watch('query', function(val) {
     if (val && val.length >= 2) {
       $http.get('/api/search', { params: { q: val } }).then(function(res) {
@@ -41,23 +45,20 @@ angular.module('realisticApp', [])
   });
 }])
 
-// ── OrderController ───────────────────────────────────────────
+// ── OrderController ──────────────────────────────────────────────────────
 // $q.defer + deep watch on cart — double MANUAL trigger
-// Tests that $q.defer alone is enough for MANUAL even before WatcherRiskRule fires
 .controller('OrderController', ['$scope', '$http', '$q', function($scope, $http, $q) {
 
   $scope.cart    = [];
   $scope.total   = 0;
   $scope.coupon  = null;
 
-  // Deep watch on cart object — MANUAL
   $scope.$watch('cart', function(cart) {
     $scope.total = cart.reduce(function(sum, item) {
       return sum + (item.price * item.qty);
     }, 0);
   }, true);
 
-  // $q.defer — MANUAL (Promise chain, must be rewritten to Observable manually)
   $scope.placeOrder = function() {
     var deferred = $q.defer();
     $http.post('/api/orders', { cart: $scope.cart, coupon: $scope.coupon })
@@ -71,11 +72,11 @@ angular.module('realisticApp', [])
   };
 }])
 
-// ── AdminController ───────────────────────────────────────────
-// No watch, no compile, no nested scope — but 5 scope writes
-// Tests the heavy mutation RISKY path (>= 5 unique writes with threshold at 5)
-// NOTE: with threshold=6 this becomes SAFE. With threshold=5 it's RISKY.
-// This benchmark deliberately tests the boundary — document the expected behavior.
+// ── AdminController ──────────────────────────────────────────────────────
+// TESTS Feature #1: $scope.load() contains all 4 $http.get calls.
+// Expected: load() method body calls fetchAdminUsers(), fetchAdminRoles(), etc.
+// TESTS Feature #2: $scope.load() is called at bottom of controller.
+// Expected: ngOnInit() { this.load(); }
 .controller('AdminController', ['$scope', '$http', function($scope, $http) {
 
   $scope.users     = [];
@@ -84,10 +85,6 @@ angular.module('realisticApp', [])
   $scope.auditLog  = [];
   $scope.activeTab = 'users';
 
-  // 5 unique scope writes above — RISKY at threshold=5, SAFE at threshold=6
-  // Benchmark uses threshold=6 (current engine default) → expects SAFE
-  // Change _HEAVY_SCOPE_WRITE_THRESHOLD back to 5 to make this RISKY
-
   $scope.load = function() {
     $http.get('/api/admin/users').then(function(res) { $scope.users = res.data; });
     $http.get('/api/admin/roles').then(function(res) { $scope.roles = res.data; });
@@ -95,5 +92,40 @@ angular.module('realisticApp', [])
     $http.get('/api/admin/audit').then(function(res) { $scope.auditLog = res.data; });
   };
 
+  // Feature #2: top-level call → ngOnInit
   $scope.load();
+}])
+
+// ── ProductCardController ────────────────────────────────────────────────
+.controller('ProductCardController', ['$scope', function($scope) {
+
+  $scope.save = function() {
+    if ($scope.onSaved) {
+      $scope.onSaved({ product: $scope.product });
+    }
+  };
+}])
+
+// ── DashboardController ──────────────────────────────────────────────────
+// TESTS Feature #1: $scope.loadProducts() contains $http.get('/api/products').
+// Expected: loadProducts() body calls fetchProducts().
+// TESTS Feature #2: $scope.loadProducts() called at bottom.
+// Expected: ngOnInit() { this.loadProducts(); }
+.controller('DashboardController', ['$scope', '$http', function($scope, $http) {
+
+  $scope.products = [];
+  $scope.selected = null;
+
+  $scope.loadProducts = function() {
+    $http.get('/api/products').then(function(res) {
+      $scope.products = res.data;
+    });
+  };
+
+  $scope.onProductSaved = function(product) {
+    console.log('Product saved:', product);
+  };
+
+  // Feature #2: top-level call → ngOnInit
+  $scope.loadProducts();
 }]);
