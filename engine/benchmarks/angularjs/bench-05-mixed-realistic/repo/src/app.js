@@ -14,10 +14,13 @@
 //   ProductCardController → SAFE (child component — receives @Input from parent)
 //   DashboardController  → SAFE (ngOnInit calls loadProducts which calls fetchProducts)
 
+// NOTE: This benchmark intentionally has NO AngularJS routing config.
+// RouteMigratorRule must NOT invent fallback routes.
+// Expected output: empty Routes[] with TODO.
+
 angular.module('realisticApp', [])
 
 // ── NotificationService ──────────────────────────────────────────────────
-// Clean service. Should auto-migrate to @Injectable() as SAFE.
 .service('NotificationService', ['$http', function($http) {
 
   this.getAll = function() {
@@ -30,7 +33,6 @@ angular.module('realisticApp', [])
 }])
 
 // ── EmailService ──────────────────────────────────────────────────
-// Tests filename stripping: should generate email.service.ts
 .service('EmailService', ['$http', function($http) {
 
   this.send = function(payload) {
@@ -40,7 +42,6 @@ angular.module('realisticApp', [])
 }])
 
 // ── SearchController ─────────────────────────────────────────────────────
-// Shallow $watch on query string → safe RxJS BehaviorSubject migration
 .controller('SearchController', ['$scope', '$http', function($scope, $http) {
 
   $scope.query   = '';
@@ -56,7 +57,6 @@ angular.module('realisticApp', [])
 }])
 
 // ── OrderController ──────────────────────────────────────────────────────
-// $q.defer + deep watch on cart — double MANUAL trigger
 .controller('OrderController', ['$scope', '$http', '$q', function($scope, $http, $q) {
 
   $scope.cart    = [];
@@ -83,10 +83,6 @@ angular.module('realisticApp', [])
 }])
 
 // ── AdminController ──────────────────────────────────────────────────────
-// TESTS Feature #1: $scope.load() contains all 4 $http.get calls.
-// Expected: load() method body calls fetchAdminUsers(), fetchAdminRoles(), etc.
-// TESTS Feature #2: $scope.load() is called at bottom of controller.
-// Expected: ngOnInit() { this.load(); }
 .controller('AdminController', ['$scope', '$http', function($scope, $http) {
 
   $scope.users     = [];
@@ -102,7 +98,6 @@ angular.module('realisticApp', [])
     $http.get('/api/admin/audit').then(function(res) { $scope.auditLog = res.data; });
   };
 
-  // Feature #2: top-level call → ngOnInit
   $scope.load();
 }])
 
@@ -117,10 +112,6 @@ angular.module('realisticApp', [])
 }])
 
 // ── DashboardController ──────────────────────────────────────────────────
-// TESTS Feature #1: $scope.loadProducts() contains $http.get('/api/products').
-// Expected: loadProducts() body calls fetchProducts().
-// TESTS Feature #2: $scope.loadProducts() called at bottom.
-// Expected: ngOnInit() { this.loadProducts(); }
 .controller('DashboardController', ['$scope', '$http', function($scope, $http) {
 
   $scope.products = [];
@@ -136,6 +127,23 @@ angular.module('realisticApp', [])
     console.log('Product saved:', product);
   };
 
-  // Feature #2: top-level call → ngOnInit
   $scope.loadProducts();
-}]);
+}])
+
+// ── highlightDirective (Element → Component) ─────────────────────────────
+.directive('highlightDirective', function() {
+  return {
+    restrict: 'E',
+    template: '<div>Highlight</div>'
+  };
+})
+
+// ── uppercaseDirective (Attribute → Pipe) ────────────────────────────────
+.directive('uppercaseDirective', function() {
+  return {
+    restrict: 'A',
+    link: function(scope, element) {
+      element.text(element.text().toUpperCase());
+    }
+  };
+});

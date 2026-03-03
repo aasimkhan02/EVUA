@@ -580,33 +580,31 @@ export class AppRoutingModule {}
     # ── Fallback ──────────────────────────────────────────────────────────
 
     def _build_fallback_routing(self, analysis) -> str:
+        """
+        No AngularJS route config detected.
+
+        Do NOT invent routes from controller names.
+        Emit empty Routes[] with explicit TODO.
+        """
+
         import_lines = [
             "import { NgModule } from '@angular/core';",
             "import { RouterModule, Routes } from '@angular/router';",
         ]
-        route_entries = []
-        for module in analysis.modules:
-            for cls in module.classes:
-                name = cls.name
-                if not (name.endswith("Controller") or name.endswith("Ctrl")):
-                    continue
-                base       = name.replace("Controller", "").replace("Ctrl", "").lower()
-                class_name = name.replace("Controller", "").replace("Ctrl", "") + "Component"
-                import_lines.append(f"import {{ {class_name} }} from './{base}.component';")
-                route_entries.append(f"  {{ path: '{base}', component: {class_name} }}")
 
-        routes_str = (
-            "const routes: Routes = [\n" + ",\n".join(route_entries) + "\n];"
-            if route_entries else "const routes: Routes = [];"
-        )
+        routes_str = """const routes: Routes = [
+    // TODO: No AngularJS route configuration detected.
+    // Add real application routes here.
+    ];"""
+
         return "\n".join(import_lines) + "\n\n" + routes_str + """
 
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
-export class AppRoutingModule {}
-"""
+    @NgModule({
+    imports: [RouterModule.forRoot(routes)],
+    exports: [RouterModule]
+    })
+    export class AppRoutingModule {}
+    """
 
     # ── Stub generators ───────────────────────────────────────────────────
 
