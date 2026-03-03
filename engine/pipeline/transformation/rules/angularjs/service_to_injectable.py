@@ -102,7 +102,15 @@ class ServiceToInjectableRule:
                 class_name = raw_name + "Service"
                 base       = raw_name
 
-            file_name = f"{raw_name.lower()}.service.ts"
+            # ---- filename normalization fix ----
+            normalized = raw_name
+
+            if normalized.lower().endswith("service"):
+                normalized = normalized[:-7]  # strip 'Service'
+            elif normalized.lower().endswith("svc"):
+                normalized = normalized[:-3]  # strip 'Svc'
+
+            file_name = f"{normalized.lower()}.service.ts"
             ts_path   = self.out_dir / file_name
 
             if di_tokens:

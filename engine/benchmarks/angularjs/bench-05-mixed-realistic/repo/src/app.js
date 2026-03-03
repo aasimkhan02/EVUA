@@ -29,6 +29,16 @@ angular.module('realisticApp', [])
   };
 }])
 
+// ── EmailService ──────────────────────────────────────────────────
+// Tests filename stripping: should generate email.service.ts
+.service('EmailService', ['$http', function($http) {
+
+  this.send = function(payload) {
+    return $http.post('/api/email', payload);
+  };
+
+}])
+
 // ── SearchController ─────────────────────────────────────────────────────
 // Shallow $watch on query string → safe RxJS BehaviorSubject migration
 .controller('SearchController', ['$scope', '$http', function($scope, $http) {

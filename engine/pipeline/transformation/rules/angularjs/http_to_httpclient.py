@@ -39,7 +39,14 @@ def _owner_to_file_base(call) -> tuple:
     if owner:
         kind = _classify_owner(owner)
         if kind == "service":
-            base = owner.lower().replace(" ", "")
+            normalized = owner
+
+            if normalized.lower().endswith("service"):
+                normalized = normalized[:-7]
+            elif normalized.lower().endswith("svc"):
+                normalized = normalized[:-3]
+
+            base = normalized.lower().replace(" ", "")
         else:
             base = _owner_to_base(owner)
         return base, kind
@@ -131,7 +138,7 @@ class HttpToHttpClientRule:
         is_q_defer = method.startswith("q_")
 
         if kind == "service":
-            target_ts  = self.app_dir / f"{base}.service.ts"
+            target_ts = self.app_dir / f"{base}.service.ts"
             class_name = "".join(w.capitalize() for w in base.split("_")) + "Service"
             selector   = None
             if not self.dry_run:
