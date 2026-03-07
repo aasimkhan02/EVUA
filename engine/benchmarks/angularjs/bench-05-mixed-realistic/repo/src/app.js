@@ -3,20 +3,11 @@
 // Feature coverage:
 //   Feature #1: HTTP calls merged into owning method body (not disconnected)
 //   Feature #2: ngOnInit generated from top-level $scope.fn() calls
-//   AppModuleUpdaterRule  → app.module.ts declares all components + services
-//   ComponentInteractionRule → @Input/@Output stubs when parent uses child in template
+//   HttpToHttpClientRule → preserves .catch() using pipe(catchError)
+//   Directive rules → stub generation
 //
-// Expected outcome:
-//   NotificationService  → SAFE  (clean service, $http only)
-//   SearchController     → SAFE  (shallow watch, few writes, no compile)
-//   OrderController      → MANUAL ($q.defer + deep watch)
-//   AdminController      → SAFE  (load() body calls fetchAdminUsers etc, ngOnInit calls load)
-//   ProductCardController → SAFE (child component — receives @Input from parent)
-//   DashboardController  → SAFE (ngOnInit calls loadProducts which calls fetchProducts)
-
 // NOTE: This benchmark intentionally has NO AngularJS routing config.
 // RouteMigratorRule must NOT invent fallback routes.
-// Expected output: empty Routes[] with TODO.
 
 angular.module('realisticApp', [])
 
@@ -24,19 +15,30 @@ angular.module('realisticApp', [])
 .service('NotificationService', ['$http', function($http) {
 
   this.getAll = function() {
-    return $http.get('/api/notifications');
+    return $http.get('/api/notifications')
+      .then(function(res) { return res.data; })
+      .catch(function(err) {
+        console.error('Notification fetch failed', err);
+        throw err;
+      });
   };
 
   this.markRead = function(id) {
-    return $http.put('/api/notifications/' + id, { read: true });
+    return $http.put('/api/notifications/' + id, { read: true })
+      .then(function(res) { return res.data; });
   };
 }])
 
-// ── EmailService ──────────────────────────────────────────────────
+// ── EmailService ─────────────────────────────────────────────────────────
 .service('EmailService', ['$http', function($http) {
 
   this.send = function(payload) {
-    return $http.post('/api/email', payload);
+    return $http.post('/api/email', payload)
+      .then(function(res) { return res.data; })
+      .catch(function(err) {
+        console.error('Email failed', err);
+        throw err;
+      });
   };
 
 }])
@@ -49,9 +51,13 @@ angular.module('realisticApp', [])
 
   $scope.$watch('query', function(val) {
     if (val && val.length >= 2) {
-      $http.get('/api/search', { params: { q: val } }).then(function(res) {
-        $scope.results = res.data;
-      });
+      $http.get('/api/search', { params: { q: val } })
+        .then(function(res) {
+          $scope.results = res.data;
+        })
+        .catch(function(err) {
+          console.error('Search failed', err);
+        });
     }
   });
 }])
@@ -71,9 +77,15 @@ angular.module('realisticApp', [])
 
   $scope.placeOrder = function() {
     var deferred = $q.defer();
+
     $http.post('/api/orders', { cart: $scope.cart, coupon: $scope.coupon })
-      .then(function(res) { deferred.resolve(res.data); })
-      .catch(function(err) { deferred.reject(err); });
+      .then(function(res) {
+        deferred.resolve(res.data);
+      })
+      .catch(function(err) {
+        deferred.reject(err);
+      });
+
     return deferred.promise;
   };
 
@@ -92,12 +104,21 @@ angular.module('realisticApp', [])
   $scope.activeTab = 'users';
 
   $scope.load = function() {
-    $http.get('/api/admin/users').then(function(res) { $scope.users = res.data; });
-    $http.get('/api/admin/roles').then(function(res) { $scope.roles = res.data; });
-    $http.get('/api/admin/settings').then(function(res) { $scope.settings = res.data; });
-    $http.get('/api/admin/audit').then(function(res) { $scope.auditLog = res.data; });
+
+    $http.get('/api/admin/users')
+      .then(function(res) { $scope.users = res.data; });
+
+    $http.get('/api/admin/roles')
+      .then(function(res) { $scope.roles = res.data; });
+
+    $http.get('/api/admin/settings')
+      .then(function(res) { $scope.settings = res.data; });
+
+    $http.get('/api/admin/audit')
+      .then(function(res) { $scope.auditLog = res.data; });
   };
 
+  // Feature #2 → should become ngOnInit()
   $scope.load();
 }])
 
@@ -118,19 +139,24 @@ angular.module('realisticApp', [])
   $scope.selected = null;
 
   $scope.loadProducts = function() {
-    $http.get('/api/products').then(function(res) {
-      $scope.products = res.data;
-    });
+    $http.get('/api/products')
+      .then(function(res) {
+        $scope.products = res.data;
+      })
+      .catch(function(err) {
+        console.error('Products failed', err);
+      });
   };
 
   $scope.onProductSaved = function(product) {
     console.log('Product saved:', product);
   };
 
+  // Feature #2 → should become ngOnInit()
   $scope.loadProducts();
 }])
 
-// ── highlightDirective (Element → Component) ─────────────────────────────
+// ── highlightDirective (Element) ─────────────────────────────────────────
 .directive('highlightDirective', function() {
   return {
     restrict: 'E',
@@ -138,7 +164,7 @@ angular.module('realisticApp', [])
   };
 })
 
-// ── uppercaseDirective (Attribute → Pipe) ────────────────────────────────
+// ── uppercaseDirective (Attribute) ───────────────────────────────────────
 .directive('uppercaseDirective', function() {
   return {
     restrict: 'A',

@@ -1,0 +1,64 @@
+<!-- bench-100: dashboard.html
+     Tests EVERY template migrator rewrite the engine supports.
+     Bound to DashboardController.
+-->
+<div ng-controller="DashboardController">
+  <h1>Dashboard</h1>
+
+  <!-- ng-if → *ngIf -->
+  <div ng-if="loading" class="spinner">Loading...</div>
+
+  <!-- ng-show → *ngIf (migrated from ng-show) -->
+  <div ng-show="stats.visible" class="stats-panel">
+
+    <!-- ng-class → [ngClass] -->
+    <span ng-class="{'positive': stats.growth > 0, 'negative': stats.growth <= 0}">
+      Growth: {{stats.growth}}%
+    </span>
+
+    <!-- ng-style → [ngStyle] -->
+    <div ng-style="{'color': stats.color}">Status: {{stats.label}}</div>
+
+  </div>
+
+  <!-- ng-hide → *ngIf with !() -->
+  <div ng-hide="loading" class="content">
+
+    <!-- ng-repeat → *ngFor, with ng-class and ng-click -->
+    <ul class="activity-feed">
+      <li ng-repeat="item in activity track by item.id"
+          ng-class="{'highlight': item.important}">
+        <span>{{item.message | capitalize}}</span>
+        <!-- ng-click → (click) -->
+        <button ng-click="dismiss(item.id)">Dismiss</button>
+      </li>
+    </ul>
+
+    <!-- ng-model → [(ngModel)], ng-change → (change) -->
+    <select ng-model="filter" ng-change="applyFilter()">
+      <option value="all">All</option>
+      <option value="recent">Recent</option>
+    </select>
+
+    <!-- limitTo filter → slice pipe -->
+    <p>Showing: {{activity | limitTo:5}}</p>
+
+    <!-- orderBy — no Angular equivalent, flagged with TODO -->
+    <ul>
+      <li ng-repeat="item in activity | orderBy:'-timestamp'">{{item.message}}</li>
+    </ul>
+
+    <!-- ng-href → [href] -->
+    <a ng-href="{{detailUrl}}">View Details</a>
+
+    <!-- ng-src → [src] -->
+    <img ng-src="{{stats.iconUrl}}" alt="icon">
+
+    <!-- ng-disabled → [disabled] -->
+    <button ng-disabled="loading" ng-click="refresh()">Refresh</button>
+
+    <!-- ng-readonly → [readOnly] -->
+    <input type="text" ng-model="filter" ng-readonly="locked">
+
+  </div>
+</div>

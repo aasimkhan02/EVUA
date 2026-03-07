@@ -8,6 +8,8 @@ from pipeline.transformation.helpers import iter_http_calls
 
 HTTP_CLIENT_IMPORT        = "import { HttpClient } from '@angular/common/http';\n"
 HTTP_CLIENT_MODULE_IMPORT = "import { HttpClientModule } from '@angular/common/http';\n"
+CATCH_ERROR_IMPORT = "import { catchError } from 'rxjs/operators';\n"
+THROW_ERROR_IMPORT = "import { throwError } from 'rxjs';\n"
 
 
 def _classify_owner(owner: str) -> str:
@@ -40,12 +42,10 @@ def _owner_to_file_base(call) -> tuple:
         kind = _classify_owner(owner)
         if kind == "service":
             normalized = owner
-
             if normalized.lower().endswith("service"):
                 normalized = normalized[:-7]
             elif normalized.lower().endswith("svc"):
                 normalized = normalized[:-3]
-
             base = normalized.lower().replace(" ", "")
         else:
             base = _owner_to_base(owner)
@@ -55,25 +55,14 @@ def _owner_to_file_base(call) -> tuple:
     return base, "component"
 
 
-
 def _infer_prop_name(url) -> str:
-    """
-    Infer the most likely $scope property name from a URL.
-    /api/products        → products
-    /api/admin/users     → users
-    /api/admin/settings  → settings
-    /api/orders          → orders
-    None                 → data
-    """
     if not url:
         return "data"
     segments = [s for s in url.strip("/").split("/") if s and s != "api"]
-    # Skip path params like :id
     clean = [s for s in segments if not s.startswith(":")]
     if not clean:
         return "data"
     last = clean[-1].replace("-", "_")
-    # camelCase if contains underscore
     parts = last.split("_")
     return parts[0] + "".join(p.capitalize() for p in parts[1:])
 
@@ -133,6 +122,26 @@ class HttpToHttpClientRule:
         url       = getattr(call, "url", None)
         file_attr = getattr(call, "file", None) or getattr(call, "source_file", "unknown")
         owner     = getattr(call, "owner_controller", None)
+        has_catch = getattr(call, "has_catch", False)
+        owner_method = getattr(call, "owner_method", None)
+
+        # ── KEY CHANGE: skip calls that belong to a $scope method ──────────
+        # Those are already inlined by ControllerToComponentRule._build_component_ts.
+        # We still record a Change for traceability, but write nothing to disk.
+        if owner_method:
+            call_id = getattr(call, "id", f"http_{file_attr}_{method}")
+            base, _ = _owner_to_file_base(call)
+            changes.append(Change(
+                before_id=call_id,
+                after_id=f"httpclient_{base}_{method}_inlined",
+                source=ChangeSource.RULE,
+                reason=(
+                    f"$http.{method}({url}) inside {owner}.{owner_method}() "
+                    f"inlined directly by ControllerToComponentRule — no separate fetch method generated"
+                ),
+            ))
+            print(f"[HttpToHttpClient] Skipped (already inlined): {owner}.{owner_method}() → {method} {url}")
+            return
 
         base, kind = _owner_to_file_base(call)
         is_q_defer = method.startswith("q_")
@@ -150,15 +159,13 @@ class HttpToHttpClientRule:
             if not self.dry_run:
                 self._ensure_component_base(target_ts, selector, class_name)
 
-        owner_method = getattr(call, "owner_method", None)
         print(f"[HttpToHttpClient] {'(dry) ' if self.dry_run else ''}Migrating: "
-              f"{owner or file_attr} -> {method} {url} -> {target_ts.name}"
-              + (f" [inside {owner_method}()]" if owner_method else ""))
+              f"{owner or file_attr} -> {method} {url} -> {target_ts.name}")
 
         if not self.dry_run:
             if not is_q_defer:
                 if method in ("get", "post", "put", "delete", "patch"):
-                    self._append_http_method(target_ts, method, url, kind)
+                    self._append_http_method(target_ts, method, url, kind, has_catch)
             else:
                 self._append_q_defer_stub(target_ts)
 
@@ -227,52 +234,52 @@ class HttpToHttpClientRule:
             return text + "\n" + code
         return text[:idx] + code + "\n" + text[idx:]
 
-    def _append_http_method(self, target_ts: Path, method: str, url, kind: str):
+    def _append_http_method(self, target_ts: Path, method: str, url, kind: str, has_catch: bool = False):
+        """
+        Generate a standalone fetch* method on a SERVICE file only.
+        Components no longer get these — their calls are inlined into the
+        originating $scope method by ControllerToComponentRule.
+        """
         if not target_ts.exists():
             return
+
         text = target_ts.read_text(encoding="utf-8")
+
         if HTTP_CLIENT_IMPORT not in text:
             text = HTTP_CLIENT_IMPORT + text
 
+        if has_catch:
+            if CATCH_ERROR_IMPORT not in text:
+                text = CATCH_ERROR_IMPORT + text
+            if THROW_ERROR_IMPORT not in text:
+                text = THROW_ERROR_IMPORT + text
+
         if url:
-            # Build a readable method name from the last 1-2 URL segments
-            # /api/admin/users → fetchAdminUsers
-            # /api/products    → fetchProducts
-            # /api/orders      → postOrders (for POST)
             segments = [s for s in url.strip("/").split("/") if s and s != "api"]
             if segments:
-                # Use last 2 non-param segments (skip :id style params)
                 clean = [s for s in segments if not s.startswith(":")][-2:]
-                name_part = "".join(w.capitalize() for w in "_".join(clean).replace("-", "_").split("_"))
+                name_part = "".join(
+                    w.capitalize()
+                    for w in "_".join(clean).replace("-", "_").split("_")
+                )
             else:
                 name_part = method.capitalize()
-            verb = "fetch" if method == "get" else method.lower()
+            verb    = "fetch" if method == "get" else method.lower()
             fn_name = f"{verb}{name_part}"
         else:
             fn_name = f"load_{method}"
 
         if fn_name in text:
-            return  # idempotent
+            return
 
         url_literal = f"'{url}'" if url else "'/'"
 
-        if kind == "service":
-            method_code = (
-                f"\n  {fn_name}() {{\n"
-                f"    return this.http.{method}({url_literal});\n"
-                f"  }}\n"
-            )
-        else:
-            # Infer the property name from the URL's last meaningful segment
-            # /api/products → products, /api/admin/users → users
-            prop_name = _infer_prop_name(url)
-            method_code = (
-                f"\n  {fn_name}() {{\n"
-                f"    this.http.{method}({url_literal}).subscribe((res: any) => {{\n"
-                f"      this.{prop_name} = res;\n"
-                f"    }});\n"
-                f"  }}\n"
-            )
+        # Services always return the Observable; components inline their own calls.
+        method_code = (
+            f"\n  {fn_name}() {{\n"
+            f"    return this.http.{method}({url_literal});\n"
+            f"  }}\n"
+        )
 
         target_ts.write_text(self._inject_into_class(text, method_code), encoding="utf-8")
 

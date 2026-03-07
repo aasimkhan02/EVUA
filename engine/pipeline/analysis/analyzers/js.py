@@ -24,9 +24,9 @@ class RawController:
         self.file = file
         self.di = di
         self.scope_reads = scope_reads
-        self.scope_writes = scope_writes   # plain property assignments: $scope.x = value
-        self.scope_methods = scope_methods # function assignments: $scope.fn = function(a,b){...}
-        self.init_calls = init_calls       # top-level $scope.fn() calls → ngOnInit
+        self.scope_writes = scope_writes
+        self.scope_methods = scope_methods
+        self.init_calls = init_calls
         self.watch_depths = watch_depths
         self.uses_compile = uses_compile
         self.has_nested_scopes = has_nested_scopes
@@ -57,6 +57,11 @@ class RawHttpCall:
         uses_q: bool,
         owner_controller: Optional[str] = None,
         owner_method: Optional[str] = None,
+        has_catch: bool = False,
+        # NEW: raw source text of chained .then() and .catch() callback bodies
+        then_body_src: Optional[str] = None,
+        catch_body_src: Optional[str] = None,
+        request_body_src: Optional[str] = None,   # second arg to $http.post/put/patch
     ):
         self.id = str(uuid.uuid4())
         self.file = file
@@ -64,31 +69,17 @@ class RawHttpCall:
         self.url = url
         self.uses_q = uses_q
         self.owner_controller = owner_controller
-        self.owner_method = owner_method   # $scope method name that contains this call
+        self.owner_method = owner_method
+        self.has_catch = has_catch
+        self.then_body_src = then_body_src
+        self.catch_body_src = catch_body_src
+        self.request_body_src = request_body_src
         self.classes = []
         self.functions = []
         self.globals = []
 
 
 class RawRoute:
-    """
-    Represents a single AngularJS route extracted from $routeProvider or $stateProvider.
-
-    Attributes
-    ----------
-    path          : URL path string  e.g. '/users/:id'
-    controller    : Controller name  e.g. 'UserController'  (may be None)
-    template_url  : templateUrl string (may be None)
-    template      : inline template string (may be None)
-    resolve       : dict of resolve keys → expression strings (may be empty)
-    state_name    : ui-router state name  e.g. 'app.users'  (None for ngRoute)
-    params        : path params extracted from path  e.g. ['id']
-    is_otherwise  : True if this is the default/otherwise/catch-all route
-    is_abstract   : True for ui-router abstract states
-    router_type   : 'ngRoute' | 'uiRouter'
-    file          : source file path
-    """
-
     def __init__(
         self,
         path: str,
@@ -110,17 +101,15 @@ class RawRoute:
         self.controller   = controller
         self.template_url = template_url
         self.template     = template
-        self.resolve      = resolve      # {key: expr_str}
+        self.resolve      = resolve
         self.state_name   = state_name
         self.is_otherwise = is_otherwise
         self.is_abstract  = is_abstract
         self.router_type  = router_type
         self.file         = file
-        # uiRouter redirect / lifecycle hooks
-        self.redirect_to  = redirect_to  # redirectTo string value (if present)
-        self.on_enter     = on_enter      # onEnter function name/description (if present)
-        self.on_exit      = on_exit       # onExit function name/description (if present)
-        # Extract :param tokens from the path
+        self.redirect_to  = redirect_to
+        self.on_enter     = on_enter
+        self.on_exit      = on_exit
         import re
         self.params = re.findall(r':(\w+)', path or '')
 
@@ -136,12 +125,6 @@ def iter_children(node):
 
 
 def _extract_fn_from_arg(arg_node):
-    """
-    Normalises both AngularJS DI syntaxes and returns the FunctionExpression:
-      Plain:  .controller('Name', function($scope) { ... })
-      Array:  .controller('Name', ['$scope', '$http', function($scope, $http) { ... }])
-    Returns None if neither pattern matches.
-    """
     if arg_node is None:
         return None
     t = getattr(arg_node, "type", None)
@@ -157,10 +140,6 @@ def _extract_fn_from_arg(arg_node):
 
 
 def _extract_di_names(arg_node) -> List[str]:
-    """
-    Extract DI token names from either plain-function or DI-array syntax.
-    DI array is preferred because the string literals survive minification.
-    """
     if arg_node is None:
         return []
     t = getattr(arg_node, "type", None)
@@ -180,7 +159,6 @@ def _extract_di_names(arg_node) -> List[str]:
 
 
 def _extract_string(node) -> Optional[str]:
-    """Return the string value of a Literal node, or None."""
     if node is None:
         return None
     if getattr(node, "type", None) == "Literal":
@@ -190,7 +168,6 @@ def _extract_string(node) -> Optional[str]:
 
 
 def _extract_object_prop(obj_node, key: str):
-    """Return the value node for a named property in an ObjectExpression, or None."""
     if obj_node is None or getattr(obj_node, "type", None) != "ObjectExpression":
         return None
     for prop in getattr(obj_node, "properties", []) or []:
@@ -201,10 +178,6 @@ def _extract_object_prop(obj_node, key: str):
 
 
 def _extract_resolve_keys(resolve_node) -> dict:
-    """
-    Extract resolve block keys as {key: '<expression>'} for annotation purposes.
-    We don't try to migrate the resolve logic — just capture the key names.
-    """
     result = {}
     if resolve_node is None or getattr(resolve_node, "type", None) != "ObjectExpression":
         return result
@@ -216,79 +189,109 @@ def _extract_resolve_keys(resolve_node) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Route extraction helpers
+# NEW: helpers to extract then/catch callback source text
+# ---------------------------------------------------------------------------
+
+def _fn_body_src(fn_node, source: str) -> Optional[str]:
+    """
+    Return the *inner* source text of a function body (the statements between
+    the outer braces), or None if we can't determine it.
+    """
+    if fn_node is None:
+        return None
+    body = getattr(fn_node, "body", None)
+    if body is None:
+        return None
+    start = getattr(body, "range", None)
+    if start is None:
+        # esprima may not include range unless we pass range=True at parse time
+        return None
+    lo, hi = body.range
+    # Strip outer braces and dedent one level
+    inner = source[lo + 1: hi - 1].strip()
+    return inner or None
+
+
+def _extract_chain_callbacks(call_node, source: str):
+    """
+    Walk a .then(...).catch(...) chain rooted at *call_node* and return
+    (then_body_src, catch_body_src).  Both may be None.
+
+    The AST looks like:
+
+        CallExpression          ← .catch(fn)
+          callee: MemberExpression
+            object: CallExpression   ← .then(fn)
+              callee: MemberExpression
+                object: CallExpression  ← $http.get(url)
+            property: 'then'
+          property: 'catch'
+    """
+    then_src  = None
+    catch_src = None
+
+    node = call_node
+    while True:
+        if getattr(node, "type", None) != "CallExpression":
+            break
+        callee = getattr(node, "callee", None)
+        if getattr(callee, "type", None) != "MemberExpression":
+            break
+        prop = getattr(callee.property, "name", None)
+        args = getattr(node, "arguments", []) or []
+        fn   = args[0] if args else None
+
+        if prop == "then" and then_src is None:
+            then_src = _fn_body_src(_extract_fn_from_arg(fn), source) if fn else None
+        elif prop == "catch" and catch_src is None:
+            catch_src = _fn_body_src(_extract_fn_from_arg(fn), source) if fn else None
+
+        # Move inward along the chain
+        node = callee.object
+
+    return then_src, catch_src
+
+
+# ---------------------------------------------------------------------------
+# Route extraction helpers (unchanged)
 # ---------------------------------------------------------------------------
 
 def _parse_ngroute_config(fn_node, file_path: str) -> List[RawRoute]:
-    """
-    Parse a .config() function body for $routeProvider chains.
-
-    Handles:
-      $routeProvider
-        .when('/path', { controller: 'Ctrl', templateUrl: '...' })
-        .when('/other/:id', { ... })
-        .otherwise({ redirectTo: '/path' })
-    """
     routes: List[RawRoute] = []
 
     def scan(node):
         if node is None or not hasattr(node, "type"):
             return
-
         if node.type == "CallExpression":
             callee = getattr(node, "callee", None)
             args   = getattr(node, "arguments", []) or []
-
             if getattr(callee, "type", None) == "MemberExpression":
                 method = getattr(callee.property, "name", None)
-
-                # .when('/path', { ... })
                 if method == "when" and len(args) >= 2:
                     path = _extract_string(args[0])
                     cfg  = args[1] if getattr(args[1], "type", None) == "ObjectExpression" else None
-
                     controller   = _extract_string(_extract_object_prop(cfg, "controller"))
                     template_url = _extract_string(_extract_object_prop(cfg, "templateUrl"))
                     template     = _extract_string(_extract_object_prop(cfg, "template"))
                     resolve_node = _extract_object_prop(cfg, "resolve")
                     resolve      = _extract_resolve_keys(resolve_node)
-
                     routes.append(RawRoute(
-                        path=path or "/unknown",
-                        controller=controller,
-                        template_url=template_url,
-                        template=template,
-                        resolve=resolve,
-                        state_name=None,
-                        is_otherwise=False,
-                        is_abstract=False,
-                        router_type="ngRoute",
-                        file=file_path,
+                        path=path or "/unknown", controller=controller,
+                        template_url=template_url, template=template, resolve=resolve,
+                        state_name=None, is_otherwise=False, is_abstract=False,
+                        router_type="ngRoute", file=file_path,
                     ))
-
-                # .otherwise({ redirectTo: '/path' })
                 elif method == "otherwise" and len(args) >= 1:
-                    cfg          = args[0] if getattr(args[0], "type", None) == "ObjectExpression" else None
-                    redirect_to  = _extract_string(_extract_object_prop(cfg, "redirectTo"))
+                    cfg         = args[0] if getattr(args[0], "type", None) == "ObjectExpression" else None
+                    redirect_to = _extract_string(_extract_object_prop(cfg, "redirectTo"))
                     routes.append(RawRoute(
-                        path=redirect_to or "**",
-                        controller=None,
-                        template_url=None,
-                        template=None,
-                        resolve={},
-                        state_name=None,
-                        is_otherwise=True,
-                        is_abstract=False,
-                        router_type="ngRoute",
-                        file=file_path,
+                        path=redirect_to or "**", controller=None,
+                        template_url=None, template=None, resolve={},
+                        state_name=None, is_otherwise=True, is_abstract=False,
+                        router_type="ngRoute", file=file_path,
                     ))
-
-                # Only follow the chain — do NOT recurse into args
-                # (prevents every route being discovered O(n^2) times)
                 scan(callee.object)
-                return  # handled this CallExpression — skip iter_children
-
-        # Non-CallExpression nodes: recurse normally (function body, blocks)
+                return
         for child in iter_children(node):
             scan(child)
 
@@ -299,88 +302,46 @@ def _parse_ngroute_config(fn_node, file_path: str) -> List[RawRoute]:
 
 
 def _parse_uirouter_config(fn_node, file_path: str) -> List[RawRoute]:
-    """
-    Parse a .config() function body for $stateProvider chains (ui-router).
-
-    Handles:
-      $stateProvider
-        .state('stateName', {
-          url: '/path/:id',
-          controller: 'Ctrl',
-          templateUrl: '...',
-          abstract: true,
-          resolve: { ... }
-        })
-    """
     routes: List[RawRoute] = []
 
     def scan(node):
         if node is None or not hasattr(node, "type"):
             return
-
         if node.type == "CallExpression":
             callee = getattr(node, "callee", None)
             args   = getattr(node, "arguments", []) or []
-
             if getattr(callee, "type", None) == "MemberExpression":
                 method = getattr(callee.property, "name", None)
-
-                # .state('name', { ... })
                 if method == "state" and len(args) >= 2:
-                    state_name = _extract_string(args[0])
-                    cfg        = args[1] if getattr(args[1], "type", None) == "ObjectExpression" else None
-
+                    state_name   = _extract_string(args[0])
+                    cfg          = args[1] if getattr(args[1], "type", None) == "ObjectExpression" else None
                     url          = _extract_string(_extract_object_prop(cfg, "url"))
                     controller   = _extract_string(_extract_object_prop(cfg, "controller"))
                     template_url = _extract_string(_extract_object_prop(cfg, "templateUrl"))
                     template     = _extract_string(_extract_object_prop(cfg, "template"))
                     resolve_node = _extract_object_prop(cfg, "resolve")
                     resolve      = _extract_resolve_keys(resolve_node)
-
-                    # abstract: true
                     abstract_node = _extract_object_prop(cfg, "abstract")
                     is_abstract   = (
                         getattr(abstract_node, "type", None) == "Literal"
                         and getattr(abstract_node, "value", None) is True
                     )
-
-                    # redirectTo (string or state name)
                     redirect_node = _extract_object_prop(cfg, "redirectTo")
                     redirect_to   = _extract_string(redirect_node)
-
-                    # onEnter / onExit — capture presence (function ref or inline fn)
                     on_enter_node = _extract_object_prop(cfg, "onEnter")
                     on_exit_node  = _extract_object_prop(cfg, "onExit")
-                    on_enter = (
-                        getattr(on_enter_node, "name", None)
-                        or ("<inline>" if on_enter_node is not None else None)
-                    )
-                    on_exit = (
-                        getattr(on_exit_node, "name", None)
-                        or ("<inline>" if on_exit_node is not None else None)
-                    )
-
+                    on_enter = getattr(on_enter_node, "name", None) or ("<inline>" if on_enter_node else None)
+                    on_exit  = getattr(on_exit_node,  "name", None) or ("<inline>" if on_exit_node  else None)
                     routes.append(RawRoute(
                         path=url or f"/{state_name or 'unknown'}",
-                        controller=controller,
-                        template_url=template_url,
-                        template=template,
-                        resolve=resolve,
-                        state_name=state_name,
-                        is_otherwise=False,
-                        is_abstract=is_abstract,
-                        router_type="uiRouter",
-                        file=file_path,
-                        redirect_to=redirect_to,
-                        on_enter=on_enter,
-                        on_exit=on_exit,
+                        controller=controller, template_url=template_url,
+                        template=template, resolve=resolve, state_name=state_name,
+                        is_otherwise=False, is_abstract=is_abstract,
+                        router_type="uiRouter", file=file_path,
+                        redirect_to=redirect_to, on_enter=on_enter, on_exit=on_exit,
                     ))
-
-                # Only follow the chain — do NOT recurse into args
                 scan(callee.object)
-                return  # handled this CallExpression — skip iter_children
-
-        # Non-CallExpression nodes: recurse normally
+                return
         for child in iter_children(node):
             scan(child)
 
@@ -391,23 +352,16 @@ def _parse_uirouter_config(fn_node, file_path: str) -> List[RawRoute]:
 
 
 def _handle_config_block(args, file_path: str) -> List[RawRoute]:
-    """
-    Given the arguments of a .config([...]) call, find the function body
-    and determine which router is being configured ($routeProvider vs $stateProvider).
-    """
     fn_node = _extract_fn_from_arg(args[0] if args else None)
     if fn_node is None:
         return []
-
-    di = _extract_di_names(args[0] if args else None)
+    di       = _extract_di_names(args[0] if args else None)
     di_lower = [d.lower() for d in di]
-
     if "$routeprovider" in di_lower:
         return _parse_ngroute_config(fn_node, file_path)
     elif "$stateprovider" in di_lower:
         return _parse_uirouter_config(fn_node, file_path)
     else:
-        # Unknown config block — try both parsers and take whichever produces routes
         ngroute = _parse_ngroute_config(fn_node, file_path)
         if ngroute:
             return ngroute
@@ -421,13 +375,7 @@ class JSAnalyzer(Analyzer):
         raw_http_calls: List[RawHttpCall]   = []
         raw_routes:     List[RawRoute]      = []
 
-        # ── top-level AST traversal ────────────────────────────────────────
-        def recurse(node, file_path: str, current_owner: Optional[str] = None):
-            """
-            current_owner: name of controller/service being parsed right now.
-            Passed down into the body so $http/$q calls inside a controller
-            are attributed to it, not just the file.
-            """
+        def recurse(node, file_path: str, source: str, current_owner: Optional[str] = None):
             if node is None or not hasattr(node, "type"):
                 return
 
@@ -440,37 +388,32 @@ class JSAnalyzer(Analyzer):
                     obj_type = getattr(callee.object, "type", None)
                     obj_name = getattr(callee.object, "name", None) if obj_type == "Identifier" else None
 
-                    # ── controller / service / factory registration ─────────
                     if prop in ("controller", "service", "factory") and len(args) >= 2:
                         name_node = args[0]
                         fn_node   = _extract_fn_from_arg(args[1])
                         if getattr(name_node, "type", None) == "Literal" and fn_node is not None:
                             ctrl_name = name_node.value
-                            _handle_controller(ctrl_name, args[1], fn_node, file_path)
+                            _handle_controller(ctrl_name, args[1], fn_node, file_path, source)
                             for child in iter_children(node):
                                 if child is not args[1] and child is not fn_node:
-                                    recurse(child, file_path, current_owner)
+                                    recurse(child, file_path, source, current_owner)
                             return
 
-                    # ── directive registration ──────────────────────────────
                     elif prop == "directive" and len(args) >= 2:
                         name_node = args[0]
                         fn_node   = _extract_fn_from_arg(args[1])
                         if getattr(name_node, "type", None) == "Literal" and fn_node is not None:
                             _handle_directive(name_node.value, fn_node, file_path)
 
-                    # ── .config([...]) — route configuration ───────────────
                     elif prop == "config" and len(args) >= 1:
                         found = _handle_config_block(args, file_path)
                         raw_routes.extend(found)
                         if found:
-                            # Don't recurse further into config body — already scanned
                             for child in iter_children(node):
                                 if child is not args[0]:
-                                    recurse(child, file_path, current_owner)
+                                    recurse(child, file_path, source, current_owner)
                             return
 
-                    # ── $http.get / post / put / delete (top-level) ─────────
                     if obj_name == "$http" and prop in ("get", "post", "put", "delete"):
                         url = None
                         if args and getattr(args[0], "type", None) == "Literal":
@@ -480,14 +423,12 @@ class JSAnalyzer(Analyzer):
                                         uses_q=False, owner_controller=current_owner)
                         )
 
-                    # ── $q.defer / $q.all (top-level) ──────────────────────
                     if obj_name == "$q" and prop in ("all", "defer"):
                         raw_http_calls.append(
                             RawHttpCall(file_path, f"q_{prop}", None,
                                         uses_q=True, owner_controller=current_owner)
                         )
 
-                # ── $http({ config }) ───────────────────────────────────────
                 if (
                     getattr(callee, "type", None) == "Identifier"
                     and getattr(callee, "name", None) == "$http"
@@ -498,25 +439,89 @@ class JSAnalyzer(Analyzer):
                     )
 
             for child in iter_children(node):
-                recurse(child, file_path, current_owner)
+                recurse(child, file_path, source, current_owner)
 
         # ── controller / service / factory body scanner ────────────────────
-        def _handle_controller(name: str, raw_arg, fn_node, file_path: str):
+        def _handle_controller(name: str, raw_arg, fn_node, file_path: str, source: str):
             di              = _extract_di_names(raw_arg)
             scope_reads:   List[str]  = []
-            scope_writes:  List[str]  = []   # plain value properties
-            scope_methods: List[dict] = []   # function-valued properties
-            init_calls:    List[str]  = []   # top-level $scope.fn() calls → ngOnInit
+            scope_writes:  List[str]  = []
+            scope_methods: List[dict] = []
+            init_calls:    List[str]  = []
             watch_depths:  List[str]  = []
             uses_compile      = False
             has_nested_scopes = False
 
             def _scan_method_http(fn_body, method_name: str, ctrl_name: str, fpath: str):
                 """
-                Scan a $scope method's function body for $http calls and record
-                them with owner_method=method_name so http rule can inline them.
+                Scan a $scope method body for $http calls.
+
+                For each call node we walk UP the AST of *fn_body* to detect
+                .then() / .catch() wrappers and extract their callback source.
+
+                Because esprima doesn't attach parent pointers, we do a single
+                pre-pass to build a child→parent map restricted to fn_body.
                 """
                 print("[js.py DEBUG] _scan_method_http called: ctrl=" + repr(ctrl_name) + " method=" + repr(method_name))
+
+                # ── Build child→parent map inside fn_body ──────────────
+                parent_of: Dict[int, object] = {}   # id(node) → parent node
+
+                def _index(n, par=None):
+                    if n is None or not hasattr(n, "type"):
+                        return
+                    parent_of[id(n)] = par
+                    for key in vars(n):
+                        val = getattr(n, key, None)
+                        if val is None:
+                            continue
+                        if hasattr(val, "type"):
+                            _index(val, n)
+                        elif isinstance(val, list):
+                            for item in val:
+                                if hasattr(item, "type"):
+                                    _index(item, n)
+
+                _index(fn_body)
+
+                def _find_wrapping_chain(http_call_node):
+                    """
+                    Walk upward from the $http.xyz() call node to find if it is
+                    immediately wrapped in .then().catch() chains.
+                    Returns (has_catch, then_src, catch_src).
+                    """
+                    then_src  = None
+                    catch_src = None
+                    has_catch = False
+
+                    cur = http_call_node
+                    while True:
+                        par = parent_of.get(id(cur))
+                        if par is None:
+                            break
+                        # par should be a MemberExpression (the .then/.catch property access)
+                        if getattr(par, "type", None) != "MemberExpression":
+                            break
+                        prop_name = getattr(par.property, "name", None)
+                        # The MemberExpression's parent should be the CallExpression for .then()/.catch()
+                        call_node = parent_of.get(id(par))
+                        if call_node is None or getattr(call_node, "type", None) != "CallExpression":
+                            break
+                        call_args = getattr(call_node, "arguments", []) or []
+                        fn_arg    = call_args[0] if call_args else None
+
+                        if prop_name == "then" and then_src is None:
+                            inner_fn = _extract_fn_from_arg(fn_arg)
+                            then_src = _fn_body_src(inner_fn, source)
+                        elif prop_name == "catch" and catch_src is None:
+                            has_catch = True
+                            inner_fn  = _extract_fn_from_arg(fn_arg)
+                            catch_src = _fn_body_src(inner_fn, source)
+
+                        cur = call_node   # keep walking up
+
+                    return has_catch, then_src, catch_src
+
                 def _walk(n):
                     if n is None or not hasattr(n, "type"):
                         return
@@ -527,18 +532,48 @@ class JSAnalyzer(Analyzer):
                             cobj  = getattr(cal.object, "type", None)
                             cname = getattr(cal.object, "name", None) if cobj == "Identifier" else None
                             cprop = getattr(cal.property, "name", None)
+
                             if cname == "$http" and cprop in ("get", "post", "put", "delete", "patch"):
                                 url = None
-                                if cargs and getattr(cargs[0], "type", None) == "Literal":
-                                    url = cargs[0].value
-                                print("[js.py DEBUG] _scan_method_http ADDING " + ctrl_name + "." + method_name + " <- $http." + cprop + "(" + repr(url) + ")")
-                                raw_http_calls.append(
-                                    RawHttpCall(fpath, cprop, url,
-                                                uses_q=False,
-                                                owner_controller=ctrl_name,
-                                                owner_method=method_name)
+                                url_src = None
+
+                                if cargs:
+                                    arg0 = cargs[0]
+
+                                    if getattr(arg0, "type", None) == "Literal":
+                                        url = arg0.value
+                                    else:
+                                        rng = getattr(arg0, "range", None)
+                                        if rng:
+                                            url_src = source[rng[0]:rng[1]]
+
+                                # Request body: second arg for post/put/patch
+                                req_body_src = None
+                                if cprop in ("post", "put", "patch") and len(cargs) >= 2:
+                                    rb = cargs[1]
+                                    rb_range = getattr(rb, "range", None)
+                                    if rb_range:
+                                        req_body_src = source[rb_range[0]:rb_range[1]]
+
+                                has_catch, then_src, catch_src = _find_wrapping_chain(n)
+
+                                call = RawHttpCall(
+                                    fpath, cprop, url,
+                                    uses_q=False,
+                                    owner_controller=ctrl_name,
+                                    owner_method=method_name,
+                                    has_catch=has_catch,
+                                    then_body_src=then_src,
+                                    catch_body_src=catch_src,
+                                    request_body_src=req_body_src,
                                 )
-                                return
+
+                                # Preserve dynamic URL source if URL literal was not detected
+                                call.url_src = url_src
+
+                                raw_http_calls.append(call)
+                                return  # don't recurse into the $http call itself
+
                             if cname == "$q" and cprop in ("defer", "all"):
                                 raw_http_calls.append(
                                     RawHttpCall(fpath, f"q_{cprop}", None,
@@ -547,15 +582,20 @@ class JSAnalyzer(Analyzer):
                                                 owner_method=method_name)
                                 )
                                 return
+
                     for key in ["body", "expression", "callee", "object", "property",
-                                "left", "right", "arguments", "params",
-                                "declarations", "init", "consequent", "alternate", "block"]:
+                                "left", "right", "argument", "arguments", "params",
+                                "declarations", "init", "consequent", "alternate", "block",
+                                "test", "cases", "elements", "properties", "handler", "finalizer"]:
                         val = getattr(n, key, None)
-                        if val is None: continue
-                        if hasattr(val, "type"): _walk(val)
+                        if val is None:
+                            continue
+                        if hasattr(val, "type"):
+                            _walk(val)
                         elif isinstance(val, list):
                             for item in val:
-                                if hasattr(item, "type"): _walk(item)
+                                if hasattr(item, "type"):
+                                    _walk(item)
 
                 _walk(fn_body)
 
@@ -564,7 +604,6 @@ class JSAnalyzer(Analyzer):
                 if node is None or not hasattr(node, "type"):
                     return
 
-                # $scope.x = ...  → scope write (property or method)
                 if getattr(node, "type", None) == "AssignmentExpression":
                     left  = getattr(node, "left", None)
                     right = getattr(node, "right", None)
@@ -579,26 +618,53 @@ class JSAnalyzer(Analyzer):
                             if pname and not pname.startswith("$"):
                                 rtype = getattr(right, "type", None)
                                 if rtype in ("FunctionExpression", "ArrowFunctionExpression"):
-                                    # $scope.fn = function(a, b) {...}  → class method
                                     params = [
                                         getattr(p, "name", "arg")
                                         for p in (getattr(right, "params", []) or [])
                                         if getattr(p, "type", None) == "Identifier"
                                     ]
                                     scope_methods.append({"name": pname, "params": params})
-                                    # ── Scan method body for $http calls ─────
-                                    # Tag each with owner_method so http rule can
-                                    # inline them into the right method stub.
                                     fn_body = getattr(right, "body", None)
                                     if fn_body:
                                         _scan_method_http(fn_body, pname, name, file_path)
                                 else:
-                                    # $scope.x = value  → class property
                                     scope_writes.append(pname)
 
-                # $scope.fn()  → top-level call → ngOnInit
-                # Pattern: ExpressionStatement > CallExpression where callee is
-                # MemberExpression($scope, fn) with no arguments or simple args
+                # this.method = function() for AngularJS .service() bodies
+                if getattr(node, "type", None) == "AssignmentExpression":
+                    _sl = getattr(node, "left", None)
+                    _sr = getattr(node, "right", None)
+                    if getattr(_sl, "type", None) == "MemberExpression":
+                        _so = getattr(_sl, "object", None)
+                        _sp = getattr(_sl, "property", None)
+                        if getattr(_so, "type", None) == "ThisExpression":
+                            _sname = getattr(_sp, "name", None) or getattr(_sp, "value", None)
+                            if _sname and not _sname.startswith("_"):
+                                _srtype = getattr(_sr, "type", None)
+                                if _srtype in ("FunctionExpression", "ArrowFunctionExpression"):
+                                    _sparams = [
+                                        getattr(p, "name", "arg")
+                                        for p in (getattr(_sr, "params", []) or [])
+                                        if getattr(p, "type", None) == "Identifier"
+                                    ]
+                                    if not any(m["name"] == _sname for m in scope_methods):
+                                        scope_methods.append({"name": _sname, "params": _sparams, "is_this_method": True})
+                                    _sfn_body = getattr(_sr, "body", None)
+                                    print("[js.py DEBUG] this.method block: " + repr(_sname) + " sfn_body=" + repr(_sfn_body is not None))
+                                    if _sfn_body:
+                                        # Tag HTTP calls with owner_method via _scan_method_http
+                                        _scan_method_http(_sfn_body, _sname, name, file_path)
+                                        # Also recurse with _current_method set so scan_fn skips (no double-add)
+                                        scan_fn(_sfn_body, _current_method=_sname)
+                                    # Scan non-body children without method context
+                                    for _sc in iter_children(_sr):
+                                        if _sc is not _sfn_body:
+                                            scan_fn(_sc, _current_method)
+                                    for _sc in iter_children(_sl):
+                                        scan_fn(_sc, _current_method)
+                                    print("[js.py DEBUG] this.method returning early for " + repr(_sname))
+                                    return
+
                 if getattr(node, "type", None) == "CallExpression":
                     callee_node = getattr(node, "callee", None)
                     if getattr(callee_node, "type", None) == "MemberExpression":
@@ -610,13 +676,17 @@ class JSAnalyzer(Analyzer):
                         ):
                             fn_called = getattr(cprop, "name", None)
                             if fn_called and not fn_called.startswith("$"):
-                                # Only record if this method was defined on $scope
-                                # (i.e. it's in scope_methods). We check post-scan
-                                # but store all for now — filter in constructor call.
                                 if fn_called not in init_calls:
                                     init_calls.append(fn_called)
 
-                # var x = $scope.$new()  → nested scope
+                # Bare call: load(); loadData(); at controller body level
+                if getattr(node, "type", None) == "CallExpression":
+                    _bcallee = getattr(node, "callee", None)
+                    if getattr(_bcallee, "type", None) == "Identifier":
+                        _bname = getattr(_bcallee, "name", None)
+                        if _bname and not _bname.startswith("$") and _bname not in init_calls:
+                            init_calls.append(_bname)
+
                 if getattr(node, "type", None) == "VariableDeclarator":
                     init = getattr(node, "init", None)
                     if init:
@@ -641,7 +711,6 @@ class JSAnalyzer(Analyzer):
                         pname    = getattr(callee.property, "name", None)
 
                         if obj_name == "$scope":
-                            # $scope.$watch(...)
                             if pname == "$watch":
                                 is_deep = False
                                 if len(callargs) >= 3:
@@ -655,8 +724,6 @@ class JSAnalyzer(Analyzer):
                             if pname == "$new":
                                 has_nested_scopes = True
 
-                        # $http calls INSIDE controller body
-                        # Skip if inside a $scope method (_scan_method_http handles those)
                         if obj_name == "$http" and pname in ("get", "post", "put", "delete"):
                             url_dbg = None
                             if callargs and getattr(callargs[0], "type", None) == "Literal":
@@ -668,7 +735,6 @@ class JSAnalyzer(Analyzer):
                                                 uses_q=False, owner_controller=name)
                                 )
 
-                        # $q.defer / $q.all INSIDE controller body
                         if obj_name == "$q" and pname in ("defer", "all"):
                             print("[js.py DEBUG] $q." + pname + "() in " + name + " _current_method=" + repr(_current_method))
                             if _current_method is None:
@@ -677,14 +743,12 @@ class JSAnalyzer(Analyzer):
                                                 uses_q=True, owner_controller=name)
                                 )
 
-                    # $compile(...)
                     if (
                         getattr(callee, "type", None) == "Identifier"
                         and getattr(callee, "name", None) == "$compile"
                     ):
                         uses_compile = True
 
-                # $scope.x  → scope read
                 if getattr(node, "type", None) == "MemberExpression":
                     obj  = getattr(node, "object", None)
                     prop = getattr(node, "property", None)
@@ -724,27 +788,24 @@ class JSAnalyzer(Analyzer):
             if body:
                 scan_fn(body)
 
-            _owned=[c for c in raw_http_calls if getattr(c,"owner_method",None) and getattr(c,"owner_controller",None)==name]
-            _unowned=[c for c in raw_http_calls if not getattr(c,"owner_method",None) and getattr(c,"owner_controller",None)==name]
+            _owned   = [c for c in raw_http_calls if getattr(c, "owner_method", None) and getattr(c, "owner_controller", None) == name]
+            _unowned = [c for c in raw_http_calls if not getattr(c, "owner_method", None) and getattr(c, "owner_controller", None) == name]
             print("[js.py DEBUG] Controller " + repr(name) + ": " + str(len(_owned)) + " method-owned, " + str(len(_unowned)) + " top-level, scope_methods=" + str([m["name"] for m in scope_methods]) + ", init_calls_raw=" + str(init_calls))
-            # Filter init_calls: only keep calls to methods actually defined on $scope
+            print("[js.py DEBUG]   owned calls: " + str([(getattr(c,"owner_method",None), c.method, c.url) for c in _owned]))
+            print("[js.py DEBUG]   unowned calls: " + str([(c.method, c.url) for c in _unowned]))
+            print("[js.py DEBUG]   this_methods: " + str([m["name"] for m in scope_methods if m.get("is_this_method")]))
             method_names_set = {m["name"] for m in scope_methods}
+            # Keep calls that reference a known method (scope or this)
             filtered_init_calls = [c for c in init_calls if c in method_names_set]
 
             raw_modules.append(RawController(
-                name=name,
-                file=file_path,
-                di=di,
-                scope_reads=scope_reads,
-                scope_writes=scope_writes,
-                scope_methods=scope_methods,
-                init_calls=filtered_init_calls,
-                watch_depths=watch_depths,
-                uses_compile=uses_compile,
+                name=name, file=file_path, di=di,
+                scope_reads=scope_reads, scope_writes=scope_writes,
+                scope_methods=scope_methods, init_calls=filtered_init_calls,
+                watch_depths=watch_depths, uses_compile=uses_compile,
                 has_nested_scopes=has_nested_scopes,
             ))
 
-        # ── directive body scanner ─────────────────────────────────────────
         def _handle_directive(name: str, fn_node, file_path: str):
             has_compile = False
             has_link    = False
@@ -760,15 +821,15 @@ class JSAnalyzer(Analyzer):
                         for prop in getattr(arg, "properties", []) or []:
                             key = getattr(prop.key, "name", None) or getattr(prop.key, "value", None)
                             val = getattr(prop, "value", None)
-                            if key == "compile":   has_compile = True
-                            if key == "link":      has_link    = True
+                            if key == "compile":    has_compile = True
+                            if key == "link":       has_link    = True
                             if key == "transclude":
                                 if getattr(val, "type", None) == "Literal" and getattr(val, "value", None) is True:
                                     transclude = True
                 if getattr(node, "type", None) == "Property":
                     key = getattr(node.key, "name", None) or getattr(node.key, "value", None)
-                    if key == "compile":   has_compile = True
-                    if key == "link":      has_link    = True
+                    if key == "compile":    has_compile = True
+                    if key == "link":       has_link    = True
                     if key == "transclude":
                         val = getattr(node, "value", None)
                         if getattr(val, "type", None) == "Literal" and getattr(val, "value", None) is True:
@@ -786,17 +847,18 @@ class JSAnalyzer(Analyzer):
         for path in paths:
             text = path.read_text(encoding="utf-8", errors="ignore")
             try:
-                ast = esprima.parseScript(text, tolerant=True)
+                # range=True is needed so _fn_body_src() can slice the source
+                ast = esprima.parseScript(text, tolerant=True, range=True)
             except Exception:
                 continue
-            recurse(ast, str(path), current_owner=None)
+            recurse(ast, str(path), source=text, current_owner=None)
 
         # ── deduplicate http calls ─────────────────────────────────────────
         deduped: List[RawHttpCall] = []
         seen: Dict[tuple, int] = {}
 
         for call in raw_http_calls:
-            sig = (call.file, call.method, call.url)
+            sig = (call.file, call.method, call.url, getattr(call, "owner_method", None))
             if sig in seen:
                 existing = deduped[seen[sig]]
                 if call.owner_controller and not existing.owner_controller:
