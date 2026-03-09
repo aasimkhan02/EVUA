@@ -602,50 +602,80 @@ check("[O] no duplicate auth.service.ts stub",
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# P. DIRECTIVE DETECTION  (gap: no DirectiveToComponentRule)
 # ═════════════════════════════════════════════════════════════════════════════
-section("P", "Directive handling — ENGINE GAP (no DirectiveToComponent rule)")
+# P. DIRECTIVE → COMPONENT CONVERSION  (DirectiveToComponentRule implemented)
+# ═════════════════════════════════════════════════════════════════════════════
+section("P", "Directive → Component conversion (DirectiveToComponentRule)")
 
-# The engine detects directives (js.py parses them, DirectiveDetector classifies them)
-# but NO rule converts them to Angular components. This section measures that gap.
+usercard_comp        = _read(OUT / "usercard.component.ts")
+usercard_html        = _read(OUT / "usercard.component.html")
+loadingspinner_comp  = _read(OUT / "loadingspinner.component.ts")
+loadingspinner_html  = _read(OUT / "loadingspinner.component.html")
+statusbadge_comp     = _read(OUT / "statusbadge.component.ts")
+statusbadge_html     = _read(OUT / "statusbadge.component.html")
+app_module_p         = _read(OUT / "app.module.ts")
 
-usercard_comp      = _read(OUT / "usercard.component.ts")
-loadingspinner_comp = _read(OUT / "loadingspinner.component.ts")
-statusbadge_comp   = _read(OUT / "statusbadge.component.ts")
+# File generation
+check("[P] usercard.component.ts generated", bool(usercard_comp), "usercard.component.ts not found", "P")
+check("[P] usercard.component.html generated", bool(usercard_html), "usercard.component.html not found", "P")
+check("[P] loadingspinner.component.ts generated", bool(loadingspinner_comp), "loadingspinner.component.ts not found", "P")
+check("[P] loadingspinner.component.html generated", bool(loadingspinner_html), "loadingspinner.component.html not found", "P")
+check("[P] statusbadge.component.ts generated", bool(statusbadge_comp), "statusbadge.component.ts not found", "P")
+check("[P] statusbadge.component.html generated", bool(statusbadge_html), "statusbadge.component.html not found", "P")
 
-check("[P] KNOWN GAP: userCard directive NOT converted to component stub",
-      not bool(usercard_comp),
-      "Unexpected: usercard.component.ts was generated — DirectiveToComponent implemented?", "P")
-check("[P] KNOWN GAP: loadingSpinner directive NOT converted to component stub",
-      not bool(loadingspinner_comp), "", "P")
-check("[P] KNOWN GAP: statusBadge directive NOT converted to component stub",
-      not bool(statusbadge_comp), "", "P")
+# @Component decorator
+check("[P] usercard.component.ts has @Component", "@Component" in usercard_comp, "missing @Component", "P")
+check("[P] loadingspinner.component.ts has @Component", "@Component" in loadingspinner_comp, "missing @Component", "P")
+check("[P] statusbadge.component.ts has @Component", "@Component" in statusbadge_comp, "missing @Component", "P")
 
-# If the above flip to FAIL, it means DirectiveToComponentRule was implemented — great!
-# Flip these to check for the positive when the rule exists:
-print(f"\n  ℹ  To FIX [P]: implement DirectiveToComponentRule that converts")
-print(f"     .directive() definitions → *.component.ts + *.component.html stubs.")
+# export class
+check("[P] usercard.component.ts exports class", "export class" in usercard_comp, "missing export class", "P")
+check("[P] loadingspinner.component.ts exports class", "export class" in loadingspinner_comp, "missing export class", "P")
+check("[P] statusbadge.component.ts exports class", "export class" in statusbadge_comp, "missing export class", "P")
+
+# @Input() from scope bindings — userCard: {user:'='}, statusBadge: {status:'@', label:'@'}
+check("[P] usercard: @Input() scope binding present", "@Input()" in usercard_comp, "missing @Input() in usercard", "P")
+check("[P] statusbadge: @Input() scope bindings present", "@Input()" in statusbadge_comp, "missing @Input() in statusbadge", "P")
+
+# AppModule declarations
+check("[P] UserCardComponent declared in app.module.ts", "UserCardComponent" in app_module_p, "UserCardComponent missing from module", "P")
+check("[P] LoadingSpinnerComponent declared in app.module.ts", "LoadingSpinnerComponent" in app_module_p, "LoadingSpinnerComponent missing from module", "P")
+check("[P] StatusBadgeComponent declared in app.module.ts", "StatusBadgeComponent" in app_module_p, "StatusBadgeComponent missing from module", "P")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Q. FILTER DETECTION  (gap: no FilterToPipeRule)
+# Q. FILTER → PIPE CONVERSION  (DirectiveToPipeRule implemented)
 # ═════════════════════════════════════════════════════════════════════════════
-section("Q", "Filter handling — ENGINE GAP (no FilterToPipe rule)")
+section("Q", "Filter → Pipe conversion (FilterToPipeRule)")
 
 capitalize_pipe  = _read(OUT / "capitalize.pipe.ts")
 truncate_pipe    = _read(OUT / "truncate.pipe.ts")
 currfmt_pipe     = _read(OUT / "currencyformat.pipe.ts")
+app_module_q     = _read(OUT / "app.module.ts")
 
-check("[Q] KNOWN GAP: capitalize filter NOT converted to pipe stub",
-      not bool(capitalize_pipe),
-      "Unexpected: capitalize.pipe.ts generated — FilterToPipe implemented?", "Q")
-check("[Q] KNOWN GAP: truncate filter NOT converted to pipe stub",
-      not bool(truncate_pipe), "", "Q")
-check("[Q] KNOWN GAP: currencyFormat filter NOT converted to pipe stub",
-      not bool(currfmt_pipe), "", "Q")
+# File generation
+check("[Q] capitalize.pipe.ts generated", bool(capitalize_pipe), "capitalize.pipe.ts not found", "Q")
+check("[Q] truncate.pipe.ts generated", bool(truncate_pipe), "truncate.pipe.ts not found", "Q")
+check("[Q] currencyformat.pipe.ts generated", bool(currfmt_pipe), "currencyformat.pipe.ts not found", "Q")
 
-print(f"\n  ℹ  To FIX [Q]: implement FilterToPipeRule that converts")
-print(f"     .filter() definitions → *.pipe.ts stubs with @Pipe + transform().")
+# @Pipe decorator
+check("[Q] capitalize.pipe.ts has @Pipe", "@Pipe" in capitalize_pipe, "missing @Pipe", "Q")
+check("[Q] truncate.pipe.ts has @Pipe", "@Pipe" in truncate_pipe, "missing @Pipe", "Q")
+check("[Q] currencyformat.pipe.ts has @Pipe", "@Pipe" in currfmt_pipe, "missing @Pipe", "Q")
+
+# Pipe names match filter names
+check("[Q] capitalize pipe name correct", "'capitalize'" in capitalize_pipe or '"capitalize"' in capitalize_pipe, "pipe name wrong", "Q")
+check("[Q] truncate pipe name correct", "'truncate'" in truncate_pipe or '"truncate"' in truncate_pipe, "pipe name wrong", "Q")
+check("[Q] currencyFormat pipe name correct", "'currencyFormat'" in currfmt_pipe or '"currencyFormat"' in currfmt_pipe, "pipe name wrong", "Q")
+
+# PipeTransform + transform()
+check("[Q] capitalize.pipe.ts implements PipeTransform", "PipeTransform" in capitalize_pipe, "missing PipeTransform", "Q")
+check("[Q] capitalize.pipe.ts has transform() method", "transform(" in capitalize_pipe, "missing transform()", "Q")
+
+# AppModule declarations
+check("[Q] CapitalizePipe declared in app.module.ts", "CapitalizePipe" in app_module_q, "CapitalizePipe missing from module", "Q")
+check("[Q] TruncatePipe declared in app.module.ts", "TruncatePipe" in app_module_q, "TruncatePipe missing from module", "Q")
+check("[Q] CurrencyformatPipe declared in app.module.ts", "CurrencyformatPipe" in app_module_q or "CurrencyFormatPipe" in app_module_q, "CurrencyformatPipe missing from module", "Q")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -655,9 +685,9 @@ total_p = len(PASS_LIST)
 total_f = len(FAIL_LIST)
 total   = total_p + total_f
 
-print(f"\n{'═'*65}")
+print(f"\n" + "=" * 65)
 print(f"  OVERALL: {total_p}/{total} passed  |  {total_f} failed")
-print(f"{'═'*65}")
+print("=" * 65)
 
 CAT_LABELS = {
     "A": "Controller → Component (file gen)",
@@ -675,8 +705,8 @@ CAT_LABELS = {
     "M": "Template migration",
     "N": "DI token mapping",
     "O": "No duplicate stubs",
-    "P": "Directive conversion (GAP)",
-    "Q": "Filter → Pipe conversion (GAP)",
+    "P": "Directive → Component conversion",
+    "Q": "Filter → Pipe conversion",
 }
 
 print("\nCategory breakdown:")
@@ -686,37 +716,25 @@ for cat in "ABCDEFGHIJKLMNOPQ":
     p = CAT_STATS[cat]["p"]
     f = CAT_STATS[cat]["f"]
     t = p + f
-    bar   = "✓" * p + "✗" * f
-    label = CAT_LABELS.get(cat, cat)
-    flag  = " ← GAP" if cat in ("P", "Q") else ""
+    bar    = "✓" * p + "✗" * f
+    label  = CAT_LABELS.get(cat, cat)
     status = "DONE" if f == 0 else "GAPS"
-    print(f"  {status}  [{cat}] {label:40s} {p:2d}/{t:2d}  {bar}{flag}")
+    print(f"  {status}  [{cat}] {label:40s} {p:2d}/{t:2d}  {bar}")
 
 print()
-real_fails = [n for n in FAIL_LIST if not n.startswith("[P]") and not n.startswith("[Q]")]
-gap_fails  = [n for n in FAIL_LIST if n.startswith("[P]") or n.startswith("[Q]")]
+real_fails = list(FAIL_LIST)
 
 if real_fails:
-    print(f"REAL FAILURES ({len(real_fails)}) — bugs to fix:")
+    print(f"FAILURES ({len(real_fails)}) — bugs to fix:")
     for n in real_fails:
         print(f"  ✗ {n}")
     print()
 
-if gap_fails:
-    # These are inverted: PASS means "gap confirmed", FAIL means gap was filled
-    unexpected = [n for n in gap_fails if "Unexpected" in n or "implemented?" in n]
-    if unexpected:
-        print(f"GAPS NOW FILLED (update assertions):")
-        for n in unexpected:
-            print(f"  ✓ {n}")
-        print()
-
 print("SUBMISSION READINESS:")
 if not real_fails:
     print("  ✅ All implemented features work correctly.")
-    print("  📋 Remaining gaps: Directive→Component, Filter→Pipe rules not yet built.")
-    print("  → Engine is ready for paper submission (with gap sections documented).")
+    print("  → Engine is ready for paper submission.")
 else:
-    print(f"  ❌ {len(real_fails)} implemented features have bugs — fix before submission.")
+    print(f"  ❌ {len(real_fails)} features have bugs — fix before submission.")
 
 sys.exit(0 if not real_fails else 1)

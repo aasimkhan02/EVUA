@@ -93,6 +93,15 @@ def _scan_app_dir(app_dir: Path) -> dict:
 
     SKIP_FILES = {"app.component.ts", "app.module.ts"}
 
+    # Scan HTML templates for [(ngModel)] — that's where ng-model lives after migration
+    for html_file in sorted(app_dir.glob("*.component.html")):
+        try:
+            html_content = html_file.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            html_content = ""
+        if "[(ngModel)]" in html_content or "ngModel" in html_content:
+            has_ngmodel = True
+
     for ts_file in sorted(app_dir.glob("*.ts")):
         fname = ts_file.name
         if fname in SKIP_FILES:
@@ -114,6 +123,10 @@ def _scan_app_dir(app_dir: Path) -> dict:
         if stem.endswith(".component"):
             cls = _extract_class_name(content) or (_to_pascal(stem[:-len(".component")]) + "Component")
             components.append((cls, stem))
+
+        elif stem.endswith(".directive"):
+            cls = _extract_class_name(content) or (_to_pascal(stem[:-len(".directive")]) + "Directive")
+            components.append((cls, stem))  # @Directive goes in declarations[]
 
         elif stem.endswith(".pipe"):
             cls = _extract_class_name(content) or (_to_pascal(stem[:-len(".pipe")]) + "Pipe")

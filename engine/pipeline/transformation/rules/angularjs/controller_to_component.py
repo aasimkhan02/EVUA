@@ -83,7 +83,13 @@ def _build_inline_http_call(call) -> list[str]:
     catch_src   = _sanitize_angularjs_callback(getattr(call, "catch_body_src", None))
     req_body    = _sanitize_angularjs_callback(getattr(call, "request_body_src", None))
 
-    url_lit = f"'{url}'" if url else "'/'"
+    url_src = getattr(call, "url_src", None)
+    if url:
+        url_lit = f"'{url}'"
+    elif url_src:
+        url_lit = f"`{url_src}`"
+    else:
+        url_lit = "'/'"
     prop    = _infer_prop_name(url)
 
     # Build the http call expression (first line portion)

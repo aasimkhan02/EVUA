@@ -246,9 +246,9 @@ def run_pipeline(
         "http":         HttpToHttpClientRule(out_dir=effective_out_dir, dry_run=dry_run),
         "watch":        SimpleWatchToRxjsRule(out_dir=effective_out_dir, dry_run=dry_run),
         "interaction":  ComponentInteractionRule(out_dir=effective_out_dir, dry_run=dry_run),
-        "module":       AppModuleUpdaterRule(out_dir=effective_out_dir, dry_run=dry_run),
         "directives_component": DirectiveToComponentRule(out_dir=effective_out_dir, dry_run=dry_run),
         "directives_pipe": DirectiveToPipeRule(out_dir=effective_out_dir, dry_run=dry_run),
+        "module":       AppModuleUpdaterRule(out_dir=effective_out_dir, dry_run=dry_run),
     }
 
     if only:
@@ -448,6 +448,9 @@ Examples:
                         help="Show unified diffs of what would change")
     parser.add_argument("--only",  type=str, default=None,
                         help="Comma-separated subset of rules: controllers,services,http,watch")
+    parser.add_argument(
+                        "--ai-assist", action="store_true",
+                        help="Enable AI completion of generated Angular stubs")
     args = parser.parse_args()
 
     if not args.repo:

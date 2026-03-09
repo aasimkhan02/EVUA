@@ -36,13 +36,19 @@ class RawController:
 
 
 class RawDirective:
-    def __init__(self, name: str, file: str, has_compile: bool, has_link: bool, transclude: bool):
+    def __init__(self, name: str, file: str, has_compile: bool, has_link: bool, transclude: bool,
+                 restrict: str = 'EA', scope_bindings: dict = None,
+                 template: str = None, template_url: str = None):
         self.id = str(uuid.uuid4())
         self.name = name
         self.file = file
         self.has_compile = has_compile
         self.has_link = has_link
         self.transclude = transclude
+        self.restrict = restrict               # 'E', 'A', 'EA', 'C', etc.
+        self.scope_bindings = scope_bindings or {}  # {bindingName: '@'/'='/'&'}
+        self.template = template               # inline template string
+        self.template_url = template_url       # templateUrl string
         self.classes = []
         self.functions = []
         self.globals = []
@@ -374,6 +380,7 @@ class JSAnalyzer(Analyzer):
         raw_directives: List[RawDirective]  = []
         raw_http_calls: List[RawHttpCall]   = []
         raw_routes:     List[RawRoute]      = []
+        raw_filters:    List[dict]          = [] 
 
         def recurse(node, file_path: str, source: str, current_owner: Optional[str] = None):
             if node is None or not hasattr(node, "type"):
@@ -404,6 +411,20 @@ class JSAnalyzer(Analyzer):
                         fn_node   = _extract_fn_from_arg(args[1])
                         if getattr(name_node, "type", None) == "Literal" and fn_node is not None:
                             _handle_directive(name_node.value, fn_node, file_path)
+
+                    # NEW: AngularJS filter detection
+                    elif prop == "filter" and len(args) >= 2:
+                        name_node = args[0]
+                        fn_node   = _extract_fn_from_arg(args[1])
+
+                        if getattr(name_node, "type", None) == "Literal":
+                            fname = name_node.value
+                            body_src = _fn_body_src(fn_node, source) if fn_node else None
+
+                            raw_filters.append({
+                                "name": fname,
+                                "fn_body": body_src
+                            })
 
                     elif prop == "config" and len(args) >= 1:
                         found = _handle_config_block(args, file_path)
@@ -807,12 +828,16 @@ class JSAnalyzer(Analyzer):
             ))
 
         def _handle_directive(name: str, fn_node, file_path: str):
-            has_compile = False
-            has_link    = False
-            transclude  = False
+            has_compile   = False
+            has_link      = False
+            transclude    = False
+            restrict      = 'EA'   # AngularJS default
+            scope_bindings: dict = {}
+            template_str  = None
+            template_url  = None
 
             def scan_for_return(node):
-                nonlocal has_compile, has_link, transclude
+                nonlocal has_compile, has_link, transclude, restrict, scope_bindings, template_str, template_url
                 if node is None or not hasattr(node, "type"):
                     return
                 if getattr(node, "type", None) == "ReturnStatement":
@@ -821,17 +846,35 @@ class JSAnalyzer(Analyzer):
                         for prop in getattr(arg, "properties", []) or []:
                             key = getattr(prop.key, "name", None) or getattr(prop.key, "value", None)
                             val = getattr(prop, "value", None)
-                            if key == "compile":    has_compile = True
-                            if key == "link":       has_link    = True
+                            if key == "compile":     has_compile = True
+                            if key == "link":        has_link    = True
+                            if key == "restrict" and getattr(val, "type", None) == "Literal":
+                                restrict = str(val.value).upper()
+                            if key == "template" and getattr(val, "type", None) == "Literal":
+                                template_str = val.value
+                            if key == "templateUrl" and getattr(val, "type", None) == "Literal":
+                                template_url = val.value
+                            if key == "scope" and getattr(val, "type", None) == "ObjectExpression":
+                                for sp in getattr(val, "properties", []) or []:
+                                    sk = getattr(sp.key, "name", None) or getattr(sp.key, "value", None)
+                                    sv = getattr(sp.value, "value", None) if getattr(sp, "value", None) else None
+                                    if sk and sv:
+                                        scope_bindings[sk] = sv
                             if key == "transclude":
                                 if getattr(val, "type", None) == "Literal" and getattr(val, "value", None) is True:
                                     transclude = True
                 if getattr(node, "type", None) == "Property":
                     key = getattr(node.key, "name", None) or getattr(node.key, "value", None)
-                    if key == "compile":    has_compile = True
-                    if key == "link":       has_link    = True
+                    val = getattr(node, "value", None)
+                    if key == "compile":     has_compile = True
+                    if key == "link":        has_link    = True
+                    if key == "restrict" and getattr(val, "type", None) == "Literal":
+                        restrict = str(val.value).upper()
+                    if key == "template" and getattr(val, "type", None) == "Literal":
+                        template_str = val.value
+                    if key == "templateUrl" and getattr(val, "type", None) == "Literal":
+                        template_url = val.value
                     if key == "transclude":
-                        val = getattr(node, "value", None)
                         if getattr(val, "type", None) == "Literal" and getattr(val, "value", None) is True:
                             transclude = True
                 for child in iter_children(node):
@@ -841,6 +884,8 @@ class JSAnalyzer(Analyzer):
             raw_directives.append(RawDirective(
                 name=name, file=file_path,
                 has_compile=has_compile, has_link=has_link, transclude=transclude,
+                restrict=restrict, scope_bindings=scope_bindings,
+                template=template_str, template_url=template_url,
             ))
 
         # ── parse each file ────────────────────────────────────────────────
@@ -867,4 +912,5 @@ class JSAnalyzer(Analyzer):
                 seen[sig] = len(deduped)
                 deduped.append(call)
 
-        return raw_modules, [], [], raw_directives, deduped, raw_routes
+        self.filters = raw_filters
+        return raw_modules, [], [], raw_directives, deduped, raw_routes, raw_filters

@@ -16,3 +16,4 @@ class AnalysisResult:
     directives:    List[Any] = field(default_factory=list)   # RawDirective objects
     raw_templates: List[Any] = field(default_factory=list)   # RawTemplate objects (with raw_html)
     routes:        List[Any] = field(default_factory=list)   # RawRoute objects
+    filters:       List[Any] = field(default_factory=list)   # RawFilter dicts [{name, fn_body}]

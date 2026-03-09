@@ -82,10 +82,10 @@ _ATTRIBUTE_REWRITES = [
     ),
     (re.compile(r'\bng-if\s*=\s*"([^"]+)"',  re.IGNORECASE), lambda m: f'*ngIf="{m.group(1)}"'),
     (re.compile(r"\bng-if\s*=\s*'([^']+)'",  re.IGNORECASE), lambda m: f"*ngIf=\"{m.group(1)}\""),
-    (re.compile(r'\bng-show\s*=\s*"([^"]+)"', re.IGNORECASE), lambda m: f'*ngIf="{m.group(1)}" <!-- migrated from ng-show -->'),
-    (re.compile(r"\bng-show\s*=\s*'([^']+)'", re.IGNORECASE), lambda m: f"*ngIf=\"{m.group(1)}\" <!-- migrated from ng-show -->"),
-    (re.compile(r'\bng-hide\s*=\s*"([^"]+)"', re.IGNORECASE), lambda m: f'*ngIf="!({m.group(1)})" <!-- migrated from ng-hide -->'),
-    (re.compile(r"\bng-hide\s*=\s*'([^']+)'", re.IGNORECASE), lambda m: f"*ngIf=\"!({m.group(1)})\" <!-- migrated from ng-hide -->"),
+    (re.compile(r'\bng-show\s*=\s*"([^"]+)"', re.IGNORECASE), lambda m: f'*ngIf="{m.group(1)}"'),
+    (re.compile(r"\bng-show\s*=\s*'([^']+)'", re.IGNORECASE), lambda m: f"*ngIf=\"{m.group(1)}\""),
+    (re.compile(r'\bng-hide\s*=\s*"([^"]+)"', re.IGNORECASE), lambda m: f'*ngIf="!({m.group(1)})"'),
+    (re.compile(r"\bng-hide\s*=\s*'([^']+)'", re.IGNORECASE), lambda m: f"*ngIf=\"!({m.group(1)})\""),
 
     # ── Property bindings ─────────────────────────────────────────────────
     (re.compile(r'\bng-class\s*=\s*"([^"]+)"',       re.IGNORECASE), lambda m: f'[ngClass]="{m.group(1)}"'),
@@ -281,6 +281,10 @@ def migrate_template(html: str) -> str:
     """
     result = html
 
+    # 0. Strip HTML comments — they often contain ng-* text (e.g. "<!-- ng-repeat → *ngFor -->")
+    #    which causes false positives in post-migration checks.
+    result = re.sub(r'<!--.*?-->', '', result, flags=re.DOTALL)
+
     # 1. Strip AngularJS script tags (irrelevant in Angular)
     result = _strip_angularjs_scripts(result)
 
@@ -290,6 +294,22 @@ def migrate_template(html: str) -> str:
 
     # 3. Migrate filter pipes inside {{ }}
     result = _migrate_filters(result)
+
+    # 3.5 Detect AngularJS filters used in *ngFor that Angular does not support
+    lines = result.split("\n")
+    updated_lines = []
+
+    for line in lines:
+        if "*ngFor" in line:
+            if re.search(r"\|\s*orderBy", line):
+                updated_lines.append("<!-- TODO: AngularJS orderBy filter has no Angular equivalent -->")
+
+            if re.search(r"\|\s*filter\s*:", line):
+                updated_lines.append("<!-- TODO: AngularJS filter pipe has no Angular equivalent -->")
+
+        updated_lines.append(line)
+
+    result = "\n".join(updated_lines)
 
     # 4. Prepend TODO comments for non-deterministic patterns
     for pattern, todo_msg in _TODO_PATTERNS:

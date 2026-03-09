@@ -42,6 +42,7 @@ class AnalyzerDispatcher:
         raw_directives = []
         raw_http_calls = []
         raw_routes     = []
+        raw_filters    = []
 
         for ftype, paths in files_by_type.items():
             analyzer = self.get_analyzer(ftype)
@@ -50,8 +51,12 @@ class AnalyzerDispatcher:
 
             result = analyzer.analyze(paths)
 
-            # JSAnalyzer returns 6-tuple (adds raw_routes); others return 5-tuple
-            if len(result) == 6:
+            # JSAnalyzer returns 7-tuple (adds raw_routes, raw_filters); others return 5-tuple
+            if len(result) == 7:
+                rm, rt, re, rd, rh, rr, rf = result
+                raw_routes.extend(rr)
+                raw_filters.extend(rf)
+            elif len(result) == 6:
                 rm, rt, re, rd, rh, rr = result
                 raw_routes.extend(rr)
             else:
@@ -86,4 +91,5 @@ class AnalyzerDispatcher:
             directives=raw_directives,
             raw_templates=preserved_raw_templates,
             routes=raw_routes,
+            filters=raw_filters,
         )
