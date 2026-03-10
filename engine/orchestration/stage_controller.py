@@ -17,6 +17,7 @@ STAGES = [
     "risk",
     "validation",
     "reporting",
+    "ai",       # AI-assist post-processing — optional, enabled via --ai-assist
 ]
 
 

@@ -52,6 +52,9 @@ from pipeline.validation.runners.tests import TestRunner
 from pipeline.validation.comparators.snapshot import SnapshotComparator
 
 from orchestration.pipeline_runner import PipelineRunner
+from pipeline.ai.client import AIClient
+from pipeline.ai.stage import AIAssistStage
+from pipeline.validation.runners.tsc import TscValidator
 
 
 # ---------------------------------------------------------------------------
@@ -160,6 +163,36 @@ def _collect_diffs(out_dir: Path, shadow_dir: Path) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Helpers (continued)
+# ---------------------------------------------------------------------------
+
+def _rewrite_md_report(repo_path, analysis, patterns, transformation, risk,
+                       validation_summary, tsc_result=None):
+    """Re-render the markdown report, optionally with tsc section appended."""
+    md = MarkdownReporter().render(analysis, patterns, transformation, risk, validation_summary)
+    if tsc_result is not None:
+        md += "\n\n## TypeScript Compilation\n"
+        if tsc_result.passed:
+            md += "\n✓ **Compilation passed** — 0 errors\n"
+        elif not tsc_result.tsc_found:
+            md += "\n⚠ **tsc not found** — install Node.js and TypeScript\n"
+            md += "\n```bash\nnpm install -g typescript\n```\n"
+        elif not tsc_result.tsconfig:
+            md += "\n⚠ **tsconfig.json not found** in generated project\n"
+        else:
+            md += f"\n✗ **{tsc_result.error_count} error(s)**\n\n"
+            for cat, errs in sorted(tsc_result.errors_by_category.items()):
+                md += f"### {cat.replace('_', ' ').title()} ({len(errs)})\n"
+                for e in errs[:5]:
+                    fname = Path(e.file).name
+                    md += f"- `{fname}:{e.line}` — {e.code}: {e.message}\n"
+                if len(errs) > 5:
+                    md += f"- *...{len(errs)-5} more*\n"
+    md_path = repo_path / ".evua_report.md"
+    md_path.write_text(md, encoding="utf-8", errors="replace")
+
+
+# ---------------------------------------------------------------------------
 # Pipeline
 # ---------------------------------------------------------------------------
 
@@ -170,6 +203,8 @@ def run_pipeline(
     show_diff: bool = False,
     only: list[str] | None = None,
     batch: bool = False,
+    ai_assist: bool = False,
+    skip_tsc: bool = False,
 ) -> bool:
     repo_path = Path(repo_path).resolve()
     out_root = Path(out_root).resolve()
@@ -183,6 +218,8 @@ def run_pipeline(
         print("  MODE: DIFF — showing unified diffs")
     if only:
         print(f"  FILTER: only={only}")
+    if skip_tsc:
+        print("  MODE: --skip-tsc — TypeScript validation disabled")
     print(f"{'='*60}")
 
     # In diff mode we write to a temp shadow directory, then compare
@@ -322,6 +359,8 @@ def run_pipeline(
     validation_summary = {
         "tests_passed":    tests_passed,
         "snapshot_passed": snapshot_passed,
+        "tsc_passed":      None,
+        "tsc_errors":      [],
         "failures": ([] if tests_passed else ["Tests failed"]) + snapshot_failures,
     }
     print(f"  Validate  : tests={tests_passed}, snapshot={snapshot_passed}")
@@ -419,6 +458,41 @@ def run_pipeline(
 
     print(f"  Reports   : {report_path}")
     print(f"  Pipeline run complete.\n")
+
+    # ── AI-assist post-processing ──────────────────────────────────────────
+    if ai_assist and not dry_run and not show_diff:
+        client = AIClient()
+        ai_app_dir = real_out_dir / "src" / "app"
+        stage  = AIAssistStage(app_dir=ai_app_dir, analysis=analysis, client=client)
+        stage.run()
+    elif ai_assist and (dry_run or show_diff):
+        print("  [AI-assist] Skipped in dry-run / diff mode")
+
+    # ── TypeScript compilation validation ──────────────────────────────────
+    if not dry_run and not show_diff and not skip_tsc:
+        tsc_project_root = real_out_dir  # scaffold root = out/.tmp/angular-app
+        print(f"\n  [tsc] Validating TypeScript compilation...")
+        tsc_result = TscValidator(tsc_project_root).run()
+        validation_summary["tsc_passed"] = tsc_result.passed
+        validation_summary["tsc_errors"] = [e.to_dict() for e in tsc_result.errors[:50]]
+        validation_summary["tsc_summary"] = tsc_result.error_summary
+        validation_summary["tsc_found"]  = tsc_result.tsc_found
+        if not tsc_result.passed and tsc_result.error_count > 0:
+            validation_summary["failures"].append(
+                f"TypeScript: {tsc_result.error_count} error(s)"
+            )
+        report_dict["validation"] = validation_summary
+        report_dict["tsc_validation"] = tsc_result.to_dict()
+        report_json = json.dumps(report_dict, indent=2, ensure_ascii=False)
+        report_path.write_text(report_json, encoding="utf-8", errors="replace")
+        _rewrite_md_report(repo_path, analysis, patterns, transformation, risk,
+                           validation_summary, tsc_result)
+        print(f"  Validate  : tsc={tsc_result.passed}  "
+              f"({tsc_result.error_count} errors)  "
+              f"cmd={tsc_result.tsc_command or 'not found'}")
+    elif skip_tsc:
+        print("  [tsc] Skipped (--skip-tsc)")
+
     return True
 
 
@@ -437,6 +511,8 @@ Examples:
   python cli.py src/my-app --diff        # show unified diffs
   python cli.py src/my-app --only controllers,services
   python cli.py src/my-app --batch       # CI/harness mode (always exit 0)
+  python cli.py src/my-app --skip-tsc    # skip TypeScript compilation check
+  python cli.py src/my-app --ai-assist   # AI-complete stubs (needs GEMINI_API_KEY)
 """,
     )
     parser.add_argument("repo",    nargs="?", help="Path to AngularJS repo")
@@ -451,6 +527,9 @@ Examples:
     parser.add_argument(
                         "--ai-assist", action="store_true",
                         help="Enable AI completion of generated Angular stubs")
+    parser.add_argument(
+                        "--skip-tsc", action="store_true",
+                        help="Skip TypeScript compilation check (faster runs, CI mode)")
     args = parser.parse_args()
 
     if not args.repo:
@@ -467,6 +546,8 @@ Examples:
             show_diff=args.diff,
             only=only_list,
             batch=args.batch,
+            ai_assist=args.ai_assist,
+            skip_tsc=args.skip_tsc,
         )
 
     runner = PipelineRunner(_run)

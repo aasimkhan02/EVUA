@@ -103,7 +103,7 @@ def _generate_component(directive) -> tuple[str, str]:
     input_lines = []
     for binding_name, sigil in scope.items():
         ts_type = _binding_type(sigil)
-        input_lines.append(f"  @Input() {binding_name}: {ts_type};")
+        input_lines.append(f"  @Input() {binding_name}!: {ts_type};  // AngularJS scope binding '{sigil}'")
 
     inputs_block = ("\n" + "\n".join(input_lines) + "\n") if input_lines else ""
 
@@ -128,7 +128,20 @@ def _generate_component(directive) -> tuple[str, str]:
     imports = ["Component"]
     if input_lines:
         imports.append("Input")
+    if has_link:
+        imports += ["AfterViewInit", "ElementRef"]
     imports_str = ", ".join(imports)
+
+    implements_str = " implements AfterViewInit" if has_link else ""
+    ctor_str = (
+        "  constructor(private el: ElementRef) {}\n"
+    ) if has_link else ""
+    after_view_str = (
+        "  ngAfterViewInit(): void {\n"
+        "    // TODO: migrate AngularJS link() DOM logic here\n"
+        "    // DOM element: this.el.nativeElement\n"
+        "  }\n"
+    ) if has_link else ""
 
     ts_code = (
         f"import {{ {imports_str} }} from '@angular/core';\n"
@@ -137,13 +150,15 @@ def _generate_component(directive) -> tuple[str, str]:
         f"  selector: '{selector}',\n"
         f"  templateUrl: './{stem}.component.html'\n"
         f"}})\n"
-        f"export class {class_name} {{\n"
+        f"export class {class_name}{implements_str} {{\n"
         f"{inputs_block}"
-        f"{warnings_block}"
-        f"{tpl_comment}\n"
-        f"\n"
-        f"  // TODO: migrate directive logic from AngularJS '{name}'\n"
-        f"}}\n"
+        + ctor_str
+        + after_view_str
+        + f"{warnings_block}"
+        + f"{tpl_comment}\n"
+        + f"\n"
+        + f"  // TODO: migrate directive logic from AngularJS '{name}'\n"
+        + f"}}\n"
     )
 
     # HTML stub
@@ -185,7 +200,7 @@ def _generate_directive(directive) -> str:
     input_lines = []
     for binding_name, sigil in scope.items():
         ts_type = _binding_type(sigil)
-        input_lines.append(f"  @Input() {binding_name}: {ts_type};")
+        input_lines.append(f"  @Input() {binding_name}!: {ts_type};  // AngularJS scope binding '{sigil}'")
 
     inputs_block = ("\n" + "\n".join(input_lines) + "\n") if input_lines else ""
 

@@ -187,6 +187,11 @@ def _rewrite_ng_repeat(expr: str) -> str:
         track_expr = track_match.group(1)
         base       = re.sub(r'\s+track\s+by\s+\S+', '', expr, flags=re.IGNORECASE).strip()
         base       = base.replace(" in ", " of ", 1)
+        # Angular trackBy requires a method reference (index, item) => key.
+        # If track_expr is a dotted expression (e.g. item.id), we cannot use it
+        # directly — omit trackBy and add a TODO comment instead.
+        if '.' in track_expr or '(' in track_expr:
+            return f"{base}  {{{{/* TODO: add trackBy method — was: track by {track_expr} */}}}}"
         return f"{base}; trackBy: {track_expr}"
 
     return expr.replace(" in ", " of ", 1)
@@ -291,6 +296,20 @@ def migrate_template(html: str) -> str:
     # 2. Apply attribute rewrites
     for pattern, replacement in _ATTRIBUTE_REWRITES:
         result = pattern.sub(replacement, result)
+
+    # 2.5 Strip {{ }} interpolation from Angular property bindings.
+    # Happens when source had ng-href="{{expr}}" → [href]="{{expr}}" → [href]="expr"
+    # Pattern: [attr]="{{ expr }}" or [attr]='{{ expr }}'
+    result = re.sub(
+        r'(\[\w[\w.-]*\])\s*=\s*"\{\{\s*(.+?)\s*\}\}"',
+        r'\1="\2"',
+        result
+    )
+    result = re.sub(
+        r"(\[\w[\w.-]*\])\s*=\s*'\{\{\s*(.+?)\s*\}\}'",
+        r'\1="\2"',
+        result
+    )
 
     # 3. Migrate filter pipes inside {{ }}
     result = _migrate_filters(result)

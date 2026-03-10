@@ -59,6 +59,24 @@ class MarkdownReporter:
             lines.append("\n## Validation Summary")
             lines.append(f"- Tests passed: **{validation.get('tests_passed')}**")
             lines.append(f"- Snapshot passed: **{validation.get('snapshot_passed')}**")
+            # tsc compilation result
+            tsc_passed = validation.get("tsc_passed")
+            if tsc_passed is None:
+                lines.append("- TypeScript compilation: **not run**")
+            elif tsc_passed:
+                lines.append("- TypeScript compilation: **✓ passed**")
+            else:
+                n_err = len(validation.get("tsc_errors", []))
+                summary = validation.get("tsc_summary", f"{n_err} error(s)")
+                lines.append(f"- TypeScript compilation: **✗ failed** — {summary}")
+                tsc_errors = validation.get("tsc_errors", [])[:10]
+                if tsc_errors:
+                    lines.append("\n### TypeScript Errors (first 10)")
+                    for e in tsc_errors:
+                        import os
+                        fname = os.path.basename(e.get("file", "?"))
+                        lines.append(f"  - `{fname}:{e.get('line','?')}` — "
+                                     f"{e.get('code','??')}: {e.get('message','')}")
             for f in validation.get("failures", []):
                 lines.append(f"  - x {f}")
 

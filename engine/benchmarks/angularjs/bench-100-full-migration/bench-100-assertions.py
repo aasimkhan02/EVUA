@@ -678,6 +678,130 @@ check("[Q] TruncatePipe declared in app.module.ts", "TruncatePipe" in app_module
 check("[Q] CurrencyformatPipe declared in app.module.ts", "CurrencyformatPipe" in app_module_q or "CurrencyFormatPipe" in app_module_q, "CurrencyformatPipe missing from module", "Q")
 
 
+
+# ═════════════════════════════════════════════════════════════════════════════
+# R. TYPESCRIPT COMPILATION  (tsc --noEmit on the generated project)
+#    This is the ultimate proof that the engine produces real Angular —
+#    not just syntactically plausible TypeScript.
+# ═════════════════════════════════════════════════════════════════════════════
+section("R", "TypeScript compilation (tsc --noEmit) — generated project compiles cleanly")
+
+import subprocess as _subprocess
+import sys as _sys
+
+# Locate the generated project root (one level up from OUT which is src/app)
+# OUT = .../angular-app/src/app  → project root = .../angular-app
+_project_root = OUT.parent.parent  # angular-app/
+
+_tsconfig = _project_root / "tsconfig.app.json"
+if not _tsconfig.exists():
+    _tsconfig = _project_root / "tsconfig.json"
+
+if not _tsconfig.exists():
+    check("[R] tsconfig.app.json found in generated project",
+          False, f"no tsconfig found under {_project_root}", "R")
+else:
+    check("[R] tsconfig.app.json found in generated project", True, cat="R")
+
+    # --- ensure node_modules (npm install if missing) ---
+    _node_modules = _project_root / "node_modules"
+    _npm_ok = True
+    if not _node_modules.exists():
+        _npm = "npm.cmd" if _sys.platform == "win32" else "npm"
+        print(f"  [R] node_modules not found — running: {_npm} install")
+        print(f"  [R] (this may take 30-60 seconds on first run...)")
+        try:
+            _npm_result = _subprocess.run(
+                [_npm, "install"],
+                capture_output=True, text=True,
+                cwd=str(_project_root),
+                timeout=300,
+            )
+            if _npm_result.returncode == 0:
+                print("  [R] npm install OK")
+            else:
+                print(f"  [R] npm install failed (rc={_npm_result.returncode})")
+                for _l in _npm_result.stderr.splitlines()[:5]:
+                    print(f"  [R]   {_l}")
+                _npm_ok = False
+                check("[R] npm install succeeded (node_modules present)",
+                      False, "npm install failed — cannot run tsc", "R")
+        except FileNotFoundError:
+            _npm_ok = False
+            check("[R] npm install succeeded (node_modules present)",
+                  False, "npm not found — install Node.js from https://nodejs.org", "R")
+        except _subprocess.TimeoutExpired:
+            _npm_ok = False
+            check("[R] npm install succeeded (node_modules present)",
+                  False, "npm install timed out after 5 minutes", "R")
+    else:
+        check("[R] node_modules present (npm install not needed)", True, cat="R")
+
+    if _npm_ok:
+        # --- find tsc ---
+        _tsc = "tsc.cmd" if _sys.platform == "win32" else "tsc"
+        _tsc_found = False
+        for _candidate in [_tsc, "npx.cmd tsc" if _sys.platform == "win32" else "npx tsc"]:
+            try:
+                _v = _subprocess.run(
+                    _candidate.split() + ["--version"],
+                    capture_output=True, text=True, timeout=15,
+                    cwd=str(_project_root),
+                )
+                if _v.returncode == 0:
+                    _tsc_cmd = _candidate.split()
+                    _tsc_found = True
+                    print(f"  [R] tsc: {_v.stdout.strip()} ({_candidate})")
+                    break
+            except (FileNotFoundError, _subprocess.TimeoutExpired):
+                continue
+
+        if not _tsc_found:
+            check("[R] tsc --noEmit exits 0 (generated Angular compiles)",
+                  False,
+                  "tsc not found — run: npm install -g typescript", "R")
+        else:
+            _result = _subprocess.run(
+                _tsc_cmd + ["--noEmit", "--project", str(_tsconfig)],
+                capture_output=True, text=True,
+                cwd=str(_project_root),
+                timeout=120,
+            )
+            _err_lines = [l for l in _result.stdout.splitlines() if "error TS" in l]
+            _n = len(_err_lines)
+
+            if _result.returncode == 0:
+                check("[R] tsc --noEmit exits 0 (generated Angular compiles)", True, cat="R")
+            else:
+                # Categorise errors so the failure message is diagnostic
+                _missing = [l for l in _err_lines if "TS2307" in l or "TS2306" in l]
+                _strict  = [l for l in _err_lines
+                            if any(c in l for c in ["TS2564","TS2531","TS2532","TS7006","TS7034"])]
+                _struct  = [l for l in _err_lines
+                            if any(c in l for c in ["TS2304","TS2339","TS2345","TS2322"])]
+                _other   = [l for l in _err_lines
+                            if l not in _missing + _strict + _struct]
+
+                _detail = (
+                    f"{_n} error(s): "
+                    f"missing_import={len(_missing)} "
+                    f"strict={len(_strict)} "
+                    f"structural={len(_struct)} "
+                    f"other={len(_other)}"
+                )
+                check("[R] tsc --noEmit exits 0 (generated Angular compiles)",
+                      False, _detail, "R")
+
+                # Print first 15 errors for diagnosis
+                print(f"  [R] First errors:")
+                for _el in _err_lines[:15]:
+                    # Trim the path to just filename
+                    import re as _re
+                    _m = _re.search(r"([^/\\]+\.ts)\(", _el)
+                    _short = _m.group(1) if _m else _el
+                    print(f"  [R]   {_short}")
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 # SUMMARY
 # ═════════════════════════════════════════════════════════════════════════════
@@ -707,6 +831,7 @@ CAT_LABELS = {
     "O": "No duplicate stubs",
     "P": "Directive → Component conversion",
     "Q": "Filter → Pipe conversion",
+    "R": "TypeScript compilation (tsc --noEmit)",
 }
 
 print("\nCategory breakdown:")
@@ -734,6 +859,9 @@ print("SUBMISSION READINESS:")
 if not real_fails:
     print("  ✅ All implemented features work correctly.")
     print("  → Engine is ready for paper submission.")
+    r_stats = CAT_STATS.get("R", {})
+    if r_stats.get("p", 0) > 0:
+        print("  → tsc --noEmit ✅ — generated Angular compiles cleanly.")
 else:
     print(f"  ❌ {len(real_fails)} features have bugs — fix before submission.")
 

@@ -44,7 +44,45 @@ def _sanitize_angularjs_callback(src: str) -> str:
     return src
 
 
-def _build_inline_http_call(call) -> list[str]:
+def _js_concat_to_template_literal(url_src: str) -> str:
+    """
+    Convert a JS string-concat URL expression to a TypeScript template literal.
+
+    Examples:
+      "'/api/users/' + id"          → "`/api/users/${id}`"
+      "baseUrl + '/items/' + item"  → "`${baseUrl}/items/${item}`"
+      "'/api/search'"               → "'/api/search'"   (plain string, unchanged)
+    """
+    import re as _re
+
+    # Strip outer whitespace
+    expr = url_src.strip()
+
+    # If it's already a plain string literal, just return it quoted
+    if (_re.fullmatch(r"'[^']*'", expr) or _re.fullmatch(r'"[^"]*"', expr)):
+        return expr
+
+    # Split on ' + ' boundaries
+    parts = [p.strip() for p in _re.split(r"\s*\+\s*", expr)]
+
+    result = ""
+    for part in parts:
+        # String literal part — strip quotes and append raw text
+        m_lit = _re.fullmatch(r"['\"](.*)['\"](.*)", part, _re.DOTALL)
+        if m_lit:
+            result += m_lit.group(1)
+        elif _re.fullmatch(r"'[^']*'", part):
+            result += part[1:-1]
+        elif _re.fullmatch(r'"[^"]*"', part):
+            result += part[1:-1]
+        else:
+            # Variable / expression — wrap in ${}
+            result += "${" + part + "}"
+
+    return f"`{result}`"
+
+
+def _build_inline_http_call(call, known_props: set | None = None) -> list[str]:
     """
     Render a single RawHttpCall as inline TypeScript statements suitable
     for inclusion directly inside an existing method body.
@@ -83,14 +121,23 @@ def _build_inline_http_call(call) -> list[str]:
     catch_src   = _sanitize_angularjs_callback(getattr(call, "catch_body_src", None))
     req_body    = _sanitize_angularjs_callback(getattr(call, "request_body_src", None))
 
+    # url_src is set by js.py for dynamic URLs (e.g. "'/api/users/' + id").
+    # When present, convert to a TypeScript template literal.
     url_src = getattr(call, "url_src", None)
+
     if url:
         url_lit = f"'{url}'"
     elif url_src:
-        url_lit = f"`{url_src}`"
+        url_lit = _js_concat_to_template_literal(url_src)
     else:
-        url_lit = "'/'"
+        url_lit = "'/'"  # unknown dynamic URL
+        url_lit += "'"
     prop    = _infer_prop_name(url)
+    # Guard: if the inferred prop name is not a known class property,
+    # set prop to None — the subscribe body will emit a TODO comment instead
+    # of assigning to an undeclared property (which fails with strict:true).
+    if known_props is not None and prop not in known_props:
+        prop = None
 
     # Build the http call expression (first line portion)
     if method in ("post", "put", "patch") and req_body:
@@ -104,8 +151,10 @@ def _build_inline_http_call(call) -> list[str]:
         then_lines = then_src.splitlines()
         sub_body = ["      // AngularJS .then() — review and adapt:"]
         sub_body += [f"      {ln}" for ln in then_lines]
-    else:
+    elif prop is not None:
         sub_body = [f"      this.{prop} = res;"]
+    else:
+        sub_body = ["      // TODO: assign response — add a typed property to this class"]
 
     # Build catch pipe if needed
     if has_catch:
@@ -116,7 +165,12 @@ def _build_inline_http_call(call) -> list[str]:
                 catch_lines.append(f"          {ln}")
         else:
             catch_lines.append("          // TODO: port AngularJS .catch() logic")
-        catch_lines.append("          return throwError(() => err);")
+        # Only append throwError if catch_src does not already end with throw/return
+        _ends_with_flow = (
+            catch_src and re.search(r"(^|\n)\s*(throw|return)\b", catch_src.rstrip())
+        )
+        if not _ends_with_flow:
+            catch_lines.append("          return throwError(() => err);")
 
         lines = [
             f"    {http_expr}",
@@ -230,7 +284,7 @@ def _build_component_ts(
         if pname.startswith("$") or pname in method_names or pname in seen_props:
             continue
         seen_props.add(pname)
-        prop_lines.append(f"  {pname}: any;  // TODO: add proper type")
+        prop_lines.append(f"  {pname}!: any;  // TODO: add proper type")
 
     # ── Class methods — HTTP calls inlined directly ───────────────────────
     method_lines: list[str] = []
@@ -250,7 +304,7 @@ def _build_component_ts(
                 if getattr(call, "uses_q", False):
                     method_lines.append("    // TODO: $q.defer()/$q.all() — migrate to RxJS Observable")
                 else:
-                    method_lines.extend(_build_inline_http_call(call))
+                    method_lines.extend(_build_inline_http_call(call, known_props=set(scope_properties)))
         else:
             method_lines.append(f"    // TODO: migrate from $scope.{mname}")
 

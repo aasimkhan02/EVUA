@@ -67,10 +67,18 @@ class JSONReporter:
                     "risk_reason":    reason_by_change.get(c.id, ""),
                     "build_passed":   validation.get("tests_passed")    if validation else None,
                     "snapshot_passed":validation.get("snapshot_passed") if validation else None,
+                    "tsc_passed":     validation.get("tsc_passed")      if validation else None,
                 }
                 for c in transformation.changes
             ],
             "validation": validation or {},
+            "tsc_validation": {
+                "passed":        (validation or {}).get("tsc_passed"),
+                "error_count":   len((validation or {}).get("tsc_errors", [])),
+                "error_summary": (validation or {}).get("tsc_summary", "not run"),
+                "tsc_found":     (validation or {}).get("tsc_found"),
+                "errors":        (validation or {}).get("tsc_errors", [])[:20],
+            },
         }
 
         return json.dumps(self._to_json_safe(report), indent=2, ensure_ascii=False)

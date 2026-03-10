@@ -86,11 +86,11 @@ class AngularProjectScaffold:
                 "dependencies": {
                     "@angular/core": "^17.0.0",
                     "@angular/common": "^17.0.0",
-                    "@angular/common/http": "^17.0.0",
                     "@angular/compiler": "^17.0.0",
                     "@angular/platform-browser": "^17.0.0",
                     "@angular/platform-browser-dynamic": "^17.0.0",
                     "@angular/router": "^17.0.0",
+                    "@angular/forms": "^17.0.0",
                     "rxjs": "^7.8.0",
                     "zone.js": "^0.14.0"
                 },
