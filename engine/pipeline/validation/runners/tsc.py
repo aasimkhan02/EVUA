@@ -276,40 +276,116 @@ class TscValidator:
 
     def _ensure_npm_install(self) -> None:
         """
-        Run `npm install` in the project root if node_modules is absent.
-        Idempotent — skips if node_modules already exists.
-        Required before tsc can resolve @angular/* imports.
+        Ensure node_modules is present for tsc to resolve @angular/* imports.
+
+        Strategy: maintain a persistent shared node_modules cache keyed by the
+        hash of package.json. On first run with a given package.json, run
+        npm install once into the cache. On subsequent runs, create a junction
+        (Windows) or symlink (Unix) from <project_root>/node_modules to the
+        cached copy — takes milliseconds instead of 3-5 minutes.
+
+        Cache location: <project_root>/../../.evua_node_cache/<hash>/node_modules
+        (two levels up from the tmp Angular project puts us inside out/)
         """
+        import hashlib
+        import os
+
         node_modules = self.project_root / "node_modules"
         if node_modules.exists():
-            return  # already installed
+            return  # already present (real install or symlink/junction)
 
         pkg_json = self.project_root / "package.json"
         if not pkg_json.exists():
             print("  [tsc] package.json not found — skipping npm install")
             return
 
+        # ── Compute cache key from package.json content ──────────────────
+        pkg_content = pkg_json.read_bytes()
+        pkg_hash    = hashlib.md5(pkg_content).hexdigest()[:12]
+
+        # Cache root: two dirs up from the Angular project root, so it survives
+        # across tmp-dir rotations.  e.g. out/.evua_node_cache/<hash>/node_modules
+        cache_root   = self.project_root.parent.parent / ".evua_node_cache"
+        cache_nm_dir = cache_root / pkg_hash / "node_modules"
+
         npm_name = "npm.cmd" if sys.platform == "win32" else "npm"
-        print(f"  [tsc] node_modules not found — running: {npm_name} install")
-        print(f"  [tsc] This may take 30-60 seconds on first run...")
+
+        # ── If cache miss, install once into a stable location ───────────
+        if not cache_nm_dir.exists():
+            print(f"  [tsc] node_modules cache miss (key={pkg_hash}) — running npm install once")
+            print(f"  [tsc] This takes ~30-60s on first run; subsequent runs will be instant.")
+            install_dir = cache_nm_dir.parent
+            install_dir.mkdir(parents=True, exist_ok=True)
+            # Copy package.json into install dir so npm install works there
+            import shutil
+            shutil.copy2(pkg_json, install_dir / "package.json")
+            try:
+                result = subprocess.run(
+                    [npm_name, "install"],
+                    capture_output=True, text=True,
+                    cwd=str(install_dir),
+                    timeout=360,
+                )
+                if result.returncode == 0:
+                    print(f"  [tsc] npm install completed — cached at {cache_nm_dir}")
+                else:
+                    print(f"  [tsc] npm install failed (rc={result.returncode})")
+                    if result.stderr:
+                        for line in result.stderr.splitlines()[:5]:
+                            print(f"  [tsc]   {line}")
+                    return
+            except FileNotFoundError:
+                print("  [tsc] npm not found — install Node.js from https://nodejs.org")
+                return
+            except subprocess.TimeoutExpired:
+                print("  [tsc] npm install timed out after 6 minutes")
+                return
+        else:
+            print(f"  [tsc] node_modules cache hit (key={pkg_hash}) — linking instantly")
+
+        # ── Link cache into the tmp project dir ──────────────────────────
+        if not cache_nm_dir.exists():
+            print("  [tsc] Cache dir missing after install — falling back to local npm install")
+            self._npm_install_local(npm_name, pkg_json)
+            return
+
+        try:
+            if sys.platform == "win32":
+                # Windows: use directory junction (no admin rights needed, unlike symlinks)
+                import subprocess as _sp
+                _sp.run(
+                    ["cmd", "/c", "mklink", "/J",
+                     str(node_modules), str(cache_nm_dir)],
+                    check=True, capture_output=True,
+                )
+            else:
+                # Unix: symlink
+                node_modules.symlink_to(cache_nm_dir)
+            print(f"  [tsc] Linked node_modules from cache ({cache_nm_dir.parent.name})")
+        except Exception as e:
+            print(f"  [tsc] Could not create junction/symlink ({e}) — falling back to copy")
+            # Last resort: copy (slow but always works)
+            import shutil
+            shutil.copytree(str(cache_nm_dir), str(node_modules))
+
+    def _npm_install_local(self, npm_name: str, pkg_json: Path) -> None:
+        """Fallback: plain npm install in project_root."""
+        print(f"  [tsc] Falling back to local npm install in {self.project_root}")
         try:
             result = subprocess.run(
                 [npm_name, "install"],
                 capture_output=True, text=True,
                 cwd=str(self.project_root),
-                timeout=300,  # 5 min max — large installs can be slow
+                timeout=360,
             )
             if result.returncode == 0:
                 print("  [tsc] npm install completed successfully")
             else:
                 print(f"  [tsc] npm install failed (rc={result.returncode})")
-                if result.stderr:
-                    for line in result.stderr.splitlines()[:5]:
-                        print(f"  [tsc]   {line}")
         except FileNotFoundError:
             print("  [tsc] npm not found — install Node.js from https://nodejs.org")
         except subprocess.TimeoutExpired:
-            print("  [tsc] npm install timed out after 5 minutes")
+            print("  [tsc] npm install timed out")
 
     def _find_tsc(self) -> Optional[list[str]]:
         """

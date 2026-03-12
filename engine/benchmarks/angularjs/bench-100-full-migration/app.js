@@ -19,7 +19,59 @@
  *  - $compile / $q               (flagged only)
  */
 
-angular.module('bench100App', ['ngRoute'])
+// Module assigned to variable — tests module alias detection (Phase 3 fix)
+var app = angular.module('bench100App', ['ngRoute']);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ALIAS-STYLE REGISTRATION  (tests module alias detection)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// NotificationController — registered via alias, not chained.
+// Tests: module alias detection (var app = angular.module(...); app.controller(...))
+app.controller('NotificationController', ['$scope', '$http',
+  function($scope, $http) {
+
+  $scope.notifications = [];
+  $scope.unreadCount = 0;
+
+  $scope.loadNotifications = function() {
+    $http.get('/api/notifications')
+      .then(function(res) {
+        $scope.notifications = res.data;
+        $scope.unreadCount = res.data.filter(function(n) { return !n.read; }).length;
+      });
+  };
+
+  // $watchCollection — tests Phase 3 watcher detection
+  $scope.$watchCollection('notifications', function(newVal) {
+    $scope.unreadCount = (newVal || []).filter(function(n) { return !n.read; }).length;
+  });
+
+  // $watchGroup — tests Phase 3 watcher detection
+  $scope.$watchGroup(['filter', 'sortBy'], function(newVals) {
+    console.log('filter or sort changed', newVals);
+  });
+
+  $scope.loadNotifications();
+
+}]);
+
+// AngularJS 1.5+ .component() — registered via alias
+// Tests: .component() detection (Phase 3 fix)
+app.component('userProfile', {
+  template: '<div class="profile"><h2>{{$ctrl.user.name}}</h2></div>',
+  controller: ['$http', function($http) {
+    var ctrl = this;
+    ctrl.user = {};
+
+    ctrl.$onInit = function() {
+      $http.get('/api/profile')
+        .then(function(res) { ctrl.user = res.data; });
+    };
+  }]
+});
+
+app
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SERVICES  (ServiceToInjectableRule target)
@@ -314,3 +366,76 @@ angular.module('bench100App', ['ngRoute'])
     })
     .otherwise({ redirectTo: '/dashboard' });
 }]);
+
+
+// ===========================================================================
+// SECTION W -- Chained .component() detection
+// angular.module('bench100App').component('phoneList', { controller: [..., fn] })
+// ===========================================================================
+
+angular.module('bench100App').component('phoneList', {
+  templateUrl: 'phone-list/phone-list.template.html',
+  controller: ['$http',
+    function PhoneListController($http) {
+      var self = this;
+      self.phones = [];
+
+      self.loadPhones = function() {
+        $http.get('/api/phones')
+          .then(function(res) {
+            self.phones = res.data;
+          });
+      };
+
+      self.loadPhones();
+    }
+  ]
+});
+
+
+// ===========================================================================
+// SECTION X -- .factory() detection
+// angular.module('bench100App').factory('PhoneService', ['$resource', fn])
+// ===========================================================================
+
+angular.module('bench100App').factory('PhoneService', ['$resource',
+  function($resource) {
+    return $resource('phones/:phoneId.json', {}, {
+      query: {
+        method: 'GET',
+        params: { phoneId: 'phones' },
+        isArray: true
+      }
+    });
+  }
+]);
+
+
+// ===========================================================================
+// SECTION Y -- self alias + ngOnInit in chained .component()
+// var self = this; self.loadDetail = fn; self.setImage = fn; self.loadDetail()
+// ===========================================================================
+
+angular.module('bench100App').component('phoneDetail', {
+  templateUrl: 'phone-detail/phone-detail.template.html',
+  controller: ['$routeParams', '$http',
+    function PhoneDetailController($routeParams, $http) {
+      var self = this;
+      self.phone = {};
+
+      self.loadDetail = function() {
+        $http.get('/api/phones/' + $routeParams.phoneId)
+          .then(function(res) {
+            self.phone = res.data;
+            self.setImage(res.data.images[0]);
+          });
+      };
+
+      self.setImage = function(imageUrl) {
+        self.mainImageUrl = imageUrl;
+      };
+
+      self.loadDetail();
+    }
+  ]
+});

@@ -65,12 +65,11 @@ class SimpleWatchToRxjsRule:
             if owner is None:
                 print(f"[SimpleWatchToRxjs]  Cannot resolve owner for watch {node_id}, skipping")
             else:
-                base = (
-                    owner.name
-                    .replace("Controller", "")
-                    .replace("Ctrl", "")
-                    .lower()
-                )
+                base = owner.name.replace("Controller", "").replace("Ctrl", "")
+
+                # flat lowercase — matches generated filenames (userlist, dashboard, etc.)
+                base = base.lower()
+
                 component_ts = self.app_dir / f"{base}.component.ts"
 
                 if component_ts not in injected_files:

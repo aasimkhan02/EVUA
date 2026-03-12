@@ -35,7 +35,11 @@ def _ctrl_to_component_class(name: Optional[str]) -> Optional[str]:
 def _ctrl_to_base(name: Optional[str]) -> Optional[str]:
     if not name:
         return None
-    return name.replace("Controller", "").replace("Ctrl", "").lower()
+
+    stripped = name.replace("Controller", "").replace("Ctrl", "")
+
+    # flat lowercase — matches generated filenames (userlist, userdetail, etc.)
+    return stripped.lower()
 
 
 def _resolver_class_name(key: str) -> str:

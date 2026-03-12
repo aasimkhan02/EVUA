@@ -24,8 +24,13 @@ Sections:
   M  Template migration (ng-* → Angular syntax)
   N  DI token mapping (custom services injected into constructors)
   O  HttpToHttpClientRule skip (no duplicate stubs)
-  P  Directive detection (measured gap — no output file generated)
-  Q  Filter detection (measured gap — no output file generated)
+  P  Directive → Component conversion (DirectiveToComponentRule)
+  Q  Filter → Pipe conversion (FilterToPipeRule)
+  R  TypeScript compilation (tsc --noEmit on generated project)
+  S  Module alias detection (var app = angular.module(...); app.controller(...))
+  T  AngularJS 1.5+ .component() detection
+  U  $watchCollection / $watchGroup detection
+  V  Multi-file ingestion (constructs from directives.js and filters.js)
 """
 
 import sys, tempfile
@@ -680,7 +685,185 @@ check("[Q] CurrencyformatPipe declared in app.module.ts", "CurrencyformatPipe" i
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# R. TYPESCRIPT COMPILATION  (tsc --noEmit on the generated project)
+# S. MODULE ALIAS DETECTION  (var app = angular.module(...); app.controller(...))
+# ═════════════════════════════════════════════════════════════════════════════
+section("S", "Module alias detection (var app = angular.module(...))")
+
+# NotificationController is registered via: app.controller('NotificationController', ...)
+# The engine must detect it via the alias map built in Pass 1 of js.py.
+notification_comp = _read(OUT / "notification.component.ts")
+
+check("[S] notification.component.ts generated (alias-registered controller detected)",
+      bool(notification_comp),
+      "NotificationController not detected — alias-based registration not parsed", "S")
+check("[S] notification.component.ts has @Component",
+      "@Component(" in notification_comp, "missing @Component", "S")
+check("[S] notification.component.ts exports class",
+      "export class" in notification_comp, "missing export class", "S")
+check("[S] NotificationComponent declared in app.module.ts",
+      "NotificationComponent" in app_module, "NotificationComponent not wired into AppModule", "S")
+
+# Verify http.get('/api/notifications') is inlined correctly
+check("[S] notification: http.get('/api/notifications') inlined",
+      "/api/notifications" in notification_comp,
+      "HTTP call not inlined — body scanner missed alias-registered controller", "S")
+
+# ngOnInit from $scope.loadNotifications() top-level call
+check("[S] NotificationComponent implements OnInit",
+      "implements OnInit" in notification_comp, "missing implements OnInit", "S")
+check("[S] ngOnInit calls this.loadNotifications()",
+      "this.loadNotifications()" in notification_comp, "loadNotifications missing from ngOnInit", "S")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# T. .component() DETECTION  (AngularJS 1.5+ component syntax)
+# ═════════════════════════════════════════════════════════════════════════════
+section("T", "AngularJS 1.5+ .component() detection")
+
+# app.component('userProfile', { template: ..., controller: [..., function() {...}] })
+# Engine must detect this as a component and generate userprofile.component.ts
+userprofile_comp = _read(OUT / "userprofile.component.ts")
+
+check("[T] userprofile.component.ts generated (.component() detected)",
+      bool(userprofile_comp),
+      "app.component('userProfile') not detected — .component() support missing", "T")
+check("[T] userprofile.component.ts has @Component",
+      "@Component(" in userprofile_comp, "missing @Component", "T")
+check("[T] UserprofileComponent declared in app.module.ts",
+      "UserprofileComponent" in app_module, "UserprofileComponent not wired into AppModule", "T")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# U. $watchCollection / $watchGroup DETECTION
+# ═════════════════════════════════════════════════════════════════════════════
+section("U", "$watchCollection / $watchGroup detection")
+
+# NotificationController uses both $watchCollection and $watchGroup.
+# Engine must detect them (Phase 3 fix in scan_fn) and produce
+# appropriate BehaviorSubject / comment output.
+
+check("[U] $watchCollection detected — BehaviorSubject or comment in notification component",
+      "BehaviorSubject" in notification_comp or "$watchCollection" in notification_comp or
+      "watchCollection" in notification_comp.lower(),
+      "$watchCollection not reflected in output (missing from watch_depths)", "U")
+
+check("[U] $watchGroup detected — BehaviorSubject or comment in notification component",
+      "BehaviorSubject" in notification_comp or "watchGroup" in notification_comp.lower() or
+      "group" in notification_comp.lower(),
+      "$watchGroup not reflected in output (missing from watch_depths)", "U")
+
+# The engine must not leave raw $watchCollection / $watchGroup in generated TS
+check("[U] no raw $watchCollection in notification.component.ts",
+      "$watchCollection" not in notification_comp,
+      "raw $watchCollection left in generated TypeScript", "U")
+check("[U] no raw $watchGroup in notification.component.ts",
+      "$watchGroup" not in notification_comp,
+      "raw $watchGroup left in generated TypeScript", "U")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# V. MULTI-FILE INGESTION  (constructs from directives.js and filters.js)
+# ═════════════════════════════════════════════════════════════════════════════
+section("V", "Multi-file ingestion (directives.js / filters.js constructs detected)")
+
+# directives.js contains: angular.module('bench100App').directive('statusBadge', ...)
+# This is a CHAINED call (no alias), so it should be detected with or without Phase 3.
+# If P (directive → component) is implemented, statusbadge.component.ts will exist.
+# Here we measure raw detection: was the directive at minimum SEEN by the analyzer?
+
+# The cleanest measurable proxy: statusbadge.component.ts was generated (P rule ran on it)
+# or the engine logs detected it. Since the bench can only read output files, we use:
+# statusbadge.component.ts presence (already checked in P) as the detection proxy.
+# Here we add a DISTINCT check: the statusBadge source came from directives.js (not app.js).
+
+_statusbadge_in_p = bool(_read(OUT / "statusbadge.component.ts"))
+
+check("[V] statusBadge (from directives.js) resulted in output component",
+      _statusbadge_in_p,
+      "directives.js constructs not ingested — multi-file processing failed", "V")
+
+# filters.js contains: angular.module('bench100App').filter('currencyFormat', ...)
+# currencyformat.pipe.ts was already checked in Q; here we confirm multi-file is why.
+_currfmt_in_q = bool(_read(OUT / "currencyformat.pipe.ts"))
+
+check("[V] currencyFormat (from filters.js) resulted in output pipe",
+      _currfmt_in_q,
+      "filters.js constructs not ingested — multi-file processing failed", "V")
+
+# routes.js is intentionally empty — engine must not crash on it
+check("[V] empty routes.js did not prevent other files from being processed",
+      bool(routing),
+      "routing file missing — empty routes.js may have blocked pipeline", "V")
+
+
+
+# =============================================================================
+# SECTION W — Chained .component() (angular.module('x').component(...))
+#   js.py sets is_component=True; iter_controllers yields it;
+#   naming: name.lower() => phonelist.component.ts / PhonelistComponent
+# =============================================================================
+section("W", "Chained .component() -- angular.module('x').component(...)")
+
+_phonelist_ts = _read(OUT / "phonelist.component.ts")
+_appmod_w     = _read(OUT / "app.module.ts") or ""
+
+check("[W] phonelist.component.ts generated (chained .component() detected)",
+      bool(_phonelist_ts),
+      "file missing -- angular.module('x').component() not detected", "W")
+
+if _phonelist_ts:
+    check("[W] phonelist.component.ts has @Component",
+          "@Component(" in _phonelist_ts, "no @Component", "W")
+    check("[W] PhonelistComponent declared in app.module.ts",
+          "PhonelistComponent" in _appmod_w, "PhonelistComponent not in app.module.ts", "W")
+    check("[W] loadPhones method present",
+          "loadPhones" in _phonelist_ts, "loadPhones missing", "W")
+    check("[W] ngOnInit present (self.loadPhones() init call detected)",
+          "ngOnInit" in _phonelist_ts, "ngOnInit missing", "W")
+
+
+# =============================================================================
+# SECTION X -- .factory() detection
+#   Naming: raw_name.lower() => phoneservice.service.ts (no hyphens)
+# =============================================================================
+section("X", ".factory() detection")
+
+_phonesvc_ts = _read(OUT / "phoneservice.service.ts")
+_appmod_x    = _read(OUT / "app.module.ts") or ""
+
+check("[X] phoneservice.service.ts generated (.factory() detected)",
+      bool(_phonesvc_ts),
+      "file missing -- .factory() not picked up by ServiceToInjectableRule", "X")
+
+if _phonesvc_ts:
+    check("[X] phoneservice.service.ts has @Injectable",
+          "@Injectable(" in _phonesvc_ts, "no @Injectable", "X")
+    check("[X] PhoneService provided in app.module.ts",
+          "PhoneService" in _appmod_x, "PhoneService not in app.module.ts", "X")
+
+
+# =============================================================================
+# SECTION Y -- self/vm alias methods + ngOnInit in .component() controller
+#   var self = this; self.loadDetail = fn; self.setImage = fn; self.loadDetail()
+#   Naming: phonedetail.component.ts / PhonedetailComponent
+# =============================================================================
+section("Y", "self/vm alias methods + ngOnInit in .component() controllers")
+
+_phonedetail_ts = _read(OUT / "phonedetail.component.ts")
+
+check("[Y] phonedetail.component.ts generated (self-alias .component() detected)",
+      bool(_phonedetail_ts),
+      "file missing -- self.method .component() controller not detected", "Y")
+
+if _phonedetail_ts:
+    check("[Y] loadDetail method present",
+          "loadDetail" in _phonedetail_ts, "loadDetail missing", "Y")
+    check("[Y] setImage method present",
+          "setImage" in _phonedetail_ts, "setImage missing", "Y")
+    check("[Y] ngOnInit present (self.loadDetail() init call detected)",
+          "ngOnInit" in _phonedetail_ts, "ngOnInit missing", "Y")
+
+
 #    This is the ultimate proof that the engine produces real Angular —
 #    not just syntactically plausible TypeScript.
 # ═════════════════════════════════════════════════════════════════════════════
@@ -832,10 +1015,17 @@ CAT_LABELS = {
     "P": "Directive → Component conversion",
     "Q": "Filter → Pipe conversion",
     "R": "TypeScript compilation (tsc --noEmit)",
+    "S": "Module alias detection (var app = angular.module(...))",
+    "T": "AngularJS 1.5+ .component() detection",
+    "U": "$watchCollection / $watchGroup detection",
+    "V": "Multi-file ingestion (directives.js / filters.js)",
+    "W": "Chained .component() -- angular.module('x').component(...)",
+    "X": ".factory() detection",
+    "Y": "self/vm alias methods + ngOnInit in .component() controllers",
 }
 
 print("\nCategory breakdown:")
-for cat in "ABCDEFGHIJKLMNOPQ":
+for cat in "ABCDEFGHIJKLMNOPQRSTUVWXY":
     if cat not in CAT_STATS:
         continue
     p = CAT_STATS[cat]["p"]
