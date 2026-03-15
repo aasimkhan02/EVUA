@@ -364,13 +364,37 @@ def _build_component_ts(
         seen_props.add(pname)
         prop_lines.append(f"  {pname}!: any;  // TODO: add proper type")
 
-    # NEW: also declare properties inferred from HTTP calls
+    # Also declare properties inferred from HTTP calls (e.g. url=/api/users -> users!: any)
+    # Guard: skip if the inferred name collides with a method name (TS2300 duplicate identifier)
     for calls in http_calls_by_method.values():
         for call in calls:
             prop = _infer_prop_name(getattr(call, "url", None))
-            if prop and prop not in seen_props:
+            if prop and prop not in seen_props and prop not in method_names:
                 seen_props.add(prop)
                 prop_lines.append(f"  {prop}!: any;")
+            elif prop and prop in method_names:
+                print(
+                    f"[ControllerToComponent] Skipping HTTP-inferred prop {prop!r}"
+                    f" — collides with method name (would cause TS2300 duplicate identifier)"
+                )
+
+    # Also declare properties that appear in then_body_src callbacks
+    # (e.g. then body: 'this.phone = res' — 'phone' won't be in scope_writes
+    #  since it's assigned inside a callback, not at $scope level)
+    for calls in http_calls_by_method.values():
+        for call in calls:
+            _tbs = getattr(call, "then_body_src", None)
+            if _tbs:
+                _sanitized_tbs = _sanitize_angularjs_callback(_tbs)
+                for _m in re.finditer(r'\bthis\.(\w+)\s*=', _sanitized_tbs):
+                    _cbprop = _m.group(1)
+                    if _cbprop not in seen_props and _cbprop not in method_names:
+                        seen_props.add(_cbprop)
+                        prop_lines.append(f"  {_cbprop}!: any;")
+                        print(
+                            f"[ControllerToComponent] Declared then-body prop {_cbprop!r}"
+                            f" (found in callback: 'this.{_cbprop} = ...')"
+                        )
 
     # ── Class methods — HTTP calls inlined directly ───────────────────────
     method_lines: list[str] = []

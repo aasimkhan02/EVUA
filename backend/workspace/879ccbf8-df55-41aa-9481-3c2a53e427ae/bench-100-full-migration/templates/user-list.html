@@ -1,0 +1,52 @@
+<!-- bench-100: user-list.html
+     Tests ng-model (forces FormsModule), ng-submit, ng-blur,
+     ng-keyup, ng-checked, ng-value, filter pipe (→ TODO).
+     Bound to UserListController.
+-->
+<div ng-controller="UserListController">
+  <h1>Users</h1>
+
+  <!-- ng-model → [(ngModel)]  ← KEY: forces FormsModule into app.module.ts -->
+  <form ng-submit="search()">
+    <input type="text"
+           ng-model="searchTerm"
+           ng-blur="onBlur()"
+           ng-keyup="onKey($event)"
+           placeholder="Search...">
+    <button type="submit">Search</button>
+  </form>
+
+  <!-- ng-if → *ngIf -->
+  <p ng-if="error" class="error">{{error}}</p>
+
+  <!-- ng-show → *ngIf (migrated) -->
+  <div ng-show="loading">Loading users...</div>
+
+  <!-- ng-hide → *ngIf !() -->
+  <div ng-hide="loading">
+
+    <!-- ng-repeat with | filter — flagged TODO by migrator -->
+    <table>
+      <tbody>
+        <tr ng-repeat="user in users | filter:searchTerm track by user.id"
+            ng-class="{'admin-row': user.role === 'admin'}">
+          <td>{{user.name | capitalize}}</td>
+          <td>{{user.email}}</td>
+          <td>
+            <!-- ng-disabled → [disabled] -->
+            <button ng-click="deleteUser(user.id)"
+                    ng-disabled="user.protected">Delete</button>
+          </td>
+          <td>
+            <!-- ng-checked → [checked] -->
+            <input type="checkbox" ng-checked="user.active">
+            <!-- ng-value → [value] -->
+            <input type="radio" ng-value="user.id" ng-model="selectedId">
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p ng-if="users.length === 0">No users found.</p>
+  </div>
+</div>

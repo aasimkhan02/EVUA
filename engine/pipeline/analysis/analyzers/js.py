@@ -469,17 +469,47 @@ class JSAnalyzer(Analyzer):
                         and obj_name in module_aliases
                     )
 
-                    # Detect chained: angular.module('x').component(...)
-                    _is_chained_module_component = False
+                    # ── Detect chained angular module calls of ANY depth ──────────────
+                    # Handles: angular.module('x').component(...)
+                    # AND:     angular.module('x').controller(...).component(...)
+                    # AND:     angular.module('x').component('a').component('b')
+                    # The old single-level check failed for multi-chained calls.
+                    def _is_angular_module_chain(call_node) -> bool:
+                        """
+                        Recursively walk the .object of a CallExpression chain.
+                        Returns True if the chain ultimately originates from
+                        angular.module(...) — regardless of how many .controller(),
+                        .component(), .factory() etc. calls sit in between.
+                        """
+                        if call_node is None:
+                            return False
+                        if getattr(call_node, "type", None) != "CallExpression":
+                            return False
+                        _cal = getattr(call_node, "callee", None)
+                        if getattr(_cal, "type", None) != "MemberExpression":
+                            return False
+                        _obj  = getattr(_cal, "object", None)
+                        _prop = getattr(_cal, "property", None)
+                        _obj_name  = getattr(_obj,  "name", None) if getattr(_obj,  "type", None) == "Identifier" else None
+                        _prop_name = getattr(_prop, "name", None)
+                        # Base case: angular.module(...)
+                        if _obj_name == "angular" and _prop_name == "module":
+                            return True
+                        # Recursive case: object is itself a chained call
+                        if getattr(_obj, "type", None) == "CallExpression":
+                            return _is_angular_module_chain(_obj)
+                        return False
 
-                    if obj_type == "CallExpression":
-                        inner_callee = getattr(callee.object, "callee", None)
-                        if getattr(inner_callee, "type", None) == "MemberExpression":
-                            inner_obj  = getattr(inner_callee.object, "name", None)
-                            inner_prop = getattr(inner_callee.property, "name", None)
-
-                            if inner_obj == "angular" and inner_prop == "module":
-                                _is_chained_module_component = True
+                    _is_chained_module_component = (
+                        obj_type == "CallExpression"
+                        and _is_angular_module_chain(callee.object)
+                    )
+                    print(
+                        f"[js.py CHAIN] prop={prop!r} obj_type={obj_type!r}"
+                        f" obj_name={obj_name!r} _is_alias={_is_module_alias_call}"
+                        f" _is_chained={_is_chained_module_component}"
+                        f" -> will_detect_component={prop == 'component' and (_is_module_alias_call or _is_chained_module_component)}"
+                    )
 
                     if prop in ("controller", "service", "factory") and len(args) >= 2:
                         name_node = args[0]
@@ -499,6 +529,12 @@ class JSAnalyzer(Analyzer):
                         ):
                         name_node = args[0]
                         cfg_node  = args[1] if getattr(args[1], "type", None) == "ObjectExpression" else None
+                        print(
+                            f"[js.py .component()] Entering detection: name_node.type={getattr(name_node, 'type', None)!r}"
+                            f" name_node.value={getattr(name_node, 'value', None)!r}"
+                            f" cfg_node={'present' if cfg_node else 'MISSING (not ObjectExpression)'}"
+                            f" args[1].type={getattr(args[1], 'type', None)!r}"
+                        )
 
                         if getattr(name_node, "type", None) == "Literal" and cfg_node is not None:
                             comp_name = name_node.value
@@ -526,6 +562,10 @@ class JSAnalyzer(Analyzer):
                                         fn_node = last
                             # If no inline function, synthesise a minimal fn_node placeholder
                             # We still create a controller entry so the component is detected
+                            print(
+                                f"[js.py .component()] '{comp_name}': ctrl_prop.type={getattr(ctrl_prop, 'type', None)!r}"
+                                f" fn_node={'found (type=' + getattr(fn_node, 'type', 'None') + ')' if fn_node else 'NOT FOUND'}"
+                            )
                             if fn_node is None and ctrl_prop is not None:
                                 # Named controller reference — record with empty body
                                 ctrl_name_ref = getattr(ctrl_prop, "name", None)
@@ -535,7 +575,7 @@ class JSAnalyzer(Analyzer):
                                 # treat AngularJS .component() like a controller for migration
                                 _handle_controller(comp_name, ctrl_prop, fn_node, file_path, source, is_component=True)
 
-                                print(f"[js.py] .component('{comp_name}') controller detected")
+                                print(f"[js.py] .component('{comp_name}') controller detected -> RawController appended (is_component=True)")
                             elif cfg_node is not None:
                                 # No controller function found — register component with empty body
                                 ctrl = RawController(

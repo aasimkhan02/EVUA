@@ -1,8 +1,9 @@
 import { DiffEditor } from "@monaco-editor/react";
 import { useState } from "react";
 
-function getLanguage(filePath) {
+function getLanguage(filePath = "") {
   const ext = filePath.split(".").pop()?.toLowerCase();
+
   const map = {
     ts: "typescript",
     tsx: "typescript",
@@ -13,6 +14,7 @@ function getLanguage(filePath) {
     json: "json",
     md: "markdown",
   };
+
   return map[ext] || "plaintext";
 }
 
@@ -20,19 +22,29 @@ export default function DiffViewer({
   filePath,
   original,
   modified,
+  diff,
   onAccept,
   onRevert,
   decision,
 }) {
   const [inline, setInline] = useState(false);
+
   const language = getLanguage(filePath);
 
+  const hasStructuredDiff = original !== undefined && modified !== undefined;
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-950 border border-gray-800 rounded-xl overflow-hidden">
+
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800">
         <div className="flex items-center gap-3">
-          <span className="text-sm font-mono text-gray-300">{filePath}</span>
+          {filePath && (
+            <span className="text-sm font-mono text-gray-300">
+              {filePath}
+            </span>
+          )}
+
           {decision && (
             <span
               className={`text-xs px-2 py-0.5 rounded font-medium ${
@@ -47,13 +59,18 @@ export default function DiffViewer({
             </span>
           )}
         </div>
+
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setInline(!inline)}
-            className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-400 hover:text-white transition-colors cursor-pointer"
-          >
-            {inline ? "Side by Side" : "Inline"}
-          </button>
+
+          {hasStructuredDiff && (
+            <button
+              onClick={() => setInline(!inline)}
+              className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-400 hover:text-white transition-colors cursor-pointer"
+            >
+              {inline ? "Side by Side" : "Inline"}
+            </button>
+          )}
+
           {onAccept && (
             <button
               onClick={onAccept}
@@ -63,6 +80,7 @@ export default function DiffViewer({
               Accept
             </button>
           )}
+
           {onRevert && (
             <button
               onClick={onRevert}
@@ -76,26 +94,32 @@ export default function DiffViewer({
       </div>
 
       {/* Monaco Diff Editor */}
-      <div className="flex-1 min-h-0">
-        <DiffEditor
-          height="100%"
-          language={language}
-          original={original || ""}
-          modified={modified || ""}
-          theme="vs-dark"
-          options={{
-            readOnly: true,
-            renderSideBySide: !inline,
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            fontSize: 13,
-            lineNumbers: "on",
-            renderOverviewRuler: false,
-            diffWordWrap: "on",
-            originalEditable: false,
-          }}
-        />
-      </div>
+      {hasStructuredDiff ? (
+        <div className="flex-1 min-h-0">
+          <DiffEditor
+            height="100%"
+            language={language}
+            original={original || ""}
+            modified={modified || ""}
+            theme="vs-dark"
+            options={{
+              readOnly: true,
+              renderSideBySide: !inline,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              fontSize: 13,
+              lineNumbers: "on",
+              renderOverviewRuler: false,
+              diffWordWrap: "on",
+              originalEditable: false,
+            }}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-auto bg-gray-950 p-4 font-mono text-sm text-gray-300 whitespace-pre-wrap">
+          {diff || "No diff available"}
+        </div>
+      )}
     </div>
   );
 }
