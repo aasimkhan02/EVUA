@@ -107,6 +107,16 @@ _ATTRIBUTE_REWRITES = [
     (re.compile(r'\bng-placeholder\s*=\s*"([^"]+)"', re.IGNORECASE), lambda m: f'[placeholder]="{m.group(1)}"'),
     (re.compile(r"\bng-placeholder\s*=\s*'([^']+)'", re.IGNORECASE), lambda m: f"[placeholder]=\"{m.group(1)}\""),
 
+    # ── ng-switch ─────────────────────────────────────────────────────────
+    # ng-switch="expr"       → [ngSwitch]="expr"
+    # ng-switch-when="val"   → *ngSwitchCase="'val'"
+    # ng-switch-default      → *ngSwitchDefault
+    (re.compile(r'\bng-switch\s*=\s*"([^"]+)"',        re.IGNORECASE), lambda m: f'[ngSwitch]="{m.group(1)}"'),
+    (re.compile(r"\bng-switch\s*=\s*'([^']+)'",        re.IGNORECASE), lambda m: f"[ngSwitch]=\"{m.group(1)}\""),
+    (re.compile(r'\bng-switch-when\s*=\s*"([^"]+)"',    re.IGNORECASE), lambda m: f'*ngSwitchCase="\'{m.group(1)}\'"'),
+    (re.compile(r"\bng-switch-when\s*=\s*'([^']+)'",   re.IGNORECASE), lambda m: f"*ngSwitchCase=\"'{m.group(1)}'\""),
+    (re.compile(r'\bng-switch-default\b',                re.IGNORECASE), lambda m: '*ngSwitchDefault'),
+
     # ── Two-way binding ───────────────────────────────────────────────────
     (re.compile(r'\bng-model\s*=\s*"([^"]+)"',  re.IGNORECASE), lambda m: f'[(ngModel)]="{m.group(1)}"'),
     (re.compile(r"\bng-model\s*=\s*'([^']+)'",  re.IGNORECASE), lambda m: f"[(ngModel)]=\"{m.group(1)}\""),
@@ -147,13 +157,41 @@ _TODO_PATTERNS = [
 
 # Filter → Pipe rewrites inside {{ }} interpolations
 _FILTER_REWRITES = [
-    # Compatible (same name, no change needed — but we annotate them as verified)
-    # Incompatible — must rewrite
+    # limitTo → slice (API difference)
     (re.compile(r'\|\s*limitTo\s*:\s*(\S+)',       re.IGNORECASE), r'| slice:0:\1'),
-    # Filters with no Angular equivalent — flag with TODO
-    (re.compile(r'\|\s*orderBy\b',                 re.IGNORECASE), '<!-- TODO: orderBy has no Angular pipe — sort in component --> | '),
-    (re.compile(r'\|\s*filter\b',                  re.IGNORECASE), '<!-- TODO: filter pipe — move filtering logic to component --> | '),
+    # Filters with no Angular equivalent — strip from binding, TODO comment on own line
+    (re.compile(r'\|\s*orderBy\s*:\s*\S+',        re.IGNORECASE), ''),
+    (re.compile(r'\|\s*orderBy\b',                 re.IGNORECASE), ''),
+    (re.compile(r'\|\s*filter\s*:\s*\S+',          re.IGNORECASE), ''),
+    (re.compile(r'\|\s*filter\b',                  re.IGNORECASE), ''),
 ]
+
+# Built-in Angular pipes that match AngularJS filter names exactly.
+# These need no syntax rewrite but do require pipe imports in app.module.ts.
+# The migrate_template() function returns which pipes were used so the caller
+# can add them to AppModule imports[].
+_BUILTIN_ANGULAR_PIPES = {
+    "date":       "DatePipe",
+    "currency":   "CurrencyPipe",
+    "number":     "DecimalPipe",
+    "uppercase":  "UpperCasePipe",
+    "lowercase":  "LowerCasePipe",
+    "percent":    "PercentPipe",
+    "json":       "JsonPipe",
+    "slice":      "SlicePipe",
+    "async":      "AsyncPipe",
+    "keyvalue":   "KeyValuePipe",
+    "titlecase":  "TitleCasePipe",
+}
+
+# Tracks which built-in Angular pipes were referenced in the last migrate_template() call.
+# Reset at start of each migrate_template() call; read by AppModuleUpdaterRule.
+_used_builtin_pipes: set = set()
+
+
+def get_used_builtin_pipes() -> set:
+    """Return the set of Angular pipe class names used in the last migration."""
+    return set(_used_builtin_pipes)
 
 # AngularJS script tags to remove from migrated output
 _ANGULARJS_SCRIPT_RE = re.compile(
@@ -187,20 +225,31 @@ def _rewrite_ng_repeat(expr: str) -> str:
         track_expr = track_match.group(1)
         base       = re.sub(r'\s+track\s+by\s+\S+', '', expr, flags=re.IGNORECASE).strip()
         base       = base.replace(" in ", " of ", 1)
-        # Angular trackBy requires a method reference (index, item) => key.
-        # If track_expr is a dotted expression (e.g. item.id), we cannot use it
-        # directly — omit trackBy and add a TODO comment instead.
+        # Angular trackBy requires a method reference on the class.
+        # We always emit "; trackBy: trackById" — the method is generated on the
+        # component class by ControllerToComponentRule._build_component_ts.
+        # If the original expression used a dotted key (item.id), we note it in
+        # a separate HTML comment (not inside the attribute — that is invalid HTML).
         if '.' in track_expr or '(' in track_expr:
-            return f"{base}  {{{{/* TODO: add trackBy method — was: track by {track_expr} */}}}}"
+            # Return a sentinel so the caller can prepend the comment on its own line
+            return f"{base}; trackBy: trackById  <!-- trackBy: was 'track by {track_expr}' -->"
         return f"{base}; trackBy: {track_expr}"
 
     return expr.replace(" in ", " of ", 1)
 
 
 def _migrate_filters(html: str) -> str:
-    """Apply filter → pipe rewrites inside {{ }} interpolations."""
+    """Apply filter → pipe rewrites inside {{ }} interpolations.
+    Also tracks which built-in Angular pipes are referenced (for AppModule imports).
+    """
+    global _used_builtin_pipes
+
     def rewrite_interpolation(m: re.Match) -> str:
         inner = m.group(1)
+        # Track built-in Angular pipe usage before rewriting
+        for pipe_name, pipe_class in _BUILTIN_ANGULAR_PIPES.items():
+            if re.search(r'\|\s*' + pipe_name + r'\b', inner, re.IGNORECASE):
+                _used_builtin_pipes.add(pipe_class)
         for pattern, replacement in _FILTER_REWRITES:
             inner = pattern.sub(replacement, inner)
         return "{{ " + inner.strip() + " }}"
@@ -284,6 +333,8 @@ def migrate_template(html: str) -> str:
      - Extracted controller fragments
      - Standalone template files
     """
+    global _used_builtin_pipes
+    _used_builtin_pipes = set()   # reset for each template migration call
     result = html
 
     # 0. Strip HTML comments — they often contain ng-* text (e.g. "<!-- ng-repeat → *ngFor -->")
@@ -310,6 +361,13 @@ def migrate_template(html: str) -> str:
         r'\1="\2"',
         result
     )
+
+    # 2.6 Strip AngularJS one-time binding prefix "::" from interpolations.
+    # {{ ::expr }} → {{ expr }}
+    # Also handles [attr]="::expr" → [attr]="expr"
+    result = re.sub(r'\{\{\s*::(.*?)\}\}', lambda m: '{{ ' + m.group(1).strip() + ' }}', result)
+    result = re.sub(r'=\s*"::([^"]+)"', r'="\1"', result)
+    result = re.sub(r"=\s*'::([^']+)'", r"='\1'", result)
 
     # 3. Migrate filter pipes inside {{ }}
     result = _migrate_filters(result)

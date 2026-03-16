@@ -439,3 +439,97 @@ angular.module('bench100App').component('phoneDetail', {
     }
   ]
 });
+
+
+// ===========================================================================
+// SECTION Z2 -- .run() block parsing
+// angular.module('bench100App').run(['$rootScope', fn])
+// ===========================================================================
+
+angular.module('bench100App').run(['$rootScope', '$location',
+  function($rootScope, $location) {
+    $rootScope.appName = 'BenchApp';
+    $rootScope.$on('$routeChangeSuccess', function() {
+      $rootScope.currentPath = $location.path();
+    });
+  }
+]);
+
+
+// ===========================================================================
+// SECTION Z3 -- .constant() / .value() → InjectionToken generation
+// ===========================================================================
+
+angular.module('bench100App')
+  .constant('API_BASE_URL', 'https://api.example.com/v1')
+  .constant('MAX_PAGE_SIZE', 50)
+  .value('defaultPageSize', 10)
+  .value('featureFlags', { darkMode: true, betaFeatures: false });
+
+
+// ===========================================================================
+// SECTION Z4 -- Re-opened module (angular.module('x') without deps array)
+// Tests: detecting 'get' vs 'define' pattern for module re-opens
+// ===========================================================================
+
+// Re-open the bench100App module (no deps array = re-open, not define)
+angular.module('bench100App').controller('TimerController', ['$scope', '$timeout', '$interval',
+  function($scope, $timeout, $interval) {
+    $scope.count  = 0;
+    $scope.ticks  = 0;
+
+    // $timeout → setTimeout
+    $scope.delayedIncrement = function() {
+      $timeout(function() { $scope.count += 1; }, 500);
+    };
+
+    // $interval → setInterval
+    var ticker = $interval(function() { $scope.ticks += 1; }, 1000);
+    $scope.stopTicker = function() { $interval.cancel(ticker); };
+    $scope.delayedIncrement();
+  }
+]);
+
+
+// ===========================================================================
+// SECTION Z5 -- $location.path() → this.router.navigate([])
+// ===========================================================================
+
+angular.module('bench100App').controller('NavController', ['$scope', '$location',
+  function($scope, $location) {
+    $scope.goToDashboard = function() {
+      $location.path('/dashboard');
+    };
+    $scope.goToUser = function(id) {
+      $location.path('/users/' + id);
+    };
+    $scope.goToSearch = function(query) {
+      $location.url('/search?q=' + query);
+    };
+    $scope.getCurrentPath = function() {
+      return $location.path();
+    };
+    $scope.goToDashboard();
+  }
+]);
+
+
+// ===========================================================================
+// SECTION Z6 -- $stateParams → ActivatedRoute body rewrite
+// (ui-router style — $stateParams instead of $routeParams)
+// ===========================================================================
+
+angular.module('bench100App').controller('ItemDetailController', ['$scope', '$stateParams', '$http',
+  function($scope, $stateParams, $http) {
+    $scope.item = {};
+
+    $scope.loadItem = function() {
+      $http.get('/api/items/' + $stateParams.itemId)
+        .then(function(res) {
+          $scope.item = res.data;
+        });
+    };
+
+    $scope.loadItem();
+  }
+]);

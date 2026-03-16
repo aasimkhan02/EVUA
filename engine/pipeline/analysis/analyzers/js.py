@@ -121,6 +121,32 @@ class RawRoute:
         self.params = re.findall(r':(\w+)', path or '')
 
 
+class RawConstant:
+    """
+    Represents an AngularJS .constant() or .value() registration.
+    These map to Angular InjectionToken declarations in a generated
+    src/app/app-constants.ts file.
+    """
+    def __init__(self, name: str, raw_value: str, kind: str, file: str):
+        self.id        = str(uuid.uuid4())
+        self.name      = name       # e.g. 'API_URL'
+        self.raw_value = raw_value  # source text of the value literal
+        self.kind      = kind       # 'constant' or 'value'
+        self.file      = file
+
+
+class RawRunBlock:
+    """
+    Represents an AngularJS .run() block — executed after injector creation.
+    These have no direct Angular equivalent; we emit them as a comment + stub.
+    """
+    def __init__(self, di: list, body_src: str, file: str):
+        self.id       = str(uuid.uuid4())
+        self.di       = di        # DI tokens
+        self.body_src = body_src  # source text of the run function body
+        self.file     = file
+
+
 def iter_children(node):
     for key, value in vars(node).items():
         if isinstance(value, list):
@@ -375,13 +401,15 @@ def _handle_config_block(args, file_path: str) -> List[RawRoute]:
         return _parse_uirouter_config(fn_node, file_path)
 
 
-def _collect_module_aliases(ast, aliases: dict):
+def _collect_module_aliases(ast, aliases: dict, reopened: list = None):
     """
     First-pass walk: find patterns like:
-      var app = angular.module('myApp', []);
-      let app = angular.module('myApp', []);
-      app = angular.module('myApp', []);
-    and populate aliases = {'app': 'myApp'}.
+      var app = angular.module('myApp', []);   → define  (has deps array)
+      app = angular.module('myApp');            → re-open (no deps array)
+    Populates aliases = {'app': 'myApp'} for define calls.
+    Appends module name to reopened[] for re-open calls (no deps array).
+    This lets the engine handle angular.module('x').component(...) chains
+    that appear in files separate from the module definition.
     """
     def _walk(node):
         if node is None or not hasattr(node, "type"):
@@ -393,7 +421,16 @@ def _collect_module_aliases(ast, aliases: dict):
             init_node = getattr(node, "init", None)
             var_name  = getattr(id_node, "name", None) if id_node else None
             if var_name and _is_angular_module_call(init_node):
-                aliases[var_name] = _get_module_name(init_node)
+                mod_name = _get_module_name(init_node)
+                call_args = getattr(init_node, "arguments", []) or []
+                if len(call_args) >= 2:
+                    # angular.module('x', [...]) → define
+                    aliases[var_name] = mod_name
+                elif reopened is not None:
+                    # angular.module('x') → re-open
+                    if mod_name not in reopened:
+                        reopened.append(mod_name)
+                    print(f"[js.py] Re-opened module detected: '{mod_name}' (var {var_name})")
 
         # x = angular.module(...)  (bare assignment)
         if getattr(node, "type", None) == "AssignmentExpression":
@@ -401,7 +438,14 @@ def _collect_module_aliases(ast, aliases: dict):
             right    = getattr(node, "right", None)
             var_name = getattr(left, "name", None) if getattr(left, "type", None) == "Identifier" else None
             if var_name and _is_angular_module_call(right):
-                aliases[var_name] = _get_module_name(right)
+                mod_name = _get_module_name(right)
+                call_args = getattr(right, "arguments", []) or []
+                if len(call_args) >= 2:
+                    aliases[var_name] = mod_name
+                elif reopened is not None:
+                    if mod_name not in reopened:
+                        reopened.append(mod_name)
+                    print(f"[js.py] Re-opened module detected: '{mod_name}' (assignment)")
 
         for key in vars(node):
             val = getattr(node, key, None)
@@ -446,7 +490,10 @@ class JSAnalyzer(Analyzer):
         raw_directives: List[RawDirective]  = []
         raw_http_calls: List[RawHttpCall]   = []
         raw_routes:     List[RawRoute]      = []
-        raw_filters:    List[dict]          = [] 
+        raw_filters:    List[dict]          = []
+        raw_constants:  List[RawConstant]   = []   # .constant() / .value()
+        raw_run_blocks: List[RawRunBlock]   = []   # .run() blocks
+        reopened_modules: List[str]         = []   # angular.module('x') without deps
 
         def recurse(node, file_path: str, source: str, current_owner: Optional[str] = None,
                     module_aliases: Optional[Dict[str, str]] = None):
@@ -618,6 +665,32 @@ class JSAnalyzer(Analyzer):
                                 if child is not args[0]:
                                     recurse(child, file_path, source, current_owner, module_aliases)
                             return
+
+                    elif prop == "run" and len(args) >= 1:
+                        # .run([...deps, fn]) or .run(fn)
+                        fn_node = _extract_fn_from_arg(args[0])
+                        di_run  = _extract_di_names(args[0])
+                        if fn_node is not None:
+                            body_src = _fn_body_src(fn_node, source) or ""
+                            raw_run_blocks.append(RawRunBlock(
+                                di=di_run, body_src=body_src, file=file_path
+                            ))
+                            print(f"[js.py] .run() block detected in {file_path} di={di_run}")
+
+                    elif prop in ("constant", "value") and len(args) >= 2:
+                        # .constant('KEY', value) or .value('KEY', value)
+                        name_node  = args[0]
+                        value_node = args[1]
+                        if getattr(name_node, "type", None) == "Literal":
+                            const_name = str(name_node.value)
+                            # Extract raw source text of the value
+                            val_range = getattr(value_node, "range", None)
+                            raw_val   = source[val_range[0]:val_range[1]] if val_range else "undefined"
+                            raw_constants.append(RawConstant(
+                                name=const_name, raw_value=raw_val,
+                                kind=prop, file=file_path
+                            ))
+                            print(f"[js.py] .{prop}('{const_name}', {raw_val[:40]}) detected")
 
                     if obj_name == "$http" and prop in ("get", "post", "put", "delete"):
                         url = None
@@ -845,7 +918,8 @@ class JSAnalyzer(Analyzer):
                                         for p in (getattr(right, "params", []) or [])
                                         if getattr(p, "type", None) == "Identifier"
                                     ]
-                                    scope_methods.append({"name": pname, "params": params})
+                                    _meth_body_src = _fn_body_src(right, source) or ""
+                                    scope_methods.append({"name": pname, "params": params, "body_src": _meth_body_src})
                                     fn_body = getattr(right, "body", None)
                                     if fn_body:
                                         _scan_method_http(fn_body, pname, name, file_path)
@@ -1123,8 +1197,10 @@ class JSAnalyzer(Analyzer):
             # ── Pass 1: collect module aliases (var app = angular.module(...)) ──
             # Builds a map of {identifier_name: angular_module_name} for this file
             module_aliases: Dict[str, str] = {}
-            _collect_module_aliases(ast, module_aliases)
+            _collect_module_aliases(ast, module_aliases, reopened_modules)
             print(f"[js.py] {path.name}: module aliases = {module_aliases}")
+            if reopened_modules:
+                print(f"[js.py] {path.name}: re-opened modules = {reopened_modules}")
 
             recurse(ast, str(path), source=text, current_owner=None,
                     module_aliases=module_aliases)
@@ -1143,5 +1219,8 @@ class JSAnalyzer(Analyzer):
                 seen[sig] = len(deduped)
                 deduped.append(call)
 
-        self.filters = raw_filters
+        self.filters        = raw_filters
+        self.raw_constants  = raw_constants
+        self.raw_run_blocks = raw_run_blocks
+        self.reopened_modules = reopened_modules
         return raw_modules, [], [], raw_directives, deduped, raw_routes, raw_filters

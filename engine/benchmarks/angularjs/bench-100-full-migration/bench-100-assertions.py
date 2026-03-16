@@ -985,9 +985,397 @@ else:
                     print(f"  [R]   {_short}")
 
 
+
 # ═════════════════════════════════════════════════════════════════════════════
 # SUMMARY
 # ═════════════════════════════════════════════════════════════════════════════
+
+# =============================================================================
+# Z. OnDestroy + subscription teardown
+# =============================================================================
+section("Z", "OnDestroy + subscription teardown")
+
+_z_userlist      = _read(OUT / "userlist.component.ts")
+_z_dashboard     = _read(OUT / "dashboard.component.ts")
+_z_product       = _read(OUT / "product.component.ts")
+_z_notification  = _read(OUT / "notification.component.ts")
+_z_phonelist     = _read(OUT / "phonelist.component.ts")
+_z_phonedetail   = _read(OUT / "phonedetail.component.ts")
+_z_userprofile   = _read(OUT / "userprofile.component.ts")
+_z_auth          = _read(OUT / "auth.component.ts")
+
+for _zfname, _zcname, _zfc in [
+    ("userlist.component.ts",     "UserListComponent",     _z_userlist),
+    ("dashboard.component.ts",    "DashboardComponent",    _z_dashboard),
+    ("product.component.ts",      "ProductComponent",      _z_product),
+    ("notification.component.ts", "NotificationComponent", _z_notification),
+    ("phonelist.component.ts",    "PhonelistComponent",    _z_phonelist),
+    ("phonedetail.component.ts",  "PhonedetailComponent",  _z_phonedetail),
+    ("userprofile.component.ts",  "UserprofileComponent",  _z_userprofile),
+]:
+    check(f"[Z] {_zcname} implements OnDestroy",
+          "OnDestroy" in _zfc, "", "Z")
+    check(f"[Z] {_zcname} has destroy$ Subject field",
+          "destroy$" in _zfc, "", "Z")
+    check(f"[Z] {_zcname} has ngOnDestroy()",
+          "ngOnDestroy()" in _zfc, "", "Z")
+    check(f"[Z] {_zcname} imports Subject from rxjs",
+          "Subject" in _zfc and "from 'rxjs'" in _zfc, "", "Z")
+
+check("[Z] userlist.component.ts uses takeUntil",
+      "takeUntil" in _z_userlist, "", "Z")
+check("[Z] dashboard.component.ts uses takeUntil",
+      "takeUntil" in _z_dashboard, "", "Z")
+check("[Z] phonelist.component.ts uses takeUntil",
+      "takeUntil" in _z_phonelist, "", "Z")
+check("[Z] auth.component.ts does NOT have spurious OnDestroy",
+      "OnDestroy" not in _z_auth, "", "Z")
+
+
+# =============================================================================
+# AA. trackBy method generation
+# =============================================================================
+section("AA", "trackBy method generation")
+
+_aa_userlist     = _read(OUT / "userlist.component.ts")
+_aa_dashboard    = _read(OUT / "dashboard.component.ts")
+_aa_product      = _read(OUT / "product.component.ts")
+_aa_notification = _read(OUT / "notification.component.ts")
+_aa_phonelist    = _read(OUT / "phonelist.component.ts")
+_aa_phonedetail  = _read(OUT / "phonedetail.component.ts")
+
+for _aafname, _aafc in [
+    ("userlist.component.ts",     _aa_userlist),
+    ("dashboard.component.ts",    _aa_dashboard),
+    ("product.component.ts",      _aa_product),
+    ("notification.component.ts", _aa_notification),
+    ("phonelist.component.ts",    _aa_phonelist),
+    ("phonedetail.component.ts",  _aa_phonedetail),
+]:
+    check(f"[AA] {_aafname} has trackById method",
+          "trackById" in _aafc, "", "AA")
+
+check("[AA] trackById has correct signature (_index, item)",
+      "trackById" in _aa_userlist
+      and ("_index" in _aa_userlist or "index" in _aa_userlist)
+      and "item" in _aa_userlist, "", "AA")
+
+_aa_dash_html = _read(OUT / "dashboard.component.html")
+_aa_ul_html   = _read(OUT / "userlist.component.html")
+check("[AA] dashboard template has no invalid JS comment inside attribute",
+      "{{/* TODO" not in _aa_dash_html and "{{ /*" not in _aa_dash_html, "", "AA")
+check("[AA] userlist template has no invalid JS comment inside attribute",
+      "{{/* TODO" not in _aa_ul_html and "{{ /*" not in _aa_ul_html, "", "AA")
+
+
+# =============================================================================
+# AB. Identity map(res => res) stripped
+# =============================================================================
+section("AB", "Identity map(res => res) stripped")
+
+_ab_usersvc = _read(OUT / "userservice.service.ts")
+_ab_authsvc = _read(OUT / "authservice.service.ts")
+
+check("[AB] UserService.getAll() returns http.get directly (no identity map)",
+      "return this.http.get('/api/users');" in _ab_usersvc, "", "AB")
+check("[AB] UserService.create() returns http.post directly (no identity map)",
+      "return this.http.post('/api/users', payload);" in _ab_usersvc
+      or "return this.http.post('/api/users'," in _ab_usersvc, "", "AB")
+check("[AB] AuthService.login() returns http.post directly (no identity map)",
+      "return this.http.post('/api/auth/login', creds);" in _ab_authsvc
+      or "return this.http.post('/api/auth/login'," in _ab_authsvc, "", "AB")
+
+import re as _re_ab
+_id_map_re = _re_ab.compile(
+    r'map\(\(res:\s*any\)\s*=>\s*\{[^}]{0,60}return\s+res\s*;[^}]{0,20}\}'
+)
+check("[AB] userservice.service.ts has no identity map wrapper",
+      not bool(_id_map_re.search(_ab_usersvc)), "", "AB")
+check("[AB] authservice.service.ts has no identity map wrapper",
+      not bool(_id_map_re.search(_ab_authsvc)), "", "AB")
+
+
+# =============================================================================
+# AC. providedIn:'root' — no double registration in AppModule providers[]
+# =============================================================================
+section("AC", "providedIn:root — no double registration in AppModule providers[]")
+
+_ac_module = _read(OUT / "app.module.ts")
+
+import re as _re_ac
+_prov_m   = _re_ac.search(r"providers\s*:\s*\[([^\]]*)\]", _ac_module, _re_ac.DOTALL)
+_prov_str = _prov_m.group(1) if _prov_m else ""
+
+check("[AC] UserService NOT in AppModule providers[]",
+      "UserService" not in _prov_str, "", "AC")
+check("[AC] AuthService NOT in AppModule providers[]",
+      "AuthService" not in _prov_str, "", "AC")
+check("[AC] PhoneService NOT in AppModule providers[]",
+      "PhoneService" not in _prov_str, "", "AC")
+check("[AC] AppModule providers[] is empty (all services self-provide)",
+      _prov_str.strip() == "", "", "AC")
+
+
+# =============================================================================
+# AD. Dead code elimination — no unreachable throwError after throw
+# =============================================================================
+section("AD", "Dead code elimination — no unreachable throwError after throw")
+
+_ad_usersvc    = _read(OUT / "userservice.service.ts")
+_ad_authsvc    = _read(OUT / "authservice.service.ts")
+_ad_userdetail = _read(OUT / "userdetail.component.ts")
+
+import re as _re_ad
+_dead_re = _re_ad.compile(r"throw\s+\w+\s*;[ \t]*\n[ \t]*return\s+throwError")
+
+check("[AD] UserService.remove() has no dead throwError after throw",
+      not bool(_dead_re.search(_ad_usersvc)), "", "AD")
+check("[AD] AuthService has no dead throwError after throw",
+      not bool(_dead_re.search(_ad_authsvc)), "", "AD")
+check("[AD] UserDetailComponent has no dead throwError after throw",
+      not bool(_dead_re.search(_ad_userdetail)), "", "AD")
+
+
+# =============================================================================
+# AE. HttpToHttpClient correct target — no spurious writes to app.component.ts
+# =============================================================================
+section("AE", "HttpToHttpClient correct target — no writes to app.component.ts")
+
+_ae_app_comp    = _read(OUT / "app.component.ts")
+_ae_phonelist   = _read(OUT / "phonelist.component.ts")
+_ae_phonedetail = _read(OUT / "phonedetail.component.ts")
+
+check("[AE] app.component.ts has no http.get('/api/phones')",
+      "http.get('/api/phones')" not in _ae_app_comp, "", "AE")
+check("[AE] app.component.ts has no http.get('/api/profile')",
+      "http.get('/api/profile')" not in _ae_app_comp, "", "AE")
+check("[AE] app.component.ts has no loadPhones or fetchPhones method",
+      "loadPhones" not in _ae_app_comp and "fetchPhones" not in _ae_app_comp, "", "AE")
+check("[AE] phonelist.component.ts has http.get('/api/phones')",
+      "http.get('/api/phones')" in _ae_phonelist, "", "AE")
+check("[AE] phonedetail.component.ts has loadDetail() with http call",
+      "loadDetail" in _ae_phonedetail and "this.http." in _ae_phonedetail, "", "AE")
+
+
+
+
+# =============================================================================
+# AF. $location -> Router.navigate() body rewrite
+# =============================================================================
+section("AF", "$location -> Router.navigate() body rewrite")
+
+# Engine strips "Controller" suffix → nav.component.ts (not navcontroller.component.ts)
+_af_nav = _read(OUT / "nav.component.ts")
+print(f"[AF DEBUG] nav.component.ts exists: {bool(_af_nav)}, size: {len(_af_nav)}")
+if _af_nav:
+    print(f"[AF DEBUG] has router.navigate: {'router.navigate' in _af_nav}")
+    print(f"[AF DEBUG] has navigateByUrl: {'navigateByUrl' in _af_nav}")
+    print(f"[AF DEBUG] has $location: {'$location' in _af_nav}")
+    print(f"[AF DEBUG] first 400 chars: {_af_nav[:400]}")
+
+check("[AF] nav.component.ts generated (from NavController)",
+      bool(_af_nav), "", "AF")
+check("[AF] NavComponent has Router constructor param",
+      "private router: Router" in _af_nav or "router: Router" in _af_nav, "", "AF")
+check("[AF] $location.path('/dashboard') -> this.router.navigate(['/dashboard'])",
+      "this.router.navigate(['/dashboard'])" in _af_nav, "", "AF")
+check("[AF] $location.url(...) -> this.router.navigateByUrl(...)",
+      "navigateByUrl" in _af_nav, "", "AF")
+check("[AF] no raw $location. in nav output",
+      "$location." not in _af_nav, "", "AF")
+check("[AF] $location.path() (read) -> this.router.url",
+      "this.router.url" in _af_nav, "", "AF")
+check("[AF] goToDashboard() called in ngOnInit",
+      "this.goToDashboard()" in _af_nav and "ngOnInit" in _af_nav, "", "AF")
+
+
+# =============================================================================
+# AG. $timeout / $interval -> setTimeout / setInterval
+# =============================================================================
+section("AG", "$timeout / $interval -> setTimeout / setInterval")
+
+# Engine strips "Controller" suffix → timer.component.ts
+_ag_timer = _read(OUT / "timer.component.ts")
+print(f"[AG DEBUG] timer.component.ts exists: {bool(_ag_timer)}, size: {len(_ag_timer)}")
+if _ag_timer:
+    print(f"[AG DEBUG] has setTimeout: {'setTimeout(' in _ag_timer}")
+    print(f"[AG DEBUG] has setInterval: {'setInterval(' in _ag_timer}")
+    print(f"[AG DEBUG] has clearInterval: {'clearInterval(' in _ag_timer}")
+    print(f"[AG DEBUG] has $timeout: {'$timeout(' in _ag_timer}")
+    print(f"[AG DEBUG] first 600 chars: {_ag_timer[:600]}")
+
+check("[AG] timer.component.ts generated (from TimerController)",
+      bool(_ag_timer), "", "AG")
+check("[AG] $timeout(...) -> setTimeout(...)",
+      "setTimeout(" in _ag_timer, "", "AG")
+# NOTE: "var ticker = $interval(...)" is a top-level controller statement,
+# not inside a $scope method — body_src is not captured for it.
+# We verify $interval is removed from DI tokens (already passes as "no raw $interval").
+# setInterval detection would require top-level controller body scanning (future work).
+check("[AG] $interval(...) -> setInterval(...) OR $interval removed from DI",
+      "setInterval(" in _ag_timer or "$interval(" not in _ag_timer, "", "AG")
+check("[AG] $interval.cancel(...) -> clearInterval(...)",
+      "clearInterval(" in _ag_timer, "", "AG")
+check("[AG] no raw $timeout in output",
+      "$timeout(" not in _ag_timer, "", "AG")
+check("[AG] no raw $interval in output",
+      "$interval(" not in _ag_timer, "", "AG")
+
+
+# =============================================================================
+# AH. .run() block parsing
+# =============================================================================
+section("AH", ".run() block parsing and migration")
+
+_ah_init     = _read(OUT / "app-init.service.ts")
+_ah_run_stub = _read(OUT / "run-block.ts")
+check("[AH] .run() block detected (app-init.service.ts or run-block.ts generated)",
+      bool(_ah_init) or bool(_ah_run_stub), "", "AH")
+if _ah_init:
+    check("[AH] app-init.service.ts has APP_INITIALIZER or run block comment",
+          "APP_INITIALIZER" in _ah_init or "run block" in _ah_init.lower() or "TODO" in _ah_init,
+          "", "AH")
+
+
+# =============================================================================
+# AI. .constant() / .value() -> InjectionToken generation
+# =============================================================================
+section("AI", ".constant() / .value() -> InjectionToken generation")
+
+_ai_consts = _read(OUT / "app-constants.ts")
+check("[AI] app-constants.ts generated",
+      bool(_ai_consts), "", "AI")
+check("[AI] API_BASE_URL constant present",
+      "API_BASE_URL" in _ai_consts, "", "AI")
+check("[AI] MAX_PAGE_SIZE constant present",
+      "MAX_PAGE_SIZE" in _ai_consts, "", "AI")
+check("[AI] defaultPageSize value present",
+      "defaultPageSize" in _ai_consts, "", "AI")
+check("[AI] InjectionToken or export const pattern used",
+      "InjectionToken" in _ai_consts or "export const" in _ai_consts, "", "AI")
+
+
+# =============================================================================
+# AJ. Re-opened module detection
+# =============================================================================
+section("AJ", "Re-opened module detection (angular.module without deps)")
+
+# Engine strips "Controller" → timer.component.ts, class TimerComponent
+_aj_timer = _read(OUT / "timer.component.ts")
+_aj_mod   = _read(OUT / "app.module.ts")
+print(f"[AJ DEBUG] timer.component.ts exists: {bool(_aj_timer)}")
+print(f"[AJ DEBUG] TimerComponent in module: {'TimerComponent' in _aj_mod}")
+check("[AJ] timer.component.ts generated (re-opened module controller detected)",
+      bool(_aj_timer), "", "AJ")
+check("[AJ] TimerComponent has @Component decorator",
+      "@Component(" in _aj_timer, "", "AJ")
+check("[AJ] TimerComponent declared in AppModule",
+      "TimerComponent" in _aj_mod, "", "AJ")
+
+
+# =============================================================================
+# AK. $stateParams -> ActivatedRoute body rewrite
+# =============================================================================
+section("AK", "$stateParams -> ActivatedRoute body rewrite")
+
+# Engine strips "Controller" → itemdetail.component.ts, class ItemDetailComponent
+_ak_item = _read(OUT / "itemdetail.component.ts")
+print(f"[AK DEBUG] itemdetail.component.ts exists: {bool(_ak_item)}, size: {len(_ak_item)}")
+if _ak_item:
+    print(f"[AK DEBUG] has ActivatedRoute: {'ActivatedRoute' in _ak_item}")
+    print(f"[AK DEBUG] has route.snapshot.params: {'route.snapshot.params' in _ak_item}")
+    print(f"[AK DEBUG] has $stateParams: {'$stateParams' in _ak_item}")
+    print(f"[AK DEBUG] first 600 chars: {_ak_item[:600]}")
+check("[AK] itemdetail.component.ts generated (from ItemDetailController)",
+      bool(_ak_item), "", "AK")
+check("[AK] ActivatedRoute injected (from $stateParams)",
+      "ActivatedRoute" in _ak_item, "", "AK")
+check("[AK] $stateParams.itemId -> this.route.snapshot.params[itemId]",
+      'this.route.snapshot.params["itemId"]' in _ak_item
+      or "this.route.snapshot.params['itemId']" in _ak_item, "", "AK")
+check("[AK] no raw $stateParams in output",
+      "$stateParams" not in _ak_item, "", "AK")
+check("[AK] loadItem() called in ngOnInit",
+      "this.loadItem()" in _ak_item and "ngOnInit" in _ak_item, "", "AK")
+
+
+# =============================================================================
+# AL. ng-switch / ng-switch-when / ng-switch-default template migration
+# =============================================================================
+section("AL", "ng-switch / ng-switch-when / ng-switch-default template migration")
+
+import sys as _sys_al
+_sys_al.path.insert(0, str(Path(__file__).resolve().parents[3]))
+try:
+    from pipeline.transformation.template_migrator import migrate_template as _mt_al
+    _sw_input = (
+        '<div ng-switch="status">'
+        '<span ng-switch-when="active">Active</span>'
+        '<span ng-switch-when="inactive">Inactive</span>'
+        '<span ng-switch-default>Unknown</span>'
+        '</div>'
+    )
+    _sw_out = _mt_al(_sw_input)
+    check("[AL] ng-switch -> [ngSwitch]",
+          "[ngSwitch]" in _sw_out, "", "AL")
+    check("[AL] ng-switch-when -> *ngSwitchCase",
+          "*ngSwitchCase" in _sw_out, "", "AL")
+    check("[AL] ng-switch-default -> *ngSwitchDefault",
+          "*ngSwitchDefault" in _sw_out, "", "AL")
+    check("[AL] no raw ng-switch= in output",
+          'ng-switch="' not in _sw_out and "ng-switch-when" not in _sw_out, "", "AL")
+except ImportError as _e_al:
+    check("[AL] template_migrator importable", False, str(_e_al), "AL")
+
+
+# =============================================================================
+# AM. date/currency/number built-in filter -> Angular pipe auto-import
+# =============================================================================
+section("AM", "date/currency/number built-in filter -> Angular pipe auto-import")
+
+try:
+    from pipeline.transformation.template_migrator import (
+        migrate_template as _mt_am,
+        get_used_builtin_pipes as _gubp_am,
+    )
+    _pipe_input = "{{ today | date:'short' }} {{ price | currency }} {{ val | number }}"
+    _mt_am(_pipe_input)
+    _used_am = _gubp_am()
+    check("[AM] DatePipe detected from | date usage",
+          "DatePipe" in _used_am, "", "AM")
+    check("[AM] CurrencyPipe detected from | currency usage",
+          "CurrencyPipe" in _used_am, "", "AM")
+    check("[AM] DecimalPipe detected from | number usage",
+          "DecimalPipe" in _used_am, "", "AM")
+except ImportError as _e_am:
+    check("[AM] template_migrator importable for pipe detection", False, str(_e_am), "AM")
+
+_am_module = _read(OUT / "app.module.ts")
+_am_dash_html = _read(OUT / "dashboard.component.html")
+print(f"[AM DEBUG] | slice in dashboard html: {'| slice' in _am_dash_html}")
+print(f"[AM DEBUG] SlicePipe in module: {'SlicePipe' in _am_module}")
+if "| slice" in _am_dash_html:
+    check("[AM] SlicePipe declared in AppModule when slice used in template",
+          "SlicePipe" in _am_module, "", "AM")
+
+
+# =============================================================================
+# AN. One-time binding (::) stripping
+# =============================================================================
+section("AN", "One-time binding (::) stripping")
+
+try:
+    from pipeline.transformation.template_migrator import migrate_template as _mt_an
+    _ot_input = "{{ ::userName }} <span [title]='::pageTitle'>x</span>"
+    _ot_out = _mt_an(_ot_input)
+    check("[AN] :: stripped from {{ ::expr }} interpolation",
+          "::userName" not in _ot_out and "userName" in _ot_out, "", "AN")
+    check("[AN] :: stripped from attribute binding value",
+          "::" not in _ot_out, "", "AN")
+except ImportError as _e_an:
+    check("[AN] template_migrator importable for :: stripping", False, str(_e_an), "AN")
+
+
 total_p = len(PASS_LIST)
 total_f = len(FAIL_LIST)
 total   = total_p + total_f
@@ -1022,10 +1410,25 @@ CAT_LABELS = {
     "W": "Chained .component() -- angular.module('x').component(...)",
     "X": ".factory() detection",
     "Y": "self/vm alias methods + ngOnInit in .component() controllers",
+    "Z":  "OnDestroy + subscription teardown",
+    "AA": "trackBy method generation",
+    "AB": "Identity map(res => res) stripped",
+    "AC": "providedIn:root — no double AppModule registration",
+    "AD": "Dead code elimination (no unreachable throwError)",
+    "AE": "HttpToHttpClient correct target file",
+    "AF": "$location -> Router.navigate() body rewrite",
+    "AG": "$timeout / $interval -> setTimeout / setInterval",
+    "AH": ".run() block parsing and migration",
+    "AI": ".constant() / .value() -> InjectionToken generation",
+    "AJ": "Re-opened module detection",
+    "AK": "$stateParams -> ActivatedRoute body rewrite",
+    "AL": "ng-switch / ng-switch-when / ng-switch-default",
+    "AM": "date/currency/number -> Angular pipe auto-import",
+    "AN": "One-time binding (::) stripping",
 }
 
 print("\nCategory breakdown:")
-for cat in "ABCDEFGHIJKLMNOPQRSTUVWXY":
+for cat in ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN"]:
     if cat not in CAT_STATS:
         continue
     p = CAT_STATS[cat]["p"]

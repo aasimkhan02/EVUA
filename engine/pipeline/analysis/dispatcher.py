@@ -36,13 +36,16 @@ class AnalyzerDispatcher:
         ]
 
     def dispatch(self, files_by_type):
-        raw_modules    = []
-        raw_templates  = []
-        raw_edges      = []
-        raw_directives = []
-        raw_http_calls = []
-        raw_routes     = []
-        raw_filters    = []
+        raw_modules      = []
+        raw_templates    = []
+        raw_edges        = []
+        raw_directives   = []
+        raw_http_calls   = []
+        raw_routes       = []
+        raw_filters      = []
+        raw_constants    = []   # from JSAnalyzer: .constant()/.value()
+        raw_run_blocks   = []   # from JSAnalyzer: .run() blocks
+        reopened_modules = []   # from JSAnalyzer: angular.module('x') without deps
 
         for ftype, paths in files_by_type.items():
             analyzer = self.get_analyzer(ftype)
@@ -50,6 +53,16 @@ class AnalyzerDispatcher:
                 continue
 
             result = analyzer.analyze(paths)
+
+            # Pick up extra data attached to JSAnalyzer after analyze() runs
+            if hasattr(analyzer, 'raw_constants'):
+                raw_constants.extend(getattr(analyzer, 'raw_constants', []) or [])
+            if hasattr(analyzer, 'raw_run_blocks'):
+                raw_run_blocks.extend(getattr(analyzer, 'raw_run_blocks', []) or [])
+            if hasattr(analyzer, 'reopened_modules'):
+                for m in (getattr(analyzer, 'reopened_modules', []) or []):
+                    if m not in reopened_modules:
+                        reopened_modules.append(m)
 
             # JSAnalyzer returns 7-tuple (adds raw_routes, raw_filters); others return 5-tuple
             if len(result) == 7:
@@ -82,7 +95,7 @@ class AnalyzerDispatcher:
             (raw_modules, ir_ready_templates, raw_edges, raw_directives, raw_http_calls)
         )
 
-        return AnalysisResult(
+        result = AnalysisResult(
             modules=modules,
             dependencies=dependencies,
             templates=templates,
@@ -93,3 +106,8 @@ class AnalyzerDispatcher:
             routes=raw_routes,
             filters=raw_filters,
         )
+        # Attach extra fields not in the original dataclass — rules access via getattr
+        result.raw_constants    = raw_constants
+        result.raw_run_blocks   = raw_run_blocks
+        result.reopened_modules = reopened_modules
+        return result

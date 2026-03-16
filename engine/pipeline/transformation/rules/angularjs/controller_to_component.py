@@ -31,69 +31,115 @@ def _infer_prop_name(url: str | None) -> str:
 
 def _sanitize_angularjs_callback(src: str) -> str:
     """
-    Rewrite AngularJS callback/body text to valid Angular:
-      $scope.x        ->  this.x   (component property)
-      self.x          ->  this.x   (vm/self alias used in .component() controllers)
-      vm.x            ->  this.x   (vm = this alias)
-      ctrl.x          ->  this.x   (ctrl = this alias)
-      $routeParams.x  ->  this.route.snapshot.params["x"]  (ActivatedRoute)
-      $stateParams.x  ->  this.route.snapshot.params["x"]  (ui-router)
-      res.data        ->  res      (HttpClient returns body directly)
-      response.data   ->  res
+    Rewrite AngularJS callback/body text to valid Angular TypeScript.
 
-    Also annotates untyped anonymous function parameters to satisfy
-    TypeScript strict mode (TS7006: Parameter 'x' implicitly has an 'any' type):
-      function(n)        ->  function(n: any)
-      function(x, y)     ->  function(x: any, y: any)
-      (n) =>             ->  (n: any) =>
+    Transformations applied (in order):
+      $scope.x        →  this.x
+      self./vm./ctrl. →  this.
+      ServiceName.fn  →  this.serviceName.fn  (PascalCase DI service calls)
+      $routeParams.x  →  this.route.snapshot.params["x"]
+      $stateParams.x  →  this.route.snapshot.params["x"]
+      res.data        →  res
+      $location.*     →  this.router.*/this.router.url
+      $timeout(       →  setTimeout(
+      $interval(      →  setInterval(
+      $timeout.cancel/clear → clearTimeout/clearInterval(this.handle)
+      $log.*          →  console.*
+      function() {    →  () => {        (no-param: fixes TS2683 'this' binding)
+      function(p) {   →  (p: any) => {  (with-param: fixes TS2683 + TS7006)
     """
     if not src:
         return src
+
     src = src.replace("$scope.", "this.")
-    # self/vm/ctrl aliases used in .component() controllers — word-boundary safe
+    # self/vm/ctrl aliases
     src = re.sub(r'\bself\.', 'this.', src)
     src = re.sub(r'\bvm\.', 'this.', src)
     src = re.sub(r'\bctrl\.', 'this.', src)
-    # $routeParams / $stateParams — replace property access with ActivatedRoute equivalent
+
+    # Custom service DI: PascalCase.method( → this.camelCase.method(
+    # e.g. AuthService.login( → this.authService.login(
+    def _svc_to_this(m):
+        name = m.group(1)
+        camel = name[0].lower() + name[1:]
+        return f'this.{camel}.'
+    src = re.sub(r'\b([A-Z][a-zA-Z0-9]+)\.(?!prototype)', _svc_to_this, src)
+
+    # Route params
     src = re.sub(r'\$routeParams\.(\w+)', r'this.route.snapshot.params["\1"]', src)
     src = re.sub(r'\$stateParams\.(\w+)', r'this.route.snapshot.params["\1"]', src)
+
     src = src.replace("res.data", "res")
     src = src.replace("response.data", "res")
 
-    # Annotate untyped params in traditional function expressions:
-    # function(a, b, c) → function(a: any, b: any, c: any)
-    # Only touches params that have no existing type annotation.
-    def _annotate_fn_params(m):
+    # $location rewrites
+    src = re.sub(
+        r"\$location\.path\(('[^']+'|\"[^\"]+\")\)",
+        lambda m: f'this.router.navigate([{m.group(1)}])',
+        src
+    )
+    src = re.sub(
+        r'\$location\.path\(([^)]+)\)',
+        lambda m: f'this.router.navigate([{m.group(1)}])',
+        src
+    )
+    src = re.sub(
+        r'\$location\.url\(([^)]+)\)',
+        lambda m: f'this.router.navigateByUrl({m.group(1)})',
+        src
+    )
+    src = src.replace('$location.search()', 'this.route.snapshot.queryParams')
+    src = src.replace('$location.absUrl()', 'window.location.href')
+    src = src.replace('$location.path()', 'this.router.url')
+
+    # $timeout/$interval — cancel FIRST, then general calls
+    src = src.replace('$timeout.cancel(', 'clearTimeout(')
+    src = src.replace('$interval.cancel(', 'clearInterval(')
+    src = src.replace('$timeout(', 'setTimeout(')
+    src = src.replace('$interval(', 'setInterval(')
+
+    # clearInterval/clearTimeout with bare variable name (from outer controller scope)
+    # → prefix with this. so TypeScript can resolve it as a class field (TS2304 fix)
+    src = re.sub(
+        r'clear(Interval|Timeout)\((?!this\.)([a-zA-Z_]\w*)\)',
+        lambda m: f'clear{m.group(1)}(this.{m.group(2)})',
+        src
+    )
+
+    # $log rewrites
+    src = src.replace('$log.info(',  'console.info(')
+    src = src.replace('$log.warn(',  'console.warn(')
+    src = src.replace('$log.error(', 'console.error(')
+    src = src.replace('$log.debug(', 'console.debug(')
+    src = src.replace('$log.log(',   'console.log(')
+
+    # Convert function callbacks to arrow functions to fix TS2683
+    # ('this' implicitly has type 'any' inside regular function() callbacks).
+    # Arrow functions capture 'this' from the enclosing class method.
+
+    # Step 1: no-param function() { → () => {
+    src = re.sub(r'function\(\)\s*\{', '() => {', src)
+    
+
+    # Step 2: function(params) { → (params: any) => {
+    # Annotates untyped params and converts to arrow syntax.
+    def _fn_to_arrow(m):
         params_str = m.group(1)
         params = [p.strip() for p in params_str.split(",") if p.strip()]
         typed = []
         for p in params:
-            # Skip if already typed (contains ':'), is '...' rest, or is empty
             if ":" in p or p.startswith("...") or not p:
                 typed.append(p)
             else:
                 typed.append(f"{p}: any")
-        return f"function({', '.join(typed)})"
+        return f"({', '.join(typed)}) => {{"
 
-    src = re.sub(r'function\(([^)]*)\)', _annotate_fn_params, src)
+    src = re.sub(r'function\(([^)]*)\)\s*\{', _fn_to_arrow, src)
 
-    # Annotate untyped params in arrow functions with parens: (n) => or (n, m) =>
-    # Skip single bare params without parens (e.g.  n => ...) — TS infers those ok.
-    def _annotate_arrow_params(m):
-        params_str = m.group(1)
-        params = [p.strip() for p in params_str.split(",") if p.strip()]
-        typed = []
-        for p in params:
-            if ":" in p or p.startswith("...") or not p:
-                typed.append(p)
-            else:
-                typed.append(f"{p}: any")
-        return f"({', '.join(typed)}) =>"
-
-    src = re.sub(r'\(([^)]*)\)\s*=>', _annotate_arrow_params, src)
+    # Promise → Observable conversion
+    src = re.sub(r'\.then\s*\(', '.subscribe(', src)
 
     return src
-
 
 def _js_concat_to_template_literal(url_src: str) -> str:
     """
@@ -222,10 +268,19 @@ def _build_inline_http_call(call, known_props: set | None = None) -> list[str]:
 
     # Build subscribe callback body
     if then_src:
-        # Indent the original then body and wrap in a comment
-        then_lines = then_src.splitlines()
-        sub_body = ["      // AngularJS .then() — review and adapt:"]
-        sub_body += [f"      {ln}" for ln in then_lines]
+        # Check if this is a trivial identity callback: after res.data → res
+        # sanitisation the body becomes just 'return res' — strip the wrapper.
+        _stripped_then = then_src.strip().rstrip(";")
+        _is_identity = _stripped_then in ("return res", "return res.data", "return response")
+        if _is_identity:
+            # Skip the map wrapper; just assign inline from the subscribe
+            sub_body = [f"      this.{prop} = res;"] if prop is not None else [
+                "      // TODO: assign response — add a typed property to this class"
+            ]
+        else:
+            then_lines = then_src.splitlines()
+            sub_body = ["      // AngularJS .then() — review and adapt:"]
+            sub_body += [f"      {ln}" for ln in then_lines]
     elif prop is not None:
         sub_body = [f"      this.{prop} = res;"]
     else:
@@ -254,16 +309,21 @@ def _build_inline_http_call(call, known_props: set | None = None) -> list[str]:
         ]
         lines += catch_lines
         lines += [
-            f"        }})",
+            f"        }}),",
+            f"        takeUntil(this.destroy$)",
             f"      )",
             f"      .subscribe((res: any) => {{",
         ]
         lines += sub_body
         lines.append("      });")
     else:
-        lines = [f"    {http_expr}.subscribe((res: any) => {{"]
+        lines = [
+            f"    {http_expr}",
+            f"      .pipe(takeUntil(this.destroy$))",
+            f"      .subscribe((res: any) => {{",
+        ]
         lines += sub_body
-        lines.append("    });")
+        lines.append("      });")
 
     return lines
 
@@ -283,6 +343,15 @@ def _build_component_ts(
 ) -> str:
     resolution = resolve_di_tokens(di_tokens)
     scope_properties    = scope_properties    or []
+    # Scan body_src for clearInterval/clearTimeout(this.X) → add X as class field
+    _timer_re = re.compile(r'clear(?:Interval|Timeout)\(this\.(\w+)\)')
+    for _m in (scope_methods or []):
+        _raw = _m.get("body_src", "") or ""
+        if _raw.strip():
+            _san = _sanitize_angularjs_callback(_raw)
+            for _h in _timer_re.findall(_san):
+                if _h not in scope_properties:
+                    scope_properties.append(_h)
     scope_methods       = scope_methods       or []
     init_calls          = init_calls          or []
     http_calls_by_method = http_calls_by_method or {}
@@ -306,6 +375,10 @@ def _build_component_ts(
     )
     if any_http:
         imports_by_module["@angular/common/http"].append("HttpClient")
+        # OnDestroy + Subject for subscription teardown (memory leak prevention)
+        imports_by_module["@angular/core"].append("OnDestroy")
+        imports_by_module["rxjs"].append("Subject")
+        imports_by_module["rxjs/operators"].append("takeUntil")
 
     if needs_catch_imports:
         imports_by_module["rxjs/operators"].append("catchError")
@@ -406,7 +479,11 @@ def _build_component_ts(
             continue
         seen_methods.add(mname)
         params = ", ".join(f"{p}: any" for p in m["params"])
-        method_lines.append(f"\n  {mname}({params}): void {{")
+        # If the body_src contains a 'return' statement, the method should return 'any'
+        # not 'void' (e.g., getCurrentPath returns this.router.url which is a string).
+        _body_preview = _sanitize_angularjs_callback(m.get("body_src", "") or "")
+        _ret_type = "any" if re.search(r'\breturn\b', _body_preview) else "void"
+        method_lines.append(f"\n  {mname}({params}): {_ret_type} {{")
 
         owned_calls = http_calls_by_method.get(mname, [])
         if owned_calls:
@@ -416,7 +493,16 @@ def _build_component_ts(
                 else:
                     method_lines.extend(_build_inline_http_call(call, known_props=set(scope_properties)))
         else:
-            method_lines.append(f"    // TODO: migrate from $scope.{mname}")
+            # No HTTP calls — try to emit sanitized body from captured source
+            raw_body = m.get("body_src", "") or ""
+            if raw_body.strip():
+                sanitized = _sanitize_angularjs_callback(raw_body)
+                # Indent each line inside the method body
+                body_lines = [f"    {ln}" for ln in sanitized.splitlines()]
+                method_lines.extend(body_lines)
+                print(f"[ControllerToComponent] Emitting sanitized body for {mname}() ({len(body_lines)} lines)")
+            else:
+                method_lines.append(f"    // TODO: migrate from $scope.{mname}")
 
         method_lines.append("  }")
 
@@ -439,6 +525,18 @@ def _build_component_ts(
                 oninit_lines.append(f"    this.{call_name}();")
         oninit_lines.append("  }")
 
+    # trackBy helper — generated on every component so templates can use
+    # trackBy: trackById without a manual TODO. Angular style guide recommends
+    # always providing a trackBy function for *ngFor performance.
+    trackby_lines: list[str] = []
+    if scope_methods:  # only emit for migrated controllers (not bare stubs)
+        trackby_lines = [
+            "",
+            "  trackById(_index: number, item: any): any {",
+            "    return item?.id ?? _index;",
+            "  }",
+        ]
+
     # ── Assemble ──────────────────────────────────────────────────────────
     lines: list[str] = import_lines
     lines.append("")
@@ -446,13 +544,40 @@ def _build_component_ts(
     lines.append(f"  selector: '{selector}',")
     lines.append(f"  templateUrl: './{base}.component.html'")
     lines.append("})")
-    implements_clause = " implements OnInit" if needs_oninit else ""
+    if needs_oninit and any_http:
+        implements_clause = " implements OnInit, OnDestroy"
+    elif needs_oninit:
+        implements_clause = " implements OnInit"
+    elif any_http:
+        implements_clause = " implements OnDestroy"
+    else:
+        implements_clause = ""
     lines.append(f"export class {class_name}{implements_clause} {{")
 
-    has_body = comment_lines or ctor or prop_lines or method_lines or oninit_lines
+    has_body = comment_lines or ctor or prop_lines or method_lines or oninit_lines or any_http
 
-    if has_body:
+    # Build ngOnDestroy for subscription teardown
+    destroy_lines: list[str] = []
+    if any_http:
+        destroy_lines = [
+            "",
+            "  private destroy$ = new Subject<void>();",
+        ]
+        ondestroy_lines = [
+            "",
+            "  ngOnDestroy(): void {",
+            "    this.destroy$.next();",
+            "    this.destroy$.complete();",
+            "  }",
+        ]
+    else:
+        ondestroy_lines = []
+
+    if has_body or any_http:
+        if destroy_lines:
+            lines.extend(destroy_lines)
         if prop_lines:
+            lines.append("")
             lines.extend(prop_lines)
             lines.append("")
         if comment_lines:
@@ -464,6 +589,12 @@ def _build_component_ts(
             lines.append("")
         if oninit_lines:
             lines.extend(oninit_lines)
+            lines.append("")
+        if trackby_lines:
+            lines.extend(trackby_lines)
+            lines.append("")
+        if ondestroy_lines:
+            lines.extend(ondestroy_lines)
             lines.append("")
 
     lines.append("}")

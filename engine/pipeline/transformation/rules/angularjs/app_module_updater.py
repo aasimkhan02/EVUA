@@ -42,6 +42,21 @@ from ir.migration_model.change import Change
 from ir.migration_model.base import ChangeSource
 from pipeline.transformation.angular_project_scaffold import AngularProjectScaffold
 
+# Built-in Angular pipes that may be needed based on template usage
+_BUILTIN_PIPE_IMPORTS = {
+    "DatePipe":      "@angular/common",
+    "CurrencyPipe":  "@angular/common",
+    "DecimalPipe":   "@angular/common",
+    "UpperCasePipe": "@angular/common",
+    "LowerCasePipe": "@angular/common",
+    "PercentPipe":   "@angular/common",
+    "JsonPipe":      "@angular/common",
+    "SlicePipe":     "@angular/common",
+    "AsyncPipe":     "@angular/common",
+    "KeyValuePipe":  "@angular/common",
+    "TitleCasePipe": "@angular/common",
+}
+
 
 def _class_name_from_file(stem: str, suffix: str) -> str:
     """
@@ -93,7 +108,8 @@ def _scan_app_dir(app_dir: Path) -> dict:
 
     SKIP_FILES = {"app.component.ts", "app.module.ts"}
 
-    # Scan HTML templates for [(ngModel)] — that's where ng-model lives after migration
+    # Scan HTML templates for [(ngModel)] and built-in pipe usage
+    builtin_pipes_used: set = set()
     for html_file in sorted(app_dir.glob("*.component.html")):
         try:
             html_content = html_file.read_text(encoding="utf-8", errors="replace")
@@ -101,6 +117,22 @@ def _scan_app_dir(app_dir: Path) -> dict:
             html_content = ""
         if "[(ngModel)]" in html_content or "ngModel" in html_content:
             has_ngmodel = True
+        # Detect built-in Angular pipe usage: "| date", "| currency", etc.
+        for pipe_re, pipe_class in [
+            (r'\|\s*date\b',       "DatePipe"),
+            (r'\|\s*currency\b',   "CurrencyPipe"),
+            (r'\|\s*number\b',     "DecimalPipe"),
+            (r'\|\s*uppercase\b',  "UpperCasePipe"),
+            (r'\|\s*lowercase\b',  "LowerCasePipe"),
+            (r'\|\s*percent\b',    "PercentPipe"),
+            (r'\|\s*json\b',       "JsonPipe"),
+            (r'\|\s*slice\b',      "SlicePipe"),
+            (r'\|\s*async\b',      "AsyncPipe"),
+            (r'\|\s*keyvalue\b',   "KeyValuePipe"),
+            (r'\|\s*titlecase\b',  "TitleCasePipe"),
+        ]:
+            if re.search(pipe_re, html_content, re.IGNORECASE):
+                builtin_pipes_used.add(pipe_class)
 
     for ts_file in sorted(app_dir.glob("*.ts")):
         fname = ts_file.name
@@ -145,13 +177,15 @@ def _scan_app_dir(app_dir: Path) -> dict:
             services.append((cls, stem))
 
     return {
-        "components":     components,
-        "pipes":          pipes,
-        "guards":         guards,
-        "resolvers":      resolvers,
-        "services":       services,
-        "has_ngmodel":    has_ngmodel,
-        "has_httpclient": has_httpclient,
+        "components":       components,
+        "pipes":            pipes,
+        "guards":           guards,
+        "resolvers":        resolvers,
+        "services":         services,
+        "has_ngmodel":      has_ngmodel,
+        "has_httpclient":   has_httpclient,
+        "_app_dir":         app_dir,
+        "builtin_pipes":    builtin_pipes_used,  # DatePipe, CurrencyPipe, etc.
     }
 
 
@@ -188,6 +222,22 @@ def _build_app_module(scanned: dict) -> str:
     for cls, stem in pipes:
         import_lines.append(f"import {{ {cls} }} from './{stem}';")
 
+    # ── Built-in Angular pipes needed by templates ───────────────────────
+    # MUST be computed BEFORE the import loop that references builtin_pipe_entries
+    builtin_pipes = scanned.get("builtin_pipes", set())
+    builtin_pipe_entries: list[tuple[str, str]] = []
+    for pipe_class in sorted(builtin_pipes):
+        mod = _BUILTIN_PIPE_IMPORTS.get(pipe_class, "@angular/common")
+        builtin_pipe_entries.append((pipe_class, mod))
+    print(f"[AppModuleUpdater] Built-in pipes detected in templates: {[p for p,_ in builtin_pipe_entries]}")
+
+    # Built-in Angular pipes — imported from @angular/common
+    _seen_bp_modules: dict = {}
+    for pipe_class, mod in builtin_pipe_entries:
+        _seen_bp_modules.setdefault(mod, []).append(pipe_class)
+    for mod, classes in sorted(_seen_bp_modules.items()):
+        import_lines.append(f"import {{ {', '.join(classes)} }} from '{mod}';")
+
     for cls, stem in guards:
         import_lines.append(f"import {{ {cls} }} from './{stem}';")
 
@@ -195,12 +245,23 @@ def _build_app_module(scanned: dict) -> str:
         import_lines.append(f"import {{ {cls} }} from './{stem}';")
 
     for cls, stem in services:
+        # Skip import if the service file has no @Injectable (e.g. app-init.service.ts)
+        # — importing a non-existent class name causes TS2305
+        svc_file_check = (scanned.get("_app_dir") or Path(".")) / f"{stem}.ts"
+        try:
+            _svc_check_content = svc_file_check.read_text(encoding="utf-8", errors="replace")
+            if "@Injectable" not in _svc_check_content:
+                print(f"[AppModuleUpdater] {stem}.ts: skipping import — no @Injectable (TS2305 prevention)")
+                continue
+        except Exception:
+            pass
         import_lines.append(f"import {{ {cls} }} from './{stem}';")
 
     # ── declarations[] ────────────────────────────────────────────────────
     decl_items = ["AppComponent"]
     decl_items += [cls for cls, _ in components]
     decl_items += [cls for cls, _ in pipes]
+    decl_items += [cls for cls, _ in builtin_pipe_entries]  # DatePipe, CurrencyPipe, etc.
 
     # ── imports[] ────────────────────────────────────────────────────────
     import_mod_items = ["BrowserModule", "AppRoutingModule"]
@@ -210,8 +271,28 @@ def _build_app_module(scanned: dict) -> str:
         import_mod_items.append("FormsModule")
 
     # ── providers[] ──────────────────────────────────────────────────────
+    # Services that declare @Injectable({providedIn: 'root'}) are globally
+    # available without listing them in providers[]. Listing them there too
+    # causes a double-registration (harmless but wrong and clutters the module).
+    # We check each service file: only add to providers[] if it does NOT use
+    # providedIn:'root'.
     provider_items: list[str] = []
-    provider_items += [cls for cls, _ in services]
+    for cls, stem in services:
+        svc_file = (scanned.get("_app_dir") or Path(".")) / f"{stem}.ts"
+        try:
+            svc_content = svc_file.read_text(encoding="utf-8", errors="replace")
+            # Skip from providers[] if:
+            # (a) already self-providing via @Injectable({providedIn:'root'})
+            # (b) not an @Injectable at all (e.g. app-init.service.ts is a plain function)
+            if "providedIn" in svc_content:
+                print(f"[AppModuleUpdater] {stem}.ts: skipping providers[] — has providedIn")
+                continue
+            if "@Injectable" not in svc_content:
+                print(f"[AppModuleUpdater] {stem}.ts: skipping providers[] — no @Injectable")
+                continue
+        except Exception:
+            pass
+        provider_items.append(cls)
     provider_items += [cls for cls, _ in guards]
     provider_items += [cls for cls, _ in resolvers]
 

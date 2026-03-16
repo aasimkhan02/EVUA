@@ -37,6 +37,7 @@ from pipeline.transformation.applier import RuleApplier
 from pipeline.transformation.result import TransformationResult
 from pipeline.transformation.rules.angularjs.directive_to_component import DirectiveToComponentRule
 from pipeline.transformation.rules.angularjs.directive_to_pipe import DirectiveToPipeRule
+from pipeline.transformation.rules.angularjs.constants_and_run import ConstantsAndRunRule
 
 from pipeline.risk.rules.angularjs.watcher_risk import WatcherRiskRule
 from pipeline.risk.rules.angularjs.template_binding_risk import TemplateBindingRiskRule
@@ -285,6 +286,7 @@ def run_pipeline(
         "interaction":  ComponentInteractionRule(out_dir=effective_out_dir, dry_run=dry_run),
         "directives_component": DirectiveToComponentRule(out_dir=effective_out_dir, dry_run=dry_run),
         "directives_pipe": DirectiveToPipeRule(out_dir=effective_out_dir, dry_run=dry_run),
+        "constants":    ConstantsAndRunRule(out_dir=effective_out_dir, dry_run=dry_run),
         "module":       AppModuleUpdaterRule(out_dir=effective_out_dir, dry_run=dry_run),
     }
 

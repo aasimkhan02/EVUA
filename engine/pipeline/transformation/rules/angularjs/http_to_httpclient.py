@@ -36,6 +36,15 @@ def _owner_to_base(owner: str) -> str:
     ) or owner.lower()
 
 
+def _is_component_entry(owner: str) -> bool:
+    """
+    Return True if owner is a camelCase .component() name (phoneList, phoneDetail,
+    userProfile) rather than a PascalCase Controller/Service name.
+    .component() names are always camelCase; Controllers are always PascalCase.
+    """
+    return bool(owner) and owner[0].islower()
+
+
 def _owner_to_file_base(call) -> tuple:
     owner = getattr(call, "owner_controller", None)
     if owner:
@@ -128,7 +137,10 @@ class HttpToHttpClientRule:
         # ── KEY CHANGE: skip calls that belong to a $scope method ──────────
         # Those are already inlined by ControllerToComponentRule._build_component_ts.
         # We still record a Change for traceability, but write nothing to disk.
-        if owner_method:
+        # Also skip camelCase .component() owners (phoneList, phoneDetail, userProfile):
+        # ControllerToComponentRule owns those files. Without this guard, _owner_to_file_base
+        # would strip nothing from the name and produce "app" as base → app.component.ts.
+        if owner_method or (owner and _is_component_entry(owner)):
             call_id = getattr(call, "id", f"http_{file_attr}_{method}")
             base, _ = _owner_to_file_base(call)
             changes.append(Change(

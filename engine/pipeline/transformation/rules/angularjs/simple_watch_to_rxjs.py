@@ -122,3 +122,6 @@ class SimpleWatchToRxjsRule:
 
         component_ts.write_text(text, encoding="utf-8")
         print(f"[SimpleWatchToRxjs] BehaviorSubject injected into: {component_ts}")
+        # Note: controller_to_component.py now also emits destroy$ Subject and
+        # takeUntil(this.destroy$) on all subscriptions — BehaviorSubject works
+        # alongside this pattern without any additional changes here.

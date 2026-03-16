@@ -123,6 +123,7 @@ def _build_service_ts(
                 else:
                     base = "this.http." + mv + "(" + ue + ")"
                 if hc:
+                    import re as _re
                     method_lines += [
                         "    return " + base,
                         "      .pipe(",
@@ -131,22 +132,38 @@ def _build_service_ts(
                     if cth_src:
                         method_lines.append("          // AngularJS .catch() — review and adapt:")
                         method_lines += ["          " + ln for ln in cth_src.splitlines()]
+                        # Only add throwError if the catch body does not already end
+                        # with a throw or return — otherwise we emit dead/unreachable code.
+                        _ends_with_flow = _re.search(
+                            r"(^|\n)\s*(throw|return)\b", cth_src.rstrip()
+                        )
+                        if not _ends_with_flow:
+                            method_lines.append("          return throwError(() => err);")
                     else:
                         method_lines.append("          // TODO: port .catch() logic")
+                        method_lines.append("          return throwError(() => err);")
                     method_lines += [
-                        "          return throwError(() => err);",
                         "        })",
                         "      );",
                     ]
                 elif then_src:
-                    method_lines += [
-                        "    return " + base,
-                        "      .pipe(",
-                        "        map((res: any) => {",
-                        "          // AngularJS .then() — review and adapt:",
-                    ]
-                    method_lines += ["          " + ln for ln in then_src.splitlines()]
-                    method_lines += ["        })", "      );"]
+                    import re as _re2
+                    # Detect identity map: then body is just 'return res' (after
+                    # res.data → res sanitisation). Emitting map(res => { return res; })
+                    # compiles but adds noise. Strip it — return the Observable directly.
+                    _stripped_then = then_src.strip().rstrip(";")
+                    _is_identity = _stripped_then in ("return res", "return res.data", "return response")
+                    if _is_identity:
+                        method_lines.append("    return " + base + ";")
+                    else:
+                        method_lines += [
+                            "    return " + base,
+                            "      .pipe(",
+                            "        map((res: any) => {",
+                            "          // AngularJS .then() — review and adapt:",
+                        ]
+                        method_lines += ["          " + ln for ln in then_src.splitlines()]
+                        method_lines += ["        })", "      );"]
                 else:
                     method_lines.append("    return " + base + ";")
         else:
