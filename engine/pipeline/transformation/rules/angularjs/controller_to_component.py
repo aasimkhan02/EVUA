@@ -3,6 +3,7 @@ from pathlib import Path
 from ir.migration_model.change import Change
 from ir.migration_model.base import ChangeSource
 from pipeline.transformation.angular_project_scaffold import AngularProjectScaffold
+from orchestration.simple_progress import SimpleProgress
 from pipeline.transformation.helpers import iter_controllers
 from pipeline.transformation.template_migrator import (
     extract_controller_template,
@@ -365,6 +366,8 @@ def _build_component_ts(
     imports_by_module: dict[str, list[str]] = defaultdict(list)
     needs_oninit = bool(init_calls)
     imports_by_module["@angular/core"].append("Component")
+    imports_by_module["@angular/core"].append("ChangeDetectionStrategy")
+
     if needs_oninit:
         imports_by_module["@angular/core"].append("OnInit")
 
@@ -435,7 +438,7 @@ def _build_component_ts(
         if pname in seen_props:
             continue
         seen_props.add(pname)
-        prop_lines.append(f"  {pname}!: any;  // TODO: add proper type")
+        prop_lines.append(f"  {pname}: any = null;")
 
     # Also declare properties inferred from HTTP calls (e.g. url=/api/users -> users!: any)
     # Guard: skip if the inferred name collides with a method name (TS2300 duplicate identifier)
@@ -444,7 +447,7 @@ def _build_component_ts(
             prop = _infer_prop_name(getattr(call, "url", None))
             if prop and prop not in seen_props and prop not in method_names:
                 seen_props.add(prop)
-                prop_lines.append(f"  {prop}!: any;")
+                prop_lines.append(f"  {prop}: any = null;")
             elif prop and prop in method_names:
                 print(
                     f"[ControllerToComponent] Skipping HTTP-inferred prop {prop!r}"
@@ -463,7 +466,7 @@ def _build_component_ts(
                     _cbprop = _m.group(1)
                     if _cbprop not in seen_props and _cbprop not in method_names:
                         seen_props.add(_cbprop)
-                        prop_lines.append(f"  {_cbprop}!: any;")
+                        prop_lines.append(f"  {_cbprop}: any = null;")
                         print(
                             f"[ControllerToComponent] Declared then-body prop {_cbprop!r}"
                             f" (found in callback: 'this.{_cbprop} = ...')"
@@ -542,7 +545,8 @@ def _build_component_ts(
     lines.append("")
     lines.append("@Component({")
     lines.append(f"  selector: '{selector}',")
-    lines.append(f"  templateUrl: './{base}.component.html'")
+    lines.append(f"  templateUrl: './{base}.component.html',")
+    lines.append("  changeDetection: ChangeDetectionStrategy.OnPush")
     lines.append("})")
     if needs_oninit and any_http:
         implements_clause = " implements OnInit, OnDestroy"
@@ -654,6 +658,8 @@ class ControllerToComponentRule:
             ))
             return changes
 
+        progress = SimpleProgress(len(controllers), "Controllers")
+
         for c in controllers:
             source_html  = template_html_by_controller.get(c.name)
             raw_template = next(
@@ -661,21 +667,37 @@ class ControllerToComponentRule:
                 None
             )
             self._emit_component(c, changes, source_html, raw_template)
+            progress.step(c.name)
+        
+        progress.done()
 
         print("========== ControllerToComponentRule DONE ==========\n")
         return changes
 
     def _resolve_html_content(self, c, source_html, raw_template) -> tuple[str, str]:
+        if getattr(c, "template", None):
+            return migrate_template(c.template), "inline_template"
+
         _stripped  = c.name.replace("Controller", "").replace("Ctrl", "")
         _base      = _stripped.lower()
+
         _is_component_entry = (
             getattr(c, "is_component", False)
             or (_stripped and _stripped[0].islower())
         )
+
         if _is_component_entry:
             class_name = _base.capitalize() + "Component"
         else:
             class_name = _stripped[0].upper() + _stripped[1:] + "Component"
+        if getattr(c, "is_component", False):
+            raw_html = getattr(raw_template, "raw_html", None) if raw_template else None
+            if raw_html:
+                content = (
+                    f"<!-- Angular template for {class_name} (inline AngularJS component) -->\n"
+                    + migrate_template_from_raw(raw_html)
+                )
+                return content, "inline_template"
 
         if source_html:
             fragment = extract_controller_template(source_html, c.name)
@@ -702,13 +724,37 @@ class ControllerToComponentRule:
             )
             return content, "raw_template_fallback"
 
-        content = (
-            f"<!-- Angular template for {class_name} -->\n"
-            f"<!-- TODO: no AngularJS template found — migrate manually -->\n"
-            f"<!-- Common patterns: ng-repeat → *ngFor | ng-if → *ngIf | ng-model → [(ngModel)] -->\n"
-            f"<h2>{class_name}</h2>\n"
-        )
-        return content, "stub"
+        methods = getattr(c, "scope_methods", []) or []
+        props   = getattr(c, "scope_writes", []) or []
+
+        lines = [
+            f"<!-- Angular template for {class_name} (auto-generated) -->",
+            f"<div class=\"{_base}-component\">"
+        ]
+
+        # Properties → bindings
+        seen = set()
+        for p in props:
+            if p in seen or p.startswith("$"):
+                continue
+            seen.add(p)
+            lines.append(f"  <p><strong>{p}:</strong> {{{{ {p} }}}}</p>")
+
+        # Methods → buttons
+        for m in methods[:5]:
+            mname = m.get("name")
+            if not mname or mname.startswith("$"):
+                continue
+            lines.append(f"  <button (click)=\"{mname}()\">{mname}</button>")
+
+        # fallback if nothing detected
+        if len(lines) == 2:
+            lines.append(f"  <p>{class_name} works!</p>")
+
+        lines.append("</div>")
+
+        content = "\n".join(lines)
+        return content, "auto_generated"
 
     def _emit_component(self, c, changes: list, source_html, raw_template) -> None:
         # Strip "Controller"/"Ctrl" suffix (classic controllers).

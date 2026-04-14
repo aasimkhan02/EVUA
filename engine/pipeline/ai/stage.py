@@ -215,6 +215,8 @@ class AIAssistStage:
         self._run_pipe_completion(result)
         self._run_template_completion(result)
         self._run_link_migration(result)
+        self._run_q_defer_migration(result)
+        self._run_type_inference(result)
 
         print(f"\n[AIAssist] Summary:")
         print(f"  Pipes:     {result.pipes_completed} completed, "
@@ -421,6 +423,95 @@ class AIAssistStage:
             ts_file.write_text(cleaned, encoding="utf-8")
             print(f"[AIAssist]   COMPLETED: {ts_file.name}")
             result.links_completed += 1
+
+    def _run_q_defer_migration(self, result: AIAssistResult):
+        print("\n[AIAssist] Task 4: $q.defer() → Observable migration")
+
+        ts_files = sorted(self.app_dir.glob("*.ts"))
+
+        for ts_file in ts_files:
+            content = ts_file.read_text(encoding="utf-8")
+
+            if "$q.defer" not in content:
+                continue
+
+            print(f"[AIAssist]   Migrating $q.defer: {ts_file.name}")
+
+            prompt = f"""
+    Rewrite this Angular TypeScript code to replace AngularJS $q.defer() patterns
+    with RxJS Observable equivalents.
+
+    Rules:
+    - Use new Observable(...)
+    - Use observer.next / observer.error / observer.complete
+    - Do not change unrelated code
+
+    Code:
+    {content}
+
+    Output ONLY the rewritten TypeScript file.
+    """
+
+            response = self.client.complete(prompt)
+            if not response:
+                continue
+
+            cleaned = clean_response(response)
+            if "Observable" not in cleaned:
+                continue
+
+            ts_file.write_text(cleaned, encoding="utf-8")
+            print(f"[AIAssist]   COMPLETED: {ts_file.name}")
+
+    def _run_type_inference(self, result: AIAssistResult):
+        print("\n[AIAssist] Task 5: Type inference for component properties")
+
+        ts_files = sorted(self.app_dir.glob("*.component.ts"))
+
+        for ts_file in ts_files:
+            content = ts_file.read_text(encoding="utf-8")
+
+            if "!: any;" not in content:
+                continue
+
+            print(f"[AIAssist]   Inferring types: {ts_file.name}")
+
+            prompt = f"""
+    Improve the TypeScript types in this Angular component.
+
+    Rules:
+    - Replace fields typed as `any`
+    - Infer types from usage
+    - Keep code structure unchanged
+    - Do not modify decorators or methods
+
+    Code:
+    {content}
+
+    Output ONLY the full improved TypeScript file.
+    """
+
+            response = self.client.complete(prompt)
+
+            if response:
+                cleaned = clean_response(response)
+
+                if "export class" in cleaned:
+                    ts_file.write_text(cleaned, encoding="utf-8")
+                    print(f"[AIAssist]   COMPLETED: {ts_file.name}")
+                    return
+
+            # ---- fallback if AI unavailable ----
+
+            print(f"[AIAssist]   fallback inference: {ts_file.name}")
+
+            cleaned = content
+
+            cleaned = cleaned.replace("!: any;", "!: unknown;")
+            cleaned = cleaned.replace(": any;", ": unknown;")
+
+            ts_file.write_text(cleaned, encoding="utf-8")
+            print(f"[AIAssist]   COMPLETED: {ts_file.name}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

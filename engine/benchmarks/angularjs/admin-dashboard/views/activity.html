@@ -1,0 +1,55 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Activity</h1>
+    <p class="page-sub">Full audit log of recent admin actions.</p>
+  </div>
+</div>
+
+<!-- Filter pills -->
+<div class="pill-filters">
+  <button
+    class="pill"
+    ng-repeat="t in ac.actionTypes"
+    ng-class="{active: ac.filter === t.key}"
+    ng-click="ac.filter = t.key">
+    {{ t.label }}
+  </button>
+</div>
+
+<!-- Loading -->
+<div class="card" ng-if="ac.loading">
+  <div class="skel-row" ng-repeat="i in [1,2,3,4,5,6]" style="margin-bottom:16px">
+    <div class="skel-block" style="width:32px;height:32px;border-radius:50%;flex-shrink:0"></div>
+    <div style="flex:1">
+      <div class="skel-block" style="width:200px;height:13px;margin-bottom:6px"></div>
+      <div class="skel-block" style="width:120px;height:11px"></div>
+    </div>
+    <div class="skel-block" style="width:80px;height:13px"></div>
+  </div>
+</div>
+
+<!-- Activity timeline -->
+<div class="card" ng-if="!ac.loading">
+  <div class="empty-state" ng-if="ac.filteredEvents().length === 0">
+    <div class="empty-icon">◈</div>
+    <div class="empty-title">No events found</div>
+    <div class="empty-sub">No activity matches the selected filter.</div>
+  </div>
+
+  <div class="timeline" ng-if="ac.filteredEvents().length > 0">
+    <div class="timeline-item" ng-repeat="e in ac.filteredEvents()">
+      <div class="timeline-dot dot--{{ e.color }}">
+        {{ ac.iconSymbol(e.icon) }}
+      </div>
+      <div class="timeline-connector" ng-if="!$last"></div>
+      <div class="timeline-content">
+        <div class="timeline-main">
+          <span class="tl-user">{{ e.user }}</span>
+          <span class="tl-action">{{ e.action }}</span>
+          <span class="tl-target" ng-if="e.target">{{ e.target }}</span>
+        </div>
+        <div class="tl-time">{{ e.time }}</div>
+      </div>
+    </div>
+  </div>
+</div>

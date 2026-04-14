@@ -193,6 +193,27 @@ for fname, content, ctrl in [
           "@Component(" in content, "no @Component decorator", "A")
     check(f"[A] {fname} exports class",
           "export class" in content, "", "A")
+    
+# ═════════════════════════════════════════════════════════════════════════════
+# A2. CHANGE DETECTION STRATEGY
+# ═════════════════════════════════════════════════════════════════════════════
+section("A2", "Angular OnPush change detection strategy")
+
+for fname, content in [
+    ("userlist.component.ts", userlist),
+    ("userdetail.component.ts", userdetail),
+    ("dashboard.component.ts", dashboard),
+    ("product.component.ts", product),
+    ("auth.component.ts", auth),
+    ("search.component.ts", search),
+]:
+    check(f"[A2] {fname} uses ChangeDetectionStrategy.OnPush",
+          "ChangeDetectionStrategy.OnPush" in content,
+          "OnPush change detection missing", "A2")
+
+    check(f"[A2] {fname} imports ChangeDetectionStrategy",
+          "ChangeDetectionStrategy" in content,
+          "ChangeDetectionStrategy import missing", "A2")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -399,6 +420,19 @@ check("[H] UserService has @Injectable",
       "@Injectable(" in user_svc, "", "H")
 check("[H] AuthService has @Injectable",
       "@Injectable(" in auth_svc, "", "H")
+
+# $resource fallback support
+check("[H] resource-style services produce CRUD methods",
+      "getAll(" in user_svc or "get(" in user_svc,
+      "$resource service not converted to HttpClient CRUD", "H")
+
+check("[H] resource service uses HttpClient",
+      "http.get(" in user_svc,
+      "$resource conversion missing HttpClient", "H")
+
+check("[H] resource service has POST/PUT support",
+      "http.post(" in user_svc or "http.put(" in user_svc,
+      "$resource CRUD not generated", "H")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -862,6 +896,60 @@ if _phonedetail_ts:
           "setImage" in _phonedetail_ts, "setImage missing", "Y")
     check("[Y] ngOnInit present (self.loadDetail() init call detected)",
           "ngOnInit" in _phonedetail_ts, "ngOnInit missing", "Y")
+
+# ═════════════════════════════════════════════════════════════════════
+# Y. ENVIRONMENT FILE GENERATION
+# ═════════════════════════════════════════════════════════════════════
+section("Y2", "environment.ts scaffold generation")
+
+env = _read(OUT.parent / "environments" / "environment.ts")
+env_prod = _read(OUT.parent / "environments" / "environment.prod.ts")
+
+check("[Y2] environment.ts generated",
+      bool(env),
+      "environment.ts missing", "Y")
+
+check("[Y2] environment.prod.ts generated",
+      bool(env_prod),
+      "environment.prod.ts missing", "Y")
+
+check("[Y2] apiBaseUrl present",
+      "apiBaseUrl" in env,
+      "API base URL missing", "Y")
+
+# ═════════════════════════════════════════════════════════════════════════════
+# X. HTTP INTERCEPTOR STUB GENERATION
+# ═════════════════════════════════════════════════════════════════════════════
+section("X", "HTTP interceptor stub generation")
+
+interceptor = _read(OUT / "http.interceptor.ts")
+
+check("[X] http.interceptor.ts generated",
+      bool(interceptor),
+      "interceptor stub missing", "X")
+
+check("[X] interceptor implements HttpInterceptor",
+      "HttpInterceptor" in interceptor,
+      "", "X")
+
+check("[X] interceptor has intercept() method",
+      "intercept(" in interceptor,
+      "", "X")
+
+# ═════════════════════════════════════════════════════════════════════════════
+# AI. AI check
+# ═════════════════════════════════════════════════════════════════════════════
+section("AI1", "$q.defer migration")
+
+check("[AI1] no $q.defer left",
+      "$q.defer" not in user_svc,
+      "Promise migration failed", "AI")
+
+section("AI2", "AI type inference")
+
+check("[AI2] component properties not typed as any",
+      "!: any" not in userlist,
+      "type inference not applied", "AI")
 
 
 #    This is the ultimate proof that the engine produces real Angular —

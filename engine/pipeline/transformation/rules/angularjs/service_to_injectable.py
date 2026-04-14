@@ -5,6 +5,7 @@ from pipeline.transformation.angular_project_scaffold import AngularProjectScaff
 from pipeline.transformation.helpers import iter_services
 from pipeline.transformation.di_mapper import resolve_di_tokens
 from collections import defaultdict
+from orchestration.simple_progress import SimpleProgress
 
 
 
@@ -41,8 +42,16 @@ def _build_service_ts(
         getattr(c, "has_catch", False)
         for calls in http_calls_by_method.values() for c in calls
     )
+    # needs_map: only set if there is a non-identity then_body that will actually
+    # emit a map() pipe. Identity bodies ("return res" etc.) are stripped at
+    # code-gen time, so they must not trigger the map import.
+    _IDENTITY_BODIES = {"return res", "return res.data", "return response"}
     needs_map = any(
-        (not getattr(c, "has_catch", False) and getattr(c, "then_body_src", None))
+        (
+            not getattr(c, "has_catch", False)
+            and getattr(c, "then_body_src", None)
+            and (getattr(c, "then_body_src", "") or "").strip().rstrip(";") not in _IDENTITY_BODIES
+        )
         for calls in http_calls_by_method.values() for c in calls
     )
     if needs_catch:
@@ -203,6 +212,8 @@ class ServiceToInjectableRule:
         services = list(iter_services(analysis, patterns))
         print(f"[ServiceToInjectable] Services detected: {len(services)}")
 
+        progress = SimpleProgress(len(services), "Services")
+
         for node in services:
             raw_name = node.name
             di_tokens: list[str] = getattr(node, "di", [])
@@ -229,6 +240,28 @@ class ServiceToInjectableRule:
                 print(f"[ServiceToInjectable] Methods for {raw_name}: "
                       f"{[m['name'] for m in _svc_methods]}")
             _svc_http: dict = {}
+
+            # -------------------------------------------------------
+            # $resource fallback (AngularJS resource service)
+            # -------------------------------------------------------
+            if not _svc_methods and "$resource" in di_tokens:
+                print(f"[ServiceToInjectable] Detected $resource service: {raw_name}")
+
+                _svc_methods = [
+                    {"name": "getAll", "params": [], "is_this_method": True},
+                    {"name": "get", "params": ["id"], "is_this_method": True},
+                    {"name": "create", "params": ["data"], "is_this_method": True},
+                    {"name": "update", "params": ["id", "data"], "is_this_method": True},
+                    {"name": "delete", "params": ["id"], "is_this_method": True},
+                ]
+
+                _svc_http = {
+                    "getAll": [{"method": "get", "url": "'/api'", "uses_q": False}],
+                    "get": [{"method": "get", "url": "'/api/' + id", "uses_q": False}],
+                    "create": [{"method": "post", "url": "'/api'", "uses_q": False}],
+                    "update": [{"method": "put", "url": "'/api/' + id", "uses_q": False}],
+                    "delete": [{"method": "delete", "url": "'/api/' + id", "uses_q": False}],
+                }
             for _c in (getattr(analysis, "http_calls", []) or []):
                 _om = getattr(_c, "owner_method", None)
                 if _om and getattr(_c, "owner_controller", None) == raw_name:
@@ -254,6 +287,10 @@ class ServiceToInjectableRule:
                 source=ChangeSource.RULE,
                 reason=f"Service → @Injectable(providedIn: 'root') at {ts_path}"
             ))
+
+            progress.step(node.name)
+        
+        progress.done()
 
         print("========== ServiceToInjectableRule DONE ==========\n")
         return changes

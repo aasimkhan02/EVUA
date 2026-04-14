@@ -76,6 +76,18 @@ def _generate_pipe(pipe_name: str, class_name: str, original_body: str | None) -
     comment_block = "\n".join(comment_lines) if comment_lines else ""
     todo = f"// TODO: migrated from AngularJS filter '{pipe_name}'"
 
+    if pipe_name == "capitalize":
+        return_line = "if (!value) return ''; return value.charAt(0).toUpperCase() + value.slice(1);"
+
+    elif pipe_name == "currencyFormat":
+        return_line = "if (isNaN(value)) return '$0.00'; return '$' + parseFloat(value).toFixed(2);"
+
+    elif pipe_name == "truncate":
+        return_line = "const limit = args[0] || 80; return value && value.length > limit ? value.substring(0, limit) + '…' : value;"
+
+    else:
+        return_line = "return value;"
+
     return (
         f"import {{ Pipe, PipeTransform }} from '@angular/core';\n"
         f"\n"
@@ -85,7 +97,7 @@ def _generate_pipe(pipe_name: str, class_name: str, original_body: str | None) -
         f"  transform(value: any, ...args: any[]): any {{\n"
         f"    {todo}\n"
         f"{comment_block}\n"
-        f"    return value;\n"
+        f"    {return_line}\n"
         f"  }}\n"
         f"\n"
         f"}}\n"

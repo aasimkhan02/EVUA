@@ -1,0 +1,142 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Users</h1>
+    <p class="page-sub" ng-if="!uc.loading">
+      {{ uc.filteredUsers().length }} {{ uc.filteredUsers().length | pluralize:'user' }} found
+    </p>
+  </div>
+  <a href="#/users/new" class="btn btn-primary">+ New User</a>
+</div>
+
+<!-- Toast -->
+<div class="toast toast--{{ uc.toast.type }}" ng-if="uc.toast">
+  {{ uc.toast.msg }}
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-backdrop" ng-if="uc.confirmDelete">
+  <div class="modal">
+    <div class="modal-title">Remove user?</div>
+    <div class="modal-body">
+      Are you sure you want to remove <strong>{{ uc.confirmDelete.name }}</strong>?
+      This action cannot be undone.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" ng-click="uc.cancelDelete()">Cancel</button>
+      <button class="btn btn-danger" ng-click="uc.confirmDeleteUser()">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search by name or email…"
+      ng-model="uc.searchQuery"
+      ng-change="uc.currentPage = 1">
+    <button class="search-clear" ng-if="uc.searchQuery" ng-click="uc.searchQuery = ''; uc.currentPage = 1">✕</button>
+  </div>
+
+  <select class="filter-select" ng-model="uc.roleFilter" ng-change="uc.currentPage = 1">
+    <option value="">All roles</option>
+    <option ng-repeat="r in uc.getRoles()" ng-value="r">{{ r }}</option>
+  </select>
+
+  <select class="filter-select" ng-model="uc.statusFilter" ng-change="uc.currentPage = 1">
+    <option value="">All statuses</option>
+    <option ng-repeat="s in uc.getStatuses()" ng-value="s">{{ s | titleCase }}</option>
+  </select>
+
+  <button class="btn btn-ghost btn-sm" ng-if="uc.searchQuery || uc.roleFilter || uc.statusFilter"
+    ng-click="uc.resetFilters()">Clear filters</button>
+</div>
+
+<!-- Loading skeleton -->
+<div class="card table-card" ng-if="uc.loading">
+  <div class="skel-row" ng-repeat="i in [1,2,3,4,5]">
+    <div class="skel-block" style="width:32px;height:32px;border-radius:50%;flex-shrink:0"></div>
+    <div style="flex:1">
+      <div class="skel-block" style="width:130px;height:14px;margin-bottom:6px"></div>
+      <div class="skel-block" style="width:200px;height:11px"></div>
+    </div>
+    <div class="skel-block" style="width:60px;height:22px;border-radius:20px"></div>
+    <div class="skel-block" style="width:70px;height:22px;border-radius:20px"></div>
+    <div class="skel-block" style="width:80px;height:28px;border-radius:6px"></div>
+  </div>
+</div>
+
+<!-- Users table -->
+<div class="card table-card" ng-if="!uc.loading">
+
+  <div class="empty-state" ng-if="uc.filteredUsers().length === 0">
+    <div class="empty-icon">◎</div>
+    <div class="empty-title">No users found</div>
+    <div class="empty-sub">Try adjusting your filters.</div>
+    <button class="btn btn-ghost" ng-click="uc.resetFilters()">Reset</button>
+  </div>
+
+  <table class="user-table" ng-if="uc.filteredUsers().length > 0">
+    <thead>
+      <tr>
+        <th class="sortable" ng-click="uc.sortBy('name')">
+          User {{ uc.sortIcon('name') }}
+        </th>
+        <th class="sortable" ng-click="uc.sortBy('role')">
+          Role {{ uc.sortIcon('role') }}
+        </th>
+        <th class="sortable" ng-click="uc.sortBy('status')">
+          Status {{ uc.sortIcon('status') }}
+        </th>
+        <th class="sortable hide-mobile" ng-click="uc.sortBy('joined')">
+          Joined {{ uc.sortIcon('joined') }}
+        </th>
+        <th class="hide-mobile">Last login</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="user in uc.pagedUsers() | orderBy: uc.sortField : uc.sortReverse"
+          class="user-row">
+        <td class="user-cell">
+          <div class="avatar-circle">{{ user.avatar }}</div>
+          <div class="user-info">
+            <div class="user-name">{{ user.name }}</div>
+            <div class="user-email">{{ user.email | shortEmail }}</div>
+          </div>
+        </td>
+        <td>
+          <span class="role-badge {{ user.role | roleClass }}">{{ user.role }}</span>
+        </td>
+        <td>
+          <span class="status-badge status--{{ user.status }}">
+            <span class="status-dot"></span>{{ user.status | statusLabel }}
+          </span>
+        </td>
+        <td class="hide-mobile muted">{{ user.joined }}</td>
+        <td class="hide-mobile muted">{{ user.lastLogin }}</td>
+        <td class="actions-cell">
+          <button class="icon-btn" title="Edit" ng-click="uc.editUser(user.id)">✎</button>
+          <button class="icon-btn icon-btn--danger" title="Delete" ng-click="uc.askDelete(user)">✕</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <div class="pagination" ng-if="uc.totalPages() > 1">
+    <button class="page-btn" ng-disabled="uc.currentPage === 1"
+      ng-click="uc.goToPage(uc.currentPage - 1)">← Prev</button>
+
+    <button class="page-btn" ng-repeat="p in uc.pages()"
+      ng-class="{active: uc.currentPage === p}"
+      ng-click="uc.goToPage(p)">{{ p }}</button>
+
+    <button class="page-btn" ng-disabled="uc.currentPage === uc.totalPages()"
+      ng-click="uc.goToPage(uc.currentPage + 1)">Next →</button>
+  </div>
+
+</div>

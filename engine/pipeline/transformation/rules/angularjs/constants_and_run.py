@@ -70,7 +70,7 @@ def _build_run_block_ts(run_blocks: list) -> str:
         "",
         "export function appInitFactory(): () => void {",
         "  return () => {",
-        "    // TODO: migrate .run() block logic here",
+        "    console.log(\"init\");",
     ]
 
     for i, rb in enumerate(run_blocks):

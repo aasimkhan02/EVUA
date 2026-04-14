@@ -92,16 +92,17 @@ def iter_controllers(analysis, patterns) -> Iterator[Any]:
             # AngularJS .component() — is_component=True set by js.py (when preserved by IR)
             if getattr(c, "is_component", False):
                 print(f"[helpers] iter_controllers: yielding .component() entry (is_component) '{c.name}'")
+                c.is_component = True   # 🔥 FORCE PRESERVE
                 seen.add(c.id)
                 yield c
                 continue
-
             # Fallback: camelCase name signals an AngularJS 1.5+ .component() registration.
             # Classic controllers and services always use PascalCase; .component() names
             # use camelCase (e.g. userProfile, phoneList, phoneDetail).
             # This handles cases where the IR conversion drops is_component.
             if _is_angularjs_component_name(c.name):
                 print(f"[helpers] iter_controllers: yielding .component() entry (camelCase) '{c.name}'")
+                c.is_component = True   # 🔥 CRITICAL FIX
                 seen.add(c.id)
                 yield c
             else:

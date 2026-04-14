@@ -1,9 +1,80 @@
 import sys
+import io
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
+class _FilteredWriter:
+    """
+    Wraps stdout and drops lines that match known internal debug prefixes.
+    Keeps all user-facing output, removes implementation noise.
+    """
+    _SUPPRESS = (
+        "[js.py]",
+        "[js.py CHAIN]",
+        "[js.py DEBUG]",
+        "[js.py .component()]",
+        "[svc DEBUG]",
+        "[TRANSFORM]",
+        "[Scaffold]",
+        "[helpers]",
+        "========== ",
+        "[ControllerToComponent DEBUG]",
+        "[ControllerToComponent] DI for",
+        "[ControllerToComponent] Template for",
+        "[ControllerToComponent] Template written:",
+        "[ControllerToComponent] Declared then-body",
+        "[ControllerToComponent] Emitting sanitized",
+        "[ControllerToComponent] Skipping HTTP-inferred",
+        "[ServiceToInjectable] DI for",
+        "[ServiceToInjectable] Methods for",
+        "[ServiceToInjectable] Detected $resource",
+        "[RouteMigrator] Router type",
+        "[RouteMigrator] Routes detected",
+        "[RouteMigrator]   ngRoute",
+        "[HttpToHttpClient] HttpClientModule added",
+        "[SimpleWatchToRxjs]  No shallow",
+        "[ComponentInteraction] No template",
+        "[ComponentInteraction] Relationships",
+        "[DirectiveToComponent] No directives",
+        "[DirectiveToPipe] Filters detected",
+        "[ConstantsAndRun] Constants detected",
+        "[ConstantsAndRun] Run blocks detected",
+        "[AppModuleUpdater] Found:",
+        "[AppModuleUpdater] FormsModule needed",
+        "[AppModuleUpdater] HttpClientModule needed",
+        "[AppModuleUpdater] Built-in pipes",
+        "[AppModuleUpdater]",
+    )
+
+    def __init__(self, wrapped):
+        self._wrapped = wrapped
+        self._buf = ""
+
+    def write(self, text):
+        # Buffer until newline so we can check complete lines
+        self._buf += text
+        while "\n" in self._buf:
+            line, self._buf = self._buf.split("\n", 1)
+            if not any(line.lstrip().startswith(p) for p in self._SUPPRESS):
+                self._wrapped.write(line + "\n")
+
+    def flush(self):
+        if self._buf:
+            if not any(self._buf.lstrip().startswith(p) for p in self._SUPPRESS):
+                self._wrapped.write(self._buf)
+            self._buf = ""
+        self._wrapped.flush()
+
+    def __getattr__(self, name):
+        return getattr(self._wrapped, name)
+
+
+# Install filtered writer — keeps all user output, drops internal debug noise
+sys.stdout = _FilteredWriter(sys.stdout)
 
 
 from pathlib import Path
@@ -230,7 +301,6 @@ def run_pipeline(
     if show_diff or dry_run:
         shadow_dir = Path(tempfile.mkdtemp(prefix="evua_shadow_"))
         effective_out_dir = shadow_dir / "angular-app"
-        print(f"  Shadow dir: {shadow_dir}")
 
     scanner    = FileScanner()
     files      = scanner.scan(str(repo_path))
@@ -329,16 +399,40 @@ def run_pipeline(
         reason_by_change_id=reason_by_change_id,
     )
 
-    print("  Risk:")
-    seen_ids = set()
+    # ── Risk summary — grouped by level, deduplicated ─────────────────────
+    risk_groups: dict[str, list[str]] = {"MANUAL": [], "RISKY": [], "SAFE": []}
+    seen_risk_names: set = set()
     for change in changes:
-        if change.id in seen_ids:
+        level = risk_by_change_id.get(change.id, RiskLevel.SAFE)
+        name  = _resolve_name(change, id_to_name, directive_id_to_name, analysis)
+        if name == "unknown" or name in seen_risk_names:
             continue
-        seen_ids.add(change.id)
-        level  = risk_by_change_id.get(change.id, RiskLevel.SAFE)
-        reason = reason_by_change_id.get(change.id, "")
-        name   = _resolve_name(change, id_to_name, directive_id_to_name, analysis)
-        print(f"    - {name:30s} => {level}  ({reason[:60]})")
+        seen_risk_names.add(name)
+        risk_groups[level.value.upper()].append(name)
+
+    n_manual = len(risk_groups["MANUAL"])
+    n_risky  = len(risk_groups["RISKY"])
+    n_safe   = len(risk_groups["SAFE"])
+
+    print(f"  Risk      : {n_safe} safe, {n_risky} risky, {n_manual} manual")
+    if risk_groups["MANUAL"]:
+        for name in risk_groups["MANUAL"]:
+            reason = next(
+                (reason_by_change_id[c.id] for c in changes
+                 if _resolve_name(c, id_to_name, directive_id_to_name, analysis) == name
+                 and c.id in reason_by_change_id),
+                ""
+            )
+            print(f"    ⚠ MANUAL  {name} — {reason[:80]}")
+    if risk_groups["RISKY"]:
+        for name in risk_groups["RISKY"]:
+            reason = next(
+                (reason_by_change_id[c.id] for c in changes
+                 if _resolve_name(c, id_to_name, directive_id_to_name, analysis) == name
+                 and c.id in reason_by_change_id),
+                ""
+            )
+            print(f"    ! RISKY   {name} — {reason[:80]}")
 
     # ── Validation (skip in dry-run / diff — files not written to real location) ──
     if dry_run or show_diff:
@@ -459,16 +553,38 @@ def run_pipeline(
     md_path.write_text(md_report, encoding="utf-8", errors="replace")
 
     print(f"  Reports   : {report_path}")
-    print(f"  Pipeline run complete.\n")
+
+    # ── Clean summary box ──────────────────────────────────────────────────
+    n_components = len([c for c in changes if "component" in (getattr(c, "reason", "") or "").lower() and "written" in (getattr(c, "reason", "") or "").lower()])
+    n_services   = len([c for c in changes if "injectable" in (getattr(c, "reason", "") or "").lower()])
+    n_pipes      = len([c for c in changes if "pipe" in (getattr(c, "after_id", "") or "").lower()])
+    n_gen        = len(generated_files)
+
+    print(f"\n  {'─'*56}")
+    print(f"  {'EVUA Migration Summary':^56}")
+    print(f"  {'─'*56}")
+    print(f"  {'Project':<20} {repo_path.name}")
+    print(f"  {'Files scanned':<20} {len(files)} ({n_js} JS)")
+    print(f"  {'Classes found':<20} {n_classes}")
+    print(f"  {'Routes migrated':<20} {n_routes}")
+    print(f"  {'Changes proposed':<20} {len(changes)}")
+    print(f"  {'Generated files':<20} {n_gen}")
+    print(f"  {'Risk: safe/risky/manual':<20} {n_safe}/{n_risky}/{n_manual}")
+    if n_manual > 0:
+        print(f"  {'Needs manual review':<20} {', '.join(risk_groups['MANUAL'])}")
+    print(f"  {'─'*56}")
+    print(f"  Next steps:")
+    print(f"    cd out/angular-app && npm install && ng serve")
+    print(f"  {'─'*56}\n")
 
     # ── AI-assist post-processing ──────────────────────────────────────────
-    if ai_assist and not dry_run and not show_diff:
+    if not dry_run and not show_diff:
         client = AIClient()
         ai_app_dir = real_out_dir / "src" / "app"
-        stage  = AIAssistStage(app_dir=ai_app_dir, analysis=analysis, client=client)
+        stage = AIAssistStage(app_dir=ai_app_dir, analysis=analysis, client=client)
         stage.run()
-    elif ai_assist and (dry_run or show_diff):
-        print("  [AI-assist] Skipped in dry-run / diff mode")
+    elif dry_run or show_diff:
+        pass  # AI-assist not run in preview modes
 
     # ── TypeScript compilation validation ──────────────────────────────────
     if not dry_run and not show_diff and not skip_tsc:
@@ -489,9 +605,17 @@ def run_pipeline(
         report_path.write_text(report_json, encoding="utf-8", errors="replace")
         _rewrite_md_report(repo_path, analysis, patterns, transformation, risk,
                            validation_summary, tsc_result)
-        print(f"  Validate  : tsc={tsc_result.passed}  "
-              f"({tsc_result.error_count} errors)  "
-              f"cmd={tsc_result.tsc_command or 'not found'}")
+        if tsc_result.passed:
+            print(f"  Validate  : tsc ✓  (0 errors)")
+        elif not tsc_result.tsc_found:
+            print(f"  Validate  : tsc ✗  (tsc not found — install Node.js + TypeScript)")
+        else:
+            print(f"  Validate  : tsc ✗  ({tsc_result.error_count} errors)")
+            for e in tsc_result.errors[:5]:
+                fname = Path(e.file).name if hasattr(e, 'file') else '?'
+                line  = getattr(e, 'line', '?')
+                msg   = getattr(e, 'message', str(e))[:80]
+                print(f"    {fname}:{line}  {msg}")
     elif skip_tsc:
         print("  [tsc] Skipped (--skip-tsc)")
 

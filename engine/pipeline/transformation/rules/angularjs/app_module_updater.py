@@ -102,7 +102,7 @@ def _scan_app_dir(app_dir: Path) -> dict:
     pipes:      list[tuple[str, str]] = []
     guards:     list[tuple[str, str]] = []
     resolvers:  list[tuple[str, str]] = []
-    services:   list[tuple[str, str]] = []
+    services:   list[tuple[str, str, str]] = []
     has_ngmodel    = False
     has_httpclient = False
 
@@ -174,7 +174,30 @@ def _scan_app_dir(app_dir: Path) -> dict:
 
         elif stem.endswith(".service"):
             cls = _extract_class_name(content) or (_to_pascal(stem[:-len(".service")]) + "Service")
-            services.append((cls, stem))
+            services.append((cls, stem, fname))
+
+    # ── Deduplicate services by class name ───────────────────────────────
+    # HttpToHttpClientRule emits e.g. stats.service.ts (class StatsService)
+    # ServiceToInjectableRule emits statsservice.service.ts (class StatsService)
+    # Both share the same class name → duplicate identifier in app.module.ts.
+    # Resolution: among duplicates, prefer the file whose stem matches the
+    # pattern <name>service.service (i.e. the ServiceToInjectableRule output),
+    # because it contains the full migrated service body. The HttpToHttpClientRule
+    # stub is a thin shim that is only needed when there is NO corresponding
+    # AngularJS service — if a *service.service.ts already covers it, drop the stub.
+    _seen_svc_class: dict[str, tuple[str, str, str]] = {}
+    for entry in services:
+        cls, stem, fname = entry
+        if cls not in _seen_svc_class:
+            _seen_svc_class[cls] = entry
+        else:
+            existing_stem = _seen_svc_class[cls][1]
+            # Prefer the file whose stem ends with "service.service" (ServiceToInjectableRule)
+            # over a plain "*.service" stub (HttpToHttpClientRule).
+            if stem.endswith("service.service"):
+                _seen_svc_class[cls] = entry
+            # else keep existing
+    services = list(_seen_svc_class.values())
 
     return {
         "components":       components,
@@ -244,7 +267,7 @@ def _build_app_module(scanned: dict) -> str:
     for cls, stem in resolvers:
         import_lines.append(f"import {{ {cls} }} from './{stem}';")
 
-    for cls, stem in services:
+    for cls, stem, _fname in services:
         # Skip import if the service file has no @Injectable (e.g. app-init.service.ts)
         # — importing a non-existent class name causes TS2305
         svc_file_check = (scanned.get("_app_dir") or Path(".")) / f"{stem}.ts"
@@ -261,7 +284,8 @@ def _build_app_module(scanned: dict) -> str:
     decl_items = ["AppComponent"]
     decl_items += [cls for cls, _ in components]
     decl_items += [cls for cls, _ in pipes]
-    decl_items += [cls for cls, _ in builtin_pipe_entries]  # DatePipe, CurrencyPipe, etc.
+    # NOTE: builtin_pipe_entries (SlicePipe, DatePipe, etc.) must NOT go in declarations[].
+    # They are Angular built-ins available via BrowserModule/CommonModule. Declaring them causes NG6001.
 
     # ── imports[] ────────────────────────────────────────────────────────
     import_mod_items = ["BrowserModule", "AppRoutingModule"]
@@ -277,7 +301,7 @@ def _build_app_module(scanned: dict) -> str:
     # We check each service file: only add to providers[] if it does NOT use
     # providedIn:'root'.
     provider_items: list[str] = []
-    for cls, stem in services:
+    for cls, stem, _fname in services:
         svc_file = (scanned.get("_app_dir") or Path(".")) / f"{stem}.ts"
         try:
             svc_content = svc_file.read_text(encoding="utf-8", errors="replace")

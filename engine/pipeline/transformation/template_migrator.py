@@ -208,34 +208,26 @@ _APP_JS_SCRIPT_RE = re.compile(
 # Core helpers
 # ---------------------------------------------------------------------------
 
-def _rewrite_ng_repeat(expr: str) -> str:
-    """
-    Convert ng-repeat value to *ngFor value.
+def _rewrite_ng_repeat(value: str) -> str:
+    if " in " not in value:
+        return value
 
-    'item in items'              → 'item of items'
-    'item in items track by $id' → 'item of items; trackBy: $id'
-    '(key, val) in obj'          → annotated TODO
-    """
-    expr = expr.strip()
-    if expr.startswith("("):
-        return f"{expr}  <!-- TODO: object iteration — use keyvalue pipe: (obj | keyvalue) -->"
+    lhs, rhs = value.split(" in ", 1)
 
-    track_match = re.search(r'\s+track\s+by\s+(\S+)', expr, re.IGNORECASE)
-    if track_match:
-        track_expr = track_match.group(1)
-        base       = re.sub(r'\s+track\s+by\s+\S+', '', expr, flags=re.IGNORECASE).strip()
-        base       = base.replace(" in ", " of ", 1)
-        # Angular trackBy requires a method reference on the class.
-        # We always emit "; trackBy: trackById" — the method is generated on the
-        # component class by ControllerToComponentRule._build_component_ts.
-        # If the original expression used a dotted key (item.id), we note it in
-        # a separate HTML comment (not inside the attribute — that is invalid HTML).
-        if '.' in track_expr or '(' in track_expr:
-            # Return a sentinel so the caller can prepend the comment on its own line
-            return f"{base}; trackBy: trackById  <!-- trackBy: was 'track by {track_expr}' -->"
-        return f"{base}; trackBy: {track_expr}"
+    rhs = re.sub(r"\|\s*orderBy\s*:[^\"'>]+", "", rhs)
+    rhs = re.sub(r"\|\s*filter\s*:[^\"'>]+", "", rhs)
+    rhs = re.sub(r"\|\s*orderBy\b", "", rhs)
+    rhs = re.sub(r"\|\s*filter\b", "", rhs)
 
-    return expr.replace(" in ", " of ", 1)
+    lhs = lhs.strip()
+    rhs = rhs.strip()
+
+    base = f"{lhs} of {rhs}"
+
+    if "track by" in value:
+        return f"{base}; trackBy: trackById"
+
+    return base
 
 
 def _migrate_filters(html: str) -> str:
@@ -378,15 +370,36 @@ def migrate_template(html: str) -> str:
 
     for line in lines:
         if "*ngFor" in line:
+            # add TODO comments inline (NOT separate append)
             if re.search(r"\|\s*orderBy", line):
-                updated_lines.append("<!-- TODO: AngularJS orderBy filter has no Angular equivalent -->")
+                line = "<!-- TODO: AngularJS orderBy filter has no Angular equivalent -->\n" + line
 
-            if re.search(r"\|\s*filter\s*:", line):
-                updated_lines.append("<!-- TODO: AngularJS filter pipe has no Angular equivalent -->")
+            if re.search(r"\|\s*filter", line):
+                line = "<!-- TODO: AngularJS filter pipe has no Angular equivalent -->\n" + line
+
+            # remove filters with args
+            line = re.sub(r"\|\s*orderBy\s*:[^\"'>]+", "", line)
+            line = re.sub(r"\|\s*filter\s*:[^\"'>]+", "", line)
+
+            # remove filters without args
+            line = re.sub(r"\|\s*orderBy\b", "", line)
+            line = re.sub(r"\|\s*filter\b", "", line)
 
         updated_lines.append(line)
 
-    result = "\n".join(updated_lines)
+    html = "\n".join(updated_lines)
+
+    # 🔥 FINAL CLEANUP (IMPORTANT)
+    html = re.sub(r"\|\s*orderBy\s*:[^\"'>]+", "", html)
+    html = re.sub(r"\|\s*filter\s*:[^\"'>]+", "", html)
+
+    # 🔥 FIX BROKEN :'-timestamp'
+    html = re.sub(r":\s*'[^']+'", "", html)
+
+    # 🔥 CLEAN {{ }} filters
+    html = re.sub(r"\{\{([^}]+)\|\s*(orderBy|filter)[^}]*\}\}", r"{{\1}}", html)
+
+    return html
 
     # 4. Prepend TODO comments for non-deterministic patterns
     for pattern, todo_msg in _TODO_PATTERNS:

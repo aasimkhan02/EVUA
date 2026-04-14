@@ -1,5 +1,3 @@
-print("HttpToHttpClientRule LOADED")
-
 from pathlib import Path
 from ir.migration_model.change import Change
 from ir.migration_model.base import ChangeSource
@@ -158,12 +156,30 @@ class HttpToHttpClientRule:
         base, kind = _owner_to_file_base(call)
         is_q_defer = method.startswith("q_")
 
+        # Guard: if the resolved base is "app", this call came from a file-level
+        # fallback (e.g. app.js with no owner_controller). Writing to app.component.ts
+        # would corrupt the scaffold root component. Skip it — there is no owning
+        # controller to migrate this call into.
+        if base == "app" and kind == "component":
+            call_id = getattr(call, "id", f"http_{file_attr}_{method}")
+            changes.append(Change(
+                before_id=call_id,
+                after_id=f"httpclient_app_{method}_skipped",
+                source=ChangeSource.RULE,
+                reason=(
+                    f"$http.{method}({url}) resolved to app.component.ts — "
+                    f"no owning controller found; skipped to protect scaffold root component"
+                ),
+            ))
+            print(f"[HttpToHttpClient] Skipped (no owner, would corrupt app.component.ts): {method} {url}")
+            return
+
         if kind == "service":
             target_ts = self.app_dir / f"{base}.service.ts"
             class_name = "".join(w.capitalize() for w in base.split("_")) + "Service"
             selector   = None
             if not self.dry_run:
-                self._ensure_service_base(target_ts, class_name)
+                self._ensure_service_base(target_ts, class_name, owner=owner)
         else:
             target_ts  = self.app_dir / f"{base}.component.ts"
             class_name = base.capitalize() + "Component"
@@ -205,9 +221,17 @@ class HttpToHttpClientRule:
     # File creation helpers
     # -----------------------------------------------------------------------
 
-    def _ensure_service_base(self, svc_ts: Path, class_name: str):
+    def _ensure_service_base(self, svc_ts: Path, class_name: str, owner=None):
         if svc_ts.exists():
             return
+
+        # If a ServiceToInjectableRule file already exists for this owner, don't
+        # create a duplicate stub (e.g. stats.service.ts when statsservice.service.ts exists).
+        if owner:
+            canonical_ts = self.app_dir / f"{owner.lower().replace(' ', '')}.service.ts"
+            if canonical_ts.exists():
+                return
+
         stub = (
             f"import {{ Injectable }} from '@angular/core';\n"
             f"import {{ HttpClient }} from '@angular/common/http';\n\n"

@@ -40,17 +40,17 @@ class PipelineRunner:
         try:
             validation_passed = self.pipeline_fn(out_root=tmp_root)
         except Exception as e:
-            print("Pipeline crashed:", e)
+            print(f"  [error] Pipeline failed: {e}")
             validation_passed = False
 
         if validation_passed:
             if self.final_root.exists():
                 shutil.rmtree(self.final_root)
             shutil.move(str(tmp_root), str(self.final_root))
-            print("Committed output atomically")
+            print("  Committed output atomically")
         else:
             shutil.rmtree(tmp_root, ignore_errors=True)
-            print("Validation failed -> temp workspace discarded")
+            print("  [warn] Validation failed — temporary workspace discarded")
 
         # Progress tracking (only on final output)
         if self.final_root.exists():

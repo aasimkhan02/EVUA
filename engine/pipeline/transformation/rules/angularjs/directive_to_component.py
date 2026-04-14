@@ -47,6 +47,7 @@ from pathlib import Path
 from ir.migration_model.change import Change
 from ir.migration_model.base import ChangeSource
 from pipeline.transformation.angular_project_scaffold import AngularProjectScaffold
+from orchestration.simple_progress import SimpleProgress
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -270,6 +271,8 @@ class DirectiveToComponentRule:
 
         seen: set[str] = set()
 
+        progress = SimpleProgress(len(directives), "Directives")
+
         for d in directives:
             name = getattr(d, "name", None)
             if not name or name in seen:
@@ -329,6 +332,10 @@ class DirectiveToComponentRule:
                     source=ChangeSource.RULE,
                     reason=f"AngularJS directive '{name}' (restrict={restrict}) → Angular @Directive stub",
                 ))
+
+            progress.step(d.name)
+        
+        progress.done()
 
         print(f"[DirectiveToComponent] {len(changes)} directive(s) migrated.")
         print("========== DirectiveToComponentRule DONE ==========\n")

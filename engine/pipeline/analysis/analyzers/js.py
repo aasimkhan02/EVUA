@@ -618,11 +618,17 @@ class JSAnalyzer(Analyzer):
                                 ctrl_name_ref = getattr(ctrl_prop, "name", None)
                                 if ctrl_name_ref:
                                     print(f"[js.py] .component('{comp_name}') references named ctrl {ctrl_name_ref}")
+                            
+                            template = None
+                            template_prop = _extract_object_prop(cfg_node, "template")
+                            if template_prop and getattr(template_prop, "type", None) == "Literal":
+                                template = template_prop.value
+                            
                             if fn_node is not None:
-                                # treat AngularJS .component() like a controller for migration
-                                _handle_controller(comp_name, ctrl_prop, fn_node, file_path, source, is_component=True)
-
-                                print(f"[js.py] .component('{comp_name}') controller detected -> RawController appended (is_component=True)")
+                                ctrl_obj = _handle_controller(comp_name, ctrl_prop, fn_node, file_path, source, is_component=True)
+                                if ctrl_obj and template:
+                                    ctrl_obj.template = template
+                                print(f"[js.py] .component('{comp_name}') controller detected -> RawController appended (is_component=True)")                   
                             elif cfg_node is not None:
                                 # No controller function found — register component with empty body
                                 ctrl = RawController(
@@ -633,6 +639,7 @@ class JSAnalyzer(Analyzer):
                                 ctrl.is_component = True
                                 ctrl.kind = "component"
                                 raw_modules.append(ctrl)
+                                return ctrl
                                 print(f"[js.py] .component('{comp_name}') registered (no inline controller)")
                             for child in iter_children(node):
                                 recurse(child, file_path, source, current_owner, module_aliases)
@@ -1123,6 +1130,7 @@ class JSAnalyzer(Analyzer):
             ctrl.is_component = is_component
 
             raw_modules.append(ctrl)
+            return ctrl
 
         def _handle_directive(name: str, fn_node, file_path: str):
             has_compile   = False
