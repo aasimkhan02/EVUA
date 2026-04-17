@@ -373,14 +373,23 @@ export default function Migration({ setActivePage }) {
               {result.status.toUpperCase()}
             </span>
 
-            {result.status === "success" && strategy === "diff" && (
-              <button
-                className="btn-primary"
-                style={{ padding: "8px 16px", fontSize: "10px" }}
-                onClick={() => setActivePage("workspace")}
-              >
-                CHECK DIFF
-              </button>
+            {(strategy === "full" || strategy === "diff") && (
+              <div style={{ display: "flex", gap: "12px" }}>
+                <button
+                  className="btn-primary"
+                  style={{ padding: "8px 16px", fontSize: "10px" }}
+                  onClick={() => setActivePage("workspace")}
+                >
+                  CHECK DIFF
+                </button>
+                <button
+                  className="btn-secondary"
+                  style={{ padding: "8px 16px", fontSize: "10px" }}
+                  onClick={() => setActivePage("dashboard")}
+                >
+                  SHOW STATS
+                </button>
+              </div>
             )}
           </div>
 
