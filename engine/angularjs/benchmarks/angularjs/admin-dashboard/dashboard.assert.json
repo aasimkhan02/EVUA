@@ -1,0 +1,36 @@
+{
+  "routes": [
+    "/dashboard",
+    "/users",
+    "/users/new",
+    "/users/edit/:id",
+    "/activity"
+  ],
+  "components": [
+    "Dashboard",
+    "UserController",
+    "UserForm",
+    "Activity"
+  ],
+  "http_calls": [
+    "/api/users",
+    "/api/dashboard"
+  ],
+  "features": [
+    "list_users",
+    "create_user",
+    "edit_user",
+    "delete_user",
+    "search_filter",
+    "role_filter",
+    "status_filter",
+    "pagination",
+    "sort_columns",
+    "activity_log",
+    "dashboard_stats",
+    "bar_chart",
+    "form_validation",
+    "confirm_modal",
+    "toast_notifications"
+  ]
+}

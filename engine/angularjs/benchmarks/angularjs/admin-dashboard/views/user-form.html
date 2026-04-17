@@ -1,0 +1,91 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ ufc.isEdit ? 'Edit User' : 'New User' }}</h1>
+    <p class="page-sub">{{ ufc.isEdit ? 'Update account details below.' : 'Fill in the details to create a new account.' }}</p>
+  </div>
+  <a href="#/users" class="btn btn-ghost">← Back</a>
+</div>
+
+<!-- Loading skeleton (edit mode only) -->
+<div class="card form-card" ng-if="ufc.loading">
+  <div ng-repeat="i in [1,2,3,4]" style="margin-bottom:20px">
+    <div class="skel-block" style="width:100px;height:13px;margin-bottom:8px"></div>
+    <div class="skel-block" style="width:100%;height:40px;border-radius:8px"></div>
+  </div>
+</div>
+
+<div class="card form-card" ng-if="!ufc.loading">
+
+  <div class="server-error" ng-if="ufc.errors.server">
+    {{ ufc.errors.server }}
+  </div>
+
+  <form novalidate ng-submit="ufc.submit()">
+
+    <!-- Name -->
+    <div class="form-group" ng-class="{'has-error': ufc.errors.name}">
+      <label class="form-label" for="f-name">Full name <span class="required">*</span></label>
+      <input
+        id="f-name"
+        type="text"
+        class="form-input"
+        placeholder="e.g. Alice Nguyen"
+        ng-model="ufc.user.name"
+        ng-change="ufc.errors.name = null"
+        autocomplete="off">
+      <span class="form-error" ng-if="ufc.errors.name">{{ ufc.errors.name }}</span>
+    </div>
+
+    <!-- Email -->
+    <div class="form-group" ng-class="{'has-error': ufc.errors.email}">
+      <label class="form-label" for="f-email">Email address <span class="required">*</span></label>
+      <input
+        id="f-email"
+        type="email"
+        class="form-input"
+        placeholder="alice@corp.io"
+        ng-model="ufc.user.email"
+        ng-change="ufc.errors.email = null"
+        autocomplete="off">
+      <span class="form-error" ng-if="ufc.errors.email">{{ ufc.errors.email }}</span>
+    </div>
+
+    <!-- Role + Status in a row -->
+    <div class="form-row">
+      <div class="form-group" ng-class="{'has-error': ufc.errors.role}">
+        <label class="form-label" for="f-role">Role <span class="required">*</span></label>
+        <select id="f-role" class="form-input" ng-model="ufc.user.role"
+                ng-change="ufc.errors.role = null">
+          <option value="">Select role…</option>
+          <option ng-repeat="r in ufc.roles" ng-value="r">{{ r }}</option>
+        </select>
+        <span class="form-error" ng-if="ufc.errors.role">{{ ufc.errors.role }}</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="f-status">Status</label>
+        <select id="f-status" class="form-input" ng-model="ufc.user.status">
+          <option ng-repeat="s in ufc.statuses" ng-value="s">{{ s | titleCase }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Role hint -->
+    <div class="role-hint" ng-if="ufc.user.role">
+      <strong>{{ ufc.user.role }}</strong>:
+      <span ng-if="ufc.user.role === 'Admin'">Full access — can manage users and settings.</span>
+      <span ng-if="ufc.user.role === 'Editor'">Can create and edit content, but cannot manage users.</span>
+      <span ng-if="ufc.user.role === 'Viewer'">Read-only access to dashboards and reports.</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" ng-click="ufc.cancel()">Cancel</button>
+      <button type="submit" class="btn btn-primary" ng-disabled="ufc.saving">
+        <span ng-if="!ufc.saving">{{ ufc.isEdit ? 'Save changes' : 'Create user' }}</span>
+        <span ng-if="ufc.saving">Saving…</span>
+      </button>
+    </div>
+
+  </form>
+</div>

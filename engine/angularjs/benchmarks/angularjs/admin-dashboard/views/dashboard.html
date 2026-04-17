@@ -1,0 +1,157 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-sub">Welcome back — here's what's happening.</p>
+  </div>
+  <a href="#/users/new" class="btn btn-primary">+ New User</a>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid" ng-if="dash.stats">
+  <div class="stat-card">
+    <div class="stat-icon stat-icon--blue">◎</div>
+    <div class="stat-body">
+      <div class="stat-value">{{ dash.stats.totalUsers }}</div>
+      <div class="stat-label">Total Users</div>
+      <div class="stat-delta positive">{{ dash.stats.growthRate }} this month</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon--green">◉</div>
+    <div class="stat-body">
+      <div class="stat-value">{{ dash.stats.activeUsers }}</div>
+      <div class="stat-label">Active Users</div>
+      <div class="stat-delta">{{ dash.stats.activeUsers | pluralize:'account':'accounts' }} online</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon--amber">⌚</div>
+    <div class="stat-body">
+      <div class="stat-value">{{ dash.stats.avgSessionMin }}m</div>
+      <div class="stat-label">Avg. Session</div>
+      <div class="stat-delta">per active user</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon--purple">▲</div>
+    <div class="stat-body">
+      <div class="stat-value">{{ dash.stats.uptimePct }}%</div>
+      <div class="stat-label">Uptime</div>
+      <div class="stat-delta positive">All systems nominal</div>
+    </div>
+  </div>
+</div>
+
+<!-- Skeleton loader for stats -->
+<div class="stats-grid" ng-if="!dash.stats">
+  <div class="stat-card skeleton" ng-repeat="i in [1,2,3,4]">
+    <div class="skel-block" style="width:44px;height:44px;border-radius:10px"></div>
+    <div class="stat-body">
+      <div class="skel-block" style="width:60px;height:28px;margin-bottom:6px"></div>
+      <div class="skel-block" style="width:90px;height:14px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart + Breakdown -->
+<div class="two-col">
+
+  <!-- Bar chart -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Login activity</span>
+      <span class="card-sub">Last 9 months</span>
+    </div>
+    <div class="chart-wrap" ng-if="!dash.loading">
+      <div class="chart-legend">
+        <span class="legend-dot legend-dot--blue"></span> Logins &nbsp;
+        <span class="legend-dot legend-dot--purple"></span> Sign-ups
+      </div>
+      <div class="bar-chart-scroll">
+        <svg ng-attr-width="{{ dash.chartW }}" ng-attr-height="{{ dash.chartH + 24 }}" class="bar-svg">
+          <g ng-repeat="b in dash.chartBars track by $index">
+            <!-- Login bar -->
+            <rect
+              ng-attr-x="{{ b.x }}"
+              ng-attr-y="{{ b.loginY }}"
+              ng-attr-width="{{ dash.barW }}"
+              ng-attr-height="{{ b.loginH }}"
+              rx="4"
+              class="bar bar-login"
+              ng-attr-title="{{ b.logins }} logins">
+            </rect>
+            <!-- Signup bar (overlay, thinner) -->
+            <rect
+              ng-attr-x="{{ b.x + dash.barW/4 }}"
+              ng-attr-y="{{ b.signupY }}"
+              ng-attr-width="{{ dash.barW/2 }}"
+              ng-attr-height="{{ b.signupH }}"
+              rx="2"
+              class="bar bar-signup"
+              ng-attr-title="{{ b.signups }} sign-ups">
+            </rect>
+            <!-- Month label -->
+            <text
+              ng-attr-x="{{ b.x + dash.barW/2 }}"
+              ng-attr-y="{{ dash.chartH + 18 }}"
+              text-anchor="middle"
+              class="chart-label">{{ b.month }}</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="chart-skel" ng-if="dash.loading">
+      <div class="skel-block" style="width:100%;height:120px;border-radius:8px"></div>
+    </div>
+  </div>
+
+  <!-- User breakdown -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">User breakdown</span>
+    </div>
+    <div ng-if="dash.stats">
+      <div class="breakdown-row" ng-repeat="item in [
+        {label:'Active',   key:'activeUsers',   cls:'bar-fill--green'},
+        {label:'Inactive', key:'inactiveUsers', cls:'bar-fill--gray'},
+        {label:'Pending',  key:'pendingUsers',  cls:'bar-fill--amber'}
+      ]">
+        <span class="breakdown-label">{{ item.label }}</span>
+        <div class="breakdown-bar-bg">
+          <div class="breakdown-bar-fill {{ item.cls }}"
+               ng-style="{ width: dash.getStatusBarWidth(item.key) }"></div>
+        </div>
+        <span class="breakdown-count">{{ dash.stats[item.key] }}</span>
+      </div>
+
+      <div class="breakdown-row" style="margin-top:20px">
+        <span class="breakdown-label">Admins</span>
+        <div class="breakdown-bar-bg">
+          <div class="breakdown-bar-fill bar-fill--blue"
+               ng-style="{ width: dash.getStatusBarWidth('adminCount') }"></div>
+        </div>
+        <span class="breakdown-count">{{ dash.stats.adminCount }}</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Recent Activity -->
+<div class="card" ng-if="dash.activity.length">
+  <div class="card-header">
+    <span class="card-title">Recent activity</span>
+    <a href="#/activity" class="card-link">View all →</a>
+  </div>
+  <div class="activity-list">
+    <div class="activity-item" ng-repeat="e in dash.activity">
+      <div class="activity-dot activity-dot--{{ e.color }}">{{ e.icon === 'login' ? '→' : e.icon === 'create' ? '+' : e.icon === 'delete' ? '✕' : '✎' }}</div>
+      <div class="activity-body">
+        <span class="activity-user">{{ e.user }}</span>
+        <span class="activity-action">{{ e.action }}</span>
+        <span class="activity-target" ng-if="e.target">{{ e.target }}</span>
+      </div>
+      <div class="activity-time">{{ e.time }}</div>
+    </div>
+  </div>
+</div>

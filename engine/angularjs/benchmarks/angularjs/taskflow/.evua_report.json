@@ -1,0 +1,1766 @@
+{
+  "angular_workspace": "out/angular-app",
+  "controllers": [
+    {
+      "id": "0319da6c-8f8e-4a52-ab61-d9ab36effafd",
+      "name": "ProfileCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js"
+    },
+    {
+      "id": "498d429f-88bf-439f-b43a-fe216be5e7f3",
+      "name": "TeamCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js"
+    },
+    {
+      "id": "e2679b00-17fb-4a1e-b807-200725c9ca60",
+      "name": "TaskDetailCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js"
+    },
+    {
+      "id": "c8c296c8-bb59-4de0-b05f-c92e53f8d182",
+      "name": "TaskBoardCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js"
+    },
+    {
+      "id": "c448b20e-236d-433e-aabf-06e7a54be095",
+      "name": "ProjectDetailCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js"
+    },
+    {
+      "id": "e7ab47bd-91e1-49cf-875a-ff441623a408",
+      "name": "ProjectFormCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js"
+    },
+    {
+      "id": "d77e2c45-c0fc-43cf-888b-d4185ab04c30",
+      "name": "ProjectListCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js"
+    },
+    {
+      "id": "18757c4a-d748-43db-8a48-e665cc3a32b0",
+      "name": "DashboardCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js"
+    },
+    {
+      "id": "10ce33db-fc20-49e9-8f1e-d0cc283d4411",
+      "name": "AuthCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js"
+    },
+    {
+      "id": "7daf9455-0821-434c-a57a-196aed22b2bf",
+      "name": "AppCtrl",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js"
+    },
+    {
+      "id": "4491b445-cb22-4935-97dc-319d0b4eb1f6",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "e8d1f122-ed4d-4a01-a0e0-848c645f5eb4",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "33bcecaa-c959-4063-b3a1-43545d963ee8",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "7917c572-1564-4ca7-b1ae-60a1887363cd",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "a779a38f-3993-49d3-bff1-86e6b48c3551",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "33b64078-4780-4375-95b2-d32ef1414b2a",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "0ea332e9-d98b-4eaf-8c85-9a400b230b6e",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "0744f5b0-7246-431f-8925-ac5bca8596c7",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "627d3efb-96f0-42a2-a9d4-7c6ada81654d",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "d678d70b-b198-45c8-9d7a-ce1551ede677",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "44ea8cbe-48d7-403e-9982-bf31995f94cd",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "fc5fb6c2-34f7-49d7-945e-a61abaa10ae3",
+      "name": "StorageService",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js"
+    },
+    {
+      "id": "5908cb78-2d3c-4dd1-bd43-1757052cdfc5",
+      "name": "NotificationService",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js"
+    },
+    {
+      "id": "5bf2a86d-f748-4405-928d-e2f607135d2b",
+      "name": "StatsService",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js"
+    },
+    {
+      "id": "a9ca2ebd-4690-4bd6-b0b4-36e3cf95bb44",
+      "name": "UserService",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js"
+    },
+    {
+      "id": "7342ac20-01c0-4495-85cf-c6cd95ae7683",
+      "name": "TaskService",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js"
+    },
+    {
+      "id": "0267d757-3077-4b5c-839b-ca7967a8e9b0",
+      "name": "ProjectService",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js"
+    },
+    {
+      "id": "e7e34ab7-2511-4cad-acf8-0b186a84039a",
+      "name": "AuthService",
+      "file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js"
+    },
+    {
+      "id": "12245531-29b8-4d0e-9ec3-ef2f9f05a552",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "b5b5e205-7b77-4de0-80d5-22e49f6c5d0d",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "5f475ea3-a051-4d46-bf8a-c3d65c39f132",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "010686e6-e3c6-4f2a-9558-e842f3e85e9d",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "7a061a81-d668-4fff-b5c7-f7e2ccfb24f0",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "8260ff9c-9240-494f-a17c-ec6e35b4b69c",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "c94fcc4e-d75e-4732-8f3e-040e5ee9801c",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "00cd5175-a4f6-450d-8648-36dd415c1434",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "e1f2bb9f-f27f-4416-a4f8-fa11cc9f2576",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "597199b8-dc62-4f35-8517-4a425dc41039",
+      "name": "unknown",
+      "file": "unknown"
+    },
+    {
+      "id": "77aeafd4-db18-4a73-94f6-e6e110ffdb27",
+      "name": "unknown",
+      "file": "unknown"
+    }
+  ],
+  "changes": [
+    {
+      "before_id": "routing_module",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "angular_routing_module",
+      "reason": "Angular Router configured written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\app-routing.module.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "extra_projects.resolver.ts",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "generated_projects.resolver.ts",
+      "reason": "Generated C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\projects.resolver.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "extra_stats.resolver.ts",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "generated_stats.resolver.ts",
+      "reason": "Generated C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\stats.resolver.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "extra_project.resolver.ts",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "generated_project.resolver.ts",
+      "reason": "Generated C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\project.resolver.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "extra_tasks.resolver.ts",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "generated_tasks.resolver.ts",
+      "reason": "Generated C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tasks.resolver.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "0319da6c-8f8e-4a52-ab61-d9ab36effafd",
+      "before_name": "ProfileCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "component_0319da6c-8f8e-4a52-ab61-d9ab36effafd",
+      "reason": "Controller -> Angular Component written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\profile.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "Deep $watch detected (high behavioral coupling risk)",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "0319da6c-8f8e-4a52-ab61-d9ab36effafd_html",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_html_0319da6c-8f8e-4a52-ab61-d9ab36effafd",
+      "reason": "Component template written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\profile.component.html",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "498d429f-88bf-439f-b43a-fe216be5e7f3",
+      "before_name": "TeamCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "component_498d429f-88bf-439f-b43a-fe216be5e7f3",
+      "reason": "Controller -> Angular Component written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\team.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "Shallow $watch → safe RxJS BehaviorSubject rewrite",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "498d429f-88bf-439f-b43a-fe216be5e7f3_html",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_html_498d429f-88bf-439f-b43a-fe216be5e7f3",
+      "reason": "Component template written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\team.component.html",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "e2679b00-17fb-4a1e-b807-200725c9ca60",
+      "before_name": "TaskDetailCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "component_e2679b00-17fb-4a1e-b807-200725c9ca60",
+      "reason": "Controller -> Angular Component written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\taskdetail.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "e2679b00-17fb-4a1e-b807-200725c9ca60_html",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_html_e2679b00-17fb-4a1e-b807-200725c9ca60",
+      "reason": "Component template written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\taskdetail.component.html",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "c8c296c8-bb59-4de0-b05f-c92e53f8d182",
+      "before_name": "TaskBoardCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "component_c8c296c8-bb59-4de0-b05f-c92e53f8d182",
+      "reason": "Controller -> Angular Component written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\taskboard.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "Shallow $watch → safe RxJS BehaviorSubject rewrite",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "c8c296c8-bb59-4de0-b05f-c92e53f8d182_html",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_html_c8c296c8-bb59-4de0-b05f-c92e53f8d182",
+      "reason": "Component template written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\taskboard.component.html",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "c448b20e-236d-433e-aabf-06e7a54be095",
+      "before_name": "ProjectDetailCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "component_c448b20e-236d-433e-aabf-06e7a54be095",
+      "reason": "Controller -> Angular Component written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\projectdetail.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "c448b20e-236d-433e-aabf-06e7a54be095_html",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_html_c448b20e-236d-433e-aabf-06e7a54be095",
+      "reason": "Component template written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\projectdetail.component.html",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "e7ab47bd-91e1-49cf-875a-ff441623a408",
+      "before_name": "ProjectFormCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "component_e7ab47bd-91e1-49cf-875a-ff441623a408",
+      "reason": "Controller -> Angular Component written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\projectform.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "e7ab47bd-91e1-49cf-875a-ff441623a408_html",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_html_e7ab47bd-91e1-49cf-875a-ff441623a408",
+      "reason": "Component template written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\projectform.component.html",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "d77e2c45-c0fc-43cf-888b-d4185ab04c30",
+      "before_name": "ProjectListCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "component_d77e2c45-c0fc-43cf-888b-d4185ab04c30",
+      "reason": "Controller -> Angular Component written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\projectlist.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "d77e2c45-c0fc-43cf-888b-d4185ab04c30_html",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_html_d77e2c45-c0fc-43cf-888b-d4185ab04c30",
+      "reason": "Component template written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\projectlist.component.html",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "18757c4a-d748-43db-8a48-e665cc3a32b0",
+      "before_name": "DashboardCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "component_18757c4a-d748-43db-8a48-e665cc3a32b0",
+      "reason": "Controller -> Angular Component written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\dashboard.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "Shallow $watch → safe RxJS BehaviorSubject rewrite",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "18757c4a-d748-43db-8a48-e665cc3a32b0_html",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_html_18757c4a-d748-43db-8a48-e665cc3a32b0",
+      "reason": "Component template written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\dashboard.component.html",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "10ce33db-fc20-49e9-8f1e-d0cc283d4411",
+      "before_name": "AuthCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "component_10ce33db-fc20-49e9-8f1e-d0cc283d4411",
+      "reason": "Controller -> Angular Component written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\auth.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "10ce33db-fc20-49e9-8f1e-d0cc283d4411_html",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_html_10ce33db-fc20-49e9-8f1e-d0cc283d4411",
+      "reason": "Component template written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\auth.component.html",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "7daf9455-0821-434c-a57a-196aed22b2bf",
+      "before_name": "AppCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "component_7daf9455-0821-434c-a57a-196aed22b2bf",
+      "reason": "Controller -> Angular Component written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\app.component.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "7daf9455-0821-434c-a57a-196aed22b2bf_html",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_html_7daf9455-0821-434c-a57a-196aed22b2bf",
+      "reason": "Component template written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\app.component.html",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "fc5fb6c2-34f7-49d7-945e-a61abaa10ae3",
+      "before_name": "StorageService",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js",
+      "after_id": "injectable_fc5fb6c2-34f7-49d7-945e-a61abaa10ae3",
+      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\storageservice.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "5908cb78-2d3c-4dd1-bd43-1757052cdfc5",
+      "before_name": "NotificationService",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js",
+      "after_id": "injectable_5908cb78-2d3c-4dd1-bd43-1757052cdfc5",
+      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\notificationservice.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "5bf2a86d-f748-4405-928d-e2f607135d2b",
+      "before_name": "StatsService",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js",
+      "after_id": "injectable_5bf2a86d-f748-4405-928d-e2f607135d2b",
+      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\statsservice.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "a9ca2ebd-4690-4bd6-b0b4-36e3cf95bb44",
+      "before_name": "UserService",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js",
+      "after_id": "injectable_a9ca2ebd-4690-4bd6-b0b4-36e3cf95bb44",
+      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\userservice.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "7342ac20-01c0-4495-85cf-c6cd95ae7683",
+      "before_name": "TaskService",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js",
+      "after_id": "injectable_7342ac20-01c0-4495-85cf-c6cd95ae7683",
+      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\taskservice.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "0267d757-3077-4b5c-839b-ca7967a8e9b0",
+      "before_name": "ProjectService",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js",
+      "after_id": "injectable_0267d757-3077-4b5c-839b-ca7967a8e9b0",
+      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\projectservice.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "e7e34ab7-2511-4cad-acf8-0b186a84039a",
+      "before_name": "AuthService",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\services.js",
+      "after_id": "injectable_e7e34ab7-2511-4cad-acf8-0b186a84039a",
+      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\authservice.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "4491b445-cb22-4935-97dc-319d0b4eb1f6",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_stats_get",
+      "reason": "$http.get(/api/stats/summary) -> HttpClient.get() migrated into C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\stats.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "e8d1f122-ed4d-4a01-a0e0-848c645f5eb4",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_stats_get",
+      "reason": "$http.get(None) -> HttpClient.get() migrated into C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\stats.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "33bcecaa-c959-4063-b3a1-43545d963ee8",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_stats_get",
+      "reason": "$http.get(/api/stats/activity) -> HttpClient.get() migrated into C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\stats.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "7917c572-1564-4ca7-b1ae-60a1887363cd",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_user_get",
+      "reason": "$http.get(/api/users) -> HttpClient.get() migrated into C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\user.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "a779a38f-3993-49d3-bff1-86e6b48c3551",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_user_put",
+      "reason": "$http.put(None) -> HttpClient.put() migrated into C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\user.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "33b64078-4780-4375-95b2-d32ef1414b2a",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_user_post",
+      "reason": "$http.post(None) -> HttpClient.post() migrated into C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\user.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "0ea332e9-d98b-4eaf-8c85-9a400b230b6e",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_user_get",
+      "reason": "$http.get(/api/users/search) -> HttpClient.get() migrated into C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\user.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "0744f5b0-7246-431f-8925-ac5bca8596c7",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_task_delete",
+      "reason": "$http.delete(None) -> HttpClient.delete() migrated into C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\task.service.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "627d3efb-96f0-42a2-a9d4-7c6ada81654d",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_auth_post_inlined",
+      "reason": "$http.post(/api/auth/login) inside AuthService.login() inlined directly by ControllerToComponentRule — no separate fetch method generated",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "d678d70b-b198-45c8-9d7a-ce1551ede677",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_auth_post_inlined",
+      "reason": "$http.post(/api/auth/logout) inside AuthService.logout() inlined directly by ControllerToComponentRule — no separate fetch method generated",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "44ea8cbe-48d7-403e-9982-bf31995f94cd",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "httpclient_auth_get_inlined",
+      "reason": "$http.get(/api/auth/me) inside AuthService.restoreSession() inlined directly by ControllerToComponentRule — no separate fetch method generated",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "498d429f-88bf-439f-b43a-fe216be5e7f3",
+      "before_name": "TeamCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "rx_498d429f-88bf-439f-b43a-fe216be5e7f3",
+      "reason": "Shallow $watch → RxJS BehaviorSubject rewrite",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "Shallow $watch → safe RxJS BehaviorSubject rewrite",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "c8c296c8-bb59-4de0-b05f-c92e53f8d182",
+      "before_name": "TaskBoardCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "rx_c8c296c8-bb59-4de0-b05f-c92e53f8d182",
+      "reason": "Shallow $watch → RxJS BehaviorSubject rewrite",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "Shallow $watch → safe RxJS BehaviorSubject rewrite",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "d77e2c45-c0fc-43cf-888b-d4185ab04c30",
+      "before_name": "ProjectListCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "rx_d77e2c45-c0fc-43cf-888b-d4185ab04c30",
+      "reason": "Shallow $watch → RxJS BehaviorSubject rewrite",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "18757c4a-d748-43db-8a48-e665cc3a32b0",
+      "before_name": "DashboardCtrl",
+      "source_file": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\controllers.js",
+      "after_id": "rx_18757c4a-d748-43db-8a48-e665cc3a32b0",
+      "reason": "Shallow $watch → RxJS BehaviorSubject rewrite",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "Shallow $watch → safe RxJS BehaviorSubject rewrite",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "component_interaction_scan",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_interaction_scan_done",
+      "reason": "ComponentInteractionRule ran — no relationships detected in stub templates",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfNotifications",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_tfnotifications",
+      "reason": "AngularJS directive 'tfNotifications' (restrict=E) → Angular @Component stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfDatepicker",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_tfdatepicker",
+      "reason": "AngularJS directive 'tfDatepicker' (restrict=A) → Angular @Directive stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfTooltip",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_tftooltip",
+      "reason": "AngularJS directive 'tfTooltip' (restrict=A) → Angular @Directive stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfClickOutside",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_tfclickoutside",
+      "reason": "AngularJS directive 'tfClickOutside' (restrict=A) → Angular @Directive stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfInfiniteScroll",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_tfinfinitescroll",
+      "reason": "AngularJS directive 'tfInfiniteScroll' (restrict=A) → Angular @Directive stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfTaskCard",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_tftaskcard",
+      "reason": "AngularJS directive 'tfTaskCard' (restrict=E) → Angular @Component stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfAvatar",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_tfavatar",
+      "reason": "AngularJS directive 'tfAvatar' (restrict=E) → Angular @Component stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfProgressBar",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_tfprogressbar",
+      "reason": "AngularJS directive 'tfProgressBar' (restrict=E) → Angular @Component stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfConfirmClick",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_tfconfirmclick",
+      "reason": "AngularJS directive 'tfConfirmClick' (restrict=A) → Angular @Directive stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfAutofocus",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_tfautofocus",
+      "reason": "AngularJS directive 'tfAutofocus' (restrict=A) → Angular @Directive stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "directive_tfPriorityBadge",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "component_tfprioritybadge",
+      "reason": "AngularJS directive 'tfPriorityBadge' (restrict=E) → Angular @Component stub",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "filter_highlight",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "pipe_highlight",
+      "reason": "AngularJS filter 'highlight' → Angular @Pipe stub at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\highlight.pipe.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "filter_countByStatus",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "pipe_countbystatus",
+      "reason": "AngularJS filter 'countByStatus' → Angular @Pipe stub at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\countbystatus.pipe.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "filter_fileSize",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "pipe_filesize",
+      "reason": "AngularJS filter 'fileSize' → Angular @Pipe stub at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\filesize.pipe.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "filter_priorityOrder",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "pipe_priorityorder",
+      "reason": "AngularJS filter 'priorityOrder' → Angular @Pipe stub at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\priorityorder.pipe.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "filter_statusLabel",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "pipe_statuslabel",
+      "reason": "AngularJS filter 'statusLabel' → Angular @Pipe stub at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\statuslabel.pipe.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "filter_timeAgo",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "pipe_timeago",
+      "reason": "AngularJS filter 'timeAgo' → Angular @Pipe stub at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\timeago.pipe.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "filter_truncate",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "pipe_truncate",
+      "reason": "AngularJS filter 'truncate' → Angular @Pipe stub at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\truncate.pipe.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "filter_capitalize",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "pipe_capitalize",
+      "reason": "AngularJS filter 'capitalize' → Angular @Pipe stub at C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\capitalize.pipe.ts",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "run_block_stub",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "app_init_service_ts",
+      "reason": "Generated app-init.service.ts from 1 .run() block(s)",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "app_module_stub",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "app_module_updated",
+      "reason": "app.module.ts updated with 20 components, 8 services, 0 guards, 4 resolvers, 8 pipes",
+      "output_path": null,
+      "risk": "RiskLevel.SAFE",
+      "risk_reason": "No risky watcher behavior detected",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "12245531-29b8-4d0e-9ec3-ef2f9f05a552",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_12245531-29b8-4d0e-9ec3-ef2f9f05a552",
+      "reason": "AngularJS directive 'tfNotifications' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tfnotifications.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "b5b5e205-7b77-4de0-80d5-22e49f6c5d0d",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_b5b5e205-7b77-4de0-80d5-22e49f6c5d0d",
+      "reason": "AngularJS directive 'tfDatepicker' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tfdatepicker.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive [link()] — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "5f475ea3-a051-4d46-bf8a-c3d65c39f132",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_5f475ea3-a051-4d46-bf8a-c3d65c39f132",
+      "reason": "AngularJS directive 'tfTooltip' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tftooltip.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive [link()] — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "010686e6-e3c6-4f2a-9558-e842f3e85e9d",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_010686e6-e3c6-4f2a-9558-e842f3e85e9d",
+      "reason": "AngularJS directive 'tfClickOutside' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tfclickoutside.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive [link()] — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "7a061a81-d668-4fff-b5c7-f7e2ccfb24f0",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_7a061a81-d668-4fff-b5c7-f7e2ccfb24f0",
+      "reason": "AngularJS directive 'tfInfiniteScroll' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tfinfinitescroll.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive [link()] — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "8260ff9c-9240-494f-a17c-ec6e35b4b69c",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_8260ff9c-9240-494f-a17c-ec6e35b4b69c",
+      "reason": "AngularJS directive 'tfTaskCard' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tftaskcard.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive [link(), transclude] — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "c94fcc4e-d75e-4732-8f3e-040e5ee9801c",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_c94fcc4e-d75e-4732-8f3e-040e5ee9801c",
+      "reason": "AngularJS directive 'tfAvatar' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tfavatar.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive [link()] — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "00cd5175-a4f6-450d-8648-36dd415c1434",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_00cd5175-a4f6-450d-8648-36dd415c1434",
+      "reason": "AngularJS directive 'tfProgressBar' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tfprogressbar.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive [link()] — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "e1f2bb9f-f27f-4416-a4f8-fa11cc9f2576",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_e1f2bb9f-f27f-4416-a4f8-fa11cc9f2576",
+      "reason": "AngularJS directive 'tfConfirmClick' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tfconfirmclick.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive [link()] — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "597199b8-dc62-4f35-8517-4a425dc41039",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_597199b8-dc62-4f35-8517-4a425dc41039",
+      "reason": "AngularJS directive 'tfAutofocus' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tfautofocus.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive [link()] — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    },
+    {
+      "before_id": "77aeafd4-db18-4a73-94f6-e6e110ffdb27",
+      "before_name": "unknown",
+      "source_file": "unknown",
+      "after_id": "directive_77aeafd4-db18-4a73-94f6-e6e110ffdb27",
+      "reason": "AngularJS directive 'tfPriorityBadge' requires manual migration written to C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\src\\app\\tfprioritybadge.directive-stub.ts",
+      "output_path": null,
+      "risk": "RiskLevel.MANUAL",
+      "risk_reason": "AngularJS directive [link()] — no deterministic Angular migration. Manually convert to @Component or @Directive.",
+      "build_passed": false,
+      "snapshot_passed": false,
+      "tsc_passed": null
+    }
+  ],
+  "validation": {
+    "tests_passed": false,
+    "snapshot_passed": false,
+    "tsc_passed": false,
+    "tsc_errors": [
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 27,
+        "col": 11,
+        "code": "TS2304",
+        "message": "Cannot find name '_token'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 28,
+        "col": 19,
+        "code": "TS2304",
+        "message": "Cannot find name '_currentUser'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 29,
+        "col": 58,
+        "code": "TS2304",
+        "message": "Cannot find name '_token'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 30,
+        "col": 19,
+        "code": "TS2304",
+        "message": "Cannot find name '$rootScope'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 30,
+        "col": 44,
+        "code": "TS2304",
+        "message": "Cannot find name '_currentUser'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 31,
+        "col": 19,
+        "code": "TS2304",
+        "message": "Cannot find name '$rootScope'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 31,
+        "col": 55,
+        "code": "TS2304",
+        "message": "Cannot find name '_currentUser'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 32,
+        "col": 26,
+        "code": "TS2304",
+        "message": "Cannot find name '_currentUser'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 38,
+        "col": 22,
+        "code": "TS2554",
+        "message": "Expected 2-3 arguments, but got 1.",
+        "category": "other"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 44,
+        "col": 20,
+        "code": "TS2345",
+        "message": "Argument of type '(err: any) => null' is not assignable to parameter of type '(err: any, caught: Observable<Object>) => ObservableInput<any>'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 46,
+        "col": 11,
+        "code": "TS2304",
+        "message": "Cannot find name '_token'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/dashboard.component.ts",
+        "line": 3,
+        "col": 26,
+        "code": "TS2307",
+        "message": "Cannot find module './projects.service' or its corresponding type declarations.",
+        "category": "missing_import"
+      },
+      {
+        "file": "src/app/dashboard.component.ts",
+        "line": 4,
+        "col": 23,
+        "code": "TS2307",
+        "message": "Cannot find module './stats.service' or its corresponding type declarations.",
+        "category": "missing_import"
+      },
+      {
+        "file": "src/app/projectdetail.component.ts",
+        "line": 4,
+        "col": 25,
+        "code": "TS2307",
+        "message": "Cannot find module './project.service' or its corresponding type declarations.",
+        "category": "missing_import"
+      },
+      {
+        "file": "src/app/taskboard.component.ts",
+        "line": 3,
+        "col": 25,
+        "code": "TS2307",
+        "message": "Cannot find module './project.service' or its corresponding type declarations.",
+        "category": "missing_import"
+      },
+      {
+        "file": "src/app/taskboard.component.ts",
+        "line": 4,
+        "col": 23,
+        "code": "TS2307",
+        "message": "Cannot find module './tasks.service' or its corresponding type declarations.",
+        "category": "missing_import"
+      }
+    ],
+    "failures": [
+      "Tests failed",
+      "Snapshot file(s) missing: C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\snapshots\\before.json, C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\benchmarks\\angularjs\\taskflow\\snapshots\\after.json",
+      "TypeScript: 16 error(s)"
+    ],
+    "tsc_summary": "16 error(s): 5 missing_import, 1 other, 10 structural",
+    "tsc_found": true
+  },
+  "tsc_validation": {
+    "passed": false,
+    "tsc_found": true,
+    "tsconfig": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\engine\\out\\.tmp_8e4f27b1\\angular-app\\tsconfig.app.json",
+    "error_count": 16,
+    "error_summary": "16 error(s): 5 missing_import, 1 other, 10 structural",
+    "tsc_command": "tsc.cmd",
+    "errors_by_category": {
+      "structural": [
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 27,
+          "col": 11,
+          "code": "TS2304",
+          "message": "Cannot find name '_token'.",
+          "category": "structural"
+        },
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 28,
+          "col": 19,
+          "code": "TS2304",
+          "message": "Cannot find name '_currentUser'.",
+          "category": "structural"
+        },
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 29,
+          "col": 58,
+          "code": "TS2304",
+          "message": "Cannot find name '_token'.",
+          "category": "structural"
+        },
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 30,
+          "col": 19,
+          "code": "TS2304",
+          "message": "Cannot find name '$rootScope'.",
+          "category": "structural"
+        },
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 30,
+          "col": 44,
+          "code": "TS2304",
+          "message": "Cannot find name '_currentUser'.",
+          "category": "structural"
+        },
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 31,
+          "col": 19,
+          "code": "TS2304",
+          "message": "Cannot find name '$rootScope'.",
+          "category": "structural"
+        },
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 31,
+          "col": 55,
+          "code": "TS2304",
+          "message": "Cannot find name '_currentUser'.",
+          "category": "structural"
+        },
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 32,
+          "col": 26,
+          "code": "TS2304",
+          "message": "Cannot find name '_currentUser'.",
+          "category": "structural"
+        },
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 44,
+          "col": 20,
+          "code": "TS2345",
+          "message": "Argument of type '(err: any) => null' is not assignable to parameter of type '(err: any, caught: Observable<Object>) => ObservableInput<any>'.",
+          "category": "structural"
+        },
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 46,
+          "col": 11,
+          "code": "TS2304",
+          "message": "Cannot find name '_token'.",
+          "category": "structural"
+        }
+      ],
+      "other": [
+        {
+          "file": "src/app/authservice.service.ts",
+          "line": 38,
+          "col": 22,
+          "code": "TS2554",
+          "message": "Expected 2-3 arguments, but got 1.",
+          "category": "other"
+        }
+      ],
+      "missing_import": [
+        {
+          "file": "src/app/dashboard.component.ts",
+          "line": 3,
+          "col": 26,
+          "code": "TS2307",
+          "message": "Cannot find module './projects.service' or its corresponding type declarations.",
+          "category": "missing_import"
+        },
+        {
+          "file": "src/app/dashboard.component.ts",
+          "line": 4,
+          "col": 23,
+          "code": "TS2307",
+          "message": "Cannot find module './stats.service' or its corresponding type declarations.",
+          "category": "missing_import"
+        },
+        {
+          "file": "src/app/projectdetail.component.ts",
+          "line": 4,
+          "col": 25,
+          "code": "TS2307",
+          "message": "Cannot find module './project.service' or its corresponding type declarations.",
+          "category": "missing_import"
+        },
+        {
+          "file": "src/app/taskboard.component.ts",
+          "line": 3,
+          "col": 25,
+          "code": "TS2307",
+          "message": "Cannot find module './project.service' or its corresponding type declarations.",
+          "category": "missing_import"
+        },
+        {
+          "file": "src/app/taskboard.component.ts",
+          "line": 4,
+          "col": 23,
+          "code": "TS2307",
+          "message": "Cannot find module './tasks.service' or its corresponding type declarations.",
+          "category": "missing_import"
+        }
+      ]
+    },
+    "errors": [
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 27,
+        "col": 11,
+        "code": "TS2304",
+        "message": "Cannot find name '_token'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 28,
+        "col": 19,
+        "code": "TS2304",
+        "message": "Cannot find name '_currentUser'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 29,
+        "col": 58,
+        "code": "TS2304",
+        "message": "Cannot find name '_token'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 30,
+        "col": 19,
+        "code": "TS2304",
+        "message": "Cannot find name '$rootScope'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 30,
+        "col": 44,
+        "code": "TS2304",
+        "message": "Cannot find name '_currentUser'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 31,
+        "col": 19,
+        "code": "TS2304",
+        "message": "Cannot find name '$rootScope'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 31,
+        "col": 55,
+        "code": "TS2304",
+        "message": "Cannot find name '_currentUser'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 32,
+        "col": 26,
+        "code": "TS2304",
+        "message": "Cannot find name '_currentUser'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 38,
+        "col": 22,
+        "code": "TS2554",
+        "message": "Expected 2-3 arguments, but got 1.",
+        "category": "other"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 44,
+        "col": 20,
+        "code": "TS2345",
+        "message": "Argument of type '(err: any) => null' is not assignable to parameter of type '(err: any, caught: Observable<Object>) => ObservableInput<any>'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/authservice.service.ts",
+        "line": 46,
+        "col": 11,
+        "code": "TS2304",
+        "message": "Cannot find name '_token'.",
+        "category": "structural"
+      },
+      {
+        "file": "src/app/dashboard.component.ts",
+        "line": 3,
+        "col": 26,
+        "code": "TS2307",
+        "message": "Cannot find module './projects.service' or its corresponding type declarations.",
+        "category": "missing_import"
+      },
+      {
+        "file": "src/app/dashboard.component.ts",
+        "line": 4,
+        "col": 23,
+        "code": "TS2307",
+        "message": "Cannot find module './stats.service' or its corresponding type declarations.",
+        "category": "missing_import"
+      },
+      {
+        "file": "src/app/projectdetail.component.ts",
+        "line": 4,
+        "col": 25,
+        "code": "TS2307",
+        "message": "Cannot find module './project.service' or its corresponding type declarations.",
+        "category": "missing_import"
+      },
+      {
+        "file": "src/app/taskboard.component.ts",
+        "line": 3,
+        "col": 25,
+        "code": "TS2307",
+        "message": "Cannot find module './project.service' or its corresponding type declarations.",
+        "category": "missing_import"
+      },
+      {
+        "file": "src/app/taskboard.component.ts",
+        "line": 4,
+        "col": 23,
+        "code": "TS2307",
+        "message": "Cannot find module './tasks.service' or its corresponding type declarations.",
+        "category": "missing_import"
+      }
+    ]
+  },
+  "risk": {
+    "by_level": {
+      "SAFE": [
+        "TeamCtrl",
+        "TaskDetailCtrl",
+        "TaskBoardCtrl",
+        "ProjectDetailCtrl",
+        "ProjectFormCtrl",
+        "ProjectListCtrl",
+        "DashboardCtrl",
+        "AuthCtrl",
+        "AppCtrl",
+        "StorageService",
+        "NotificationService",
+        "StatsService",
+        "UserService",
+        "TaskService",
+        "ProjectService",
+        "AuthService"
+      ],
+      "RISKY": [],
+      "MANUAL": [
+        "ProfileCtrl",
+        "tfNotifications",
+        "tfDatepicker",
+        "tfTooltip",
+        "tfClickOutside",
+        "tfInfiniteScroll",
+        "tfTaskCard",
+        "tfAvatar",
+        "tfProgressBar",
+        "tfConfirmClick",
+        "tfAutofocus",
+        "tfPriorityBadge"
+      ]
+    }
+  },
+  "transformation": {
+    "generated_files": [
+      "app-routing.module.ts",
+      "profile.component.ts",
+      "profile.component.html",
+      "team.component.ts",
+      "team.component.html",
+      "taskdetail.component.ts",
+      "taskdetail.component.html",
+      "taskboard.component.ts",
+      "taskboard.component.html",
+      "projectdetail.component.ts",
+      "projectdetail.component.html",
+      "projectform.component.ts",
+      "projectform.component.html",
+      "projectlist.component.ts",
+      "projectlist.component.html",
+      "dashboard.component.ts",
+      "dashboard.component.html",
+      "auth.component.ts",
+      "auth.component.html",
+      "app.component.ts",
+      "app.component.html",
+      "stats.service.ts",
+      "user.service.ts",
+      "task.service.ts",
+      "tfnotifications.directive-stub.ts",
+      "tfdatepicker.directive-stub.ts",
+      "tftooltip.directive-stub.ts",
+      "tfclickoutside.directive-stub.ts",
+      "tfinfinitescroll.directive-stub.ts",
+      "tftaskcard.directive-stub.ts",
+      "tfavatar.directive-stub.ts",
+      "tfprogressbar.directive-stub.ts",
+      "tfconfirmclick.directive-stub.ts",
+      "tfautofocus.directive-stub.ts",
+      "tfprioritybadge.directive-stub.ts"
+    ],
+    "auto_modernized": [
+      "TeamCtrl",
+      "TaskDetailCtrl",
+      "TaskBoardCtrl",
+      "ProjectDetailCtrl",
+      "ProjectFormCtrl",
+      "ProjectListCtrl",
+      "DashboardCtrl",
+      "AuthCtrl",
+      "AppCtrl",
+      "StorageService",
+      "NotificationService",
+      "StatsService",
+      "UserService",
+      "TaskService",
+      "ProjectService",
+      "AuthService"
+    ],
+    "manual_required": [
+      "ProfileCtrl",
+      "tfNotifications",
+      "tfDatepicker",
+      "tfTooltip",
+      "tfClickOutside",
+      "tfInfiniteScroll",
+      "tfTaskCard",
+      "tfAvatar",
+      "tfProgressBar",
+      "tfConfirmClick",
+      "tfAutofocus",
+      "tfPriorityBadge"
+    ]
+  }
+}

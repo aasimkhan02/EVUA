@@ -1,0 +1,590 @@
+<!-- ==========================================
+     index.html - App Shell
+     ========================================== -->
+<!-- Save as: index.html -->
+<!DOCTYPE html>
+<html lang="en" ng-app="taskflow">
+<head>
+  <meta charset="UTF-8">
+  <title>TaskFlow</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body ng-controller="AppCtrl">
+
+  <!-- Global loading bar -->
+  <div class="loading-bar" ng-show="isLoading"></div>
+
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar" ng-class="{open: menuOpen}" ng-if="currentUser">
+    <div class="sidebar-header">
+      <span class="app-logo">⚡ TaskFlow</span>
+      <button class="menu-toggle" ng-click="toggleMenu()">☰</button>
+    </div>
+
+    <ul class="nav-links">
+      <li ng-class="{active: isActive('/dashboard')}">
+        <a href="#/dashboard">Dashboard</a>
+      </li>
+      <li ng-class="{active: isActive('/projects')}">
+        <a href="#/projects">Projects</a>
+      </li>
+      <li ng-class="{active: isActive('/team')}">
+        <a href="#/team">Team</a>
+      </li>
+      <li ng-class="{active: isActive('/profile')}">
+        <a href="#/profile">Profile</a>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <tf-avatar user="currentUser" size="sm"></tf-avatar>
+      <span class="user-name">{{currentUser.name}}</span>
+      <button class="btn-logout" ng-click="logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content" ng-class="{'with-sidebar': currentUser}">
+    <tf-notifications></tf-notifications>
+    <div ng-view></div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular-route.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular-animate.min.js"></script>
+  <script src="app.js"></script>
+  <script src="services.js"></script>
+  <script src="controllers.js"></script>
+  <script src="directives.js"></script>
+  <script src="filters.js"></script>
+</body>
+</html>
+
+
+<!-- ==========================================
+     views/login.html
+     ========================================== -->
+<!-- Save as: views/login.html -->
+<div class="login-page">
+  <div class="login-card">
+    <h1>⚡ TaskFlow</h1>
+    <p class="subtitle">Sign in to your workspace</p>
+
+    <div class="alert alert-error" ng-if="vm.error">{{vm.error}}</div>
+
+    <form name="loginForm" ng-submit="vm.login(loginForm)" novalidate>
+
+      <div class="form-group" ng-class="{'has-error': loginForm.email.$invalid && loginForm.email.$touched}">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email"
+               ng-model="vm.credentials.email"
+               placeholder="you@company.com"
+               required
+               tf-autofocus>
+        <span class="field-error" ng-show="loginForm.email.$error.required && loginForm.email.$touched">
+          Email is required.
+        </span>
+        <span class="field-error" ng-show="loginForm.email.$error.email && loginForm.email.$touched">
+          Please enter a valid email.
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-group">
+          <input ng-attr-type="{{vm.showPassword ? 'text' : 'password'}}"
+                 id="password" name="password"
+                 ng-model="vm.credentials.password"
+                 placeholder="••••••••"
+                 required
+                 minlength="6">
+          <button type="button" class="btn-icon" ng-click="vm.togglePassword()">
+            {{vm.showPassword ? '🙈' : '👁'}}
+          </button>
+        </div>
+        <span class="field-error" ng-show="loginForm.password.$error.required && loginForm.password.$touched">
+          Password is required.
+        </span>
+      </div>
+
+      <div class="form-group form-check">
+        <label>
+          <input type="checkbox" ng-model="vm.credentials.rememberMe">
+          Remember me
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block"
+              ng-disabled="loginForm.$invalid || vm.isLoading">
+        <span ng-if="!vm.isLoading">Sign In</span>
+        <span ng-if="vm.isLoading">Signing in…</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+
+<!-- ==========================================
+     views/dashboard.html
+     ========================================== -->
+<!-- Save as: views/dashboard.html -->
+<div class="page dashboard-page">
+  <div class="page-header">
+    <h1>Dashboard</h1>
+    <div class="header-actions">
+      <select ng-model="vm.selectedPeriod" class="select-input">
+        <option value="1day">Today</option>
+        <option value="7days">Last 7 days</option>
+        <option value="30days">Last 30 days</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{vm.stats.totalProjects}}</div>
+      <div class="stat-label">Projects</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{vm.stats.totalTasks}}</div>
+      <div class="stat-label">Total Tasks</div>
+    </div>
+    <div class="stat-card stat-card--success">
+      <div class="stat-value">{{vm.stats.completedTasks}}</div>
+      <div class="stat-label">Completed</div>
+    </div>
+    <div class="stat-card stat-card--warning">
+      <div class="stat-value">{{vm.stats.overdueTasks}}</div>
+      <div class="stat-label">Overdue</div>
+    </div>
+  </div>
+
+  <!-- Projects Overview -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Active Projects</h2>
+      <a href="#/projects/new" class="btn btn-primary btn-sm">+ New Project</a>
+    </div>
+
+    <div class="projects-grid">
+      <div class="project-card"
+           ng-repeat="project in vm.projects | filter:{status:'active'} track by project.id"
+           ng-class="{'overdue': project.isOverdue}">
+
+        <div class="project-color-bar" ng-style="{backgroundColor: project.color}"></div>
+
+        <div class="project-card-body">
+          <h3>
+            <a href="#/projects/{{project.id}}">{{project.name}}</a>
+          </h3>
+          <p class="project-desc">{{project.description | truncate:80}}</p>
+
+          <div class="project-meta">
+            <tf-priority-badge priority="{{project.priority}}"></tf-priority-badge>
+            <span class="due-date" ng-if="project.dueDate">
+              Due {{project.dueDate | date:'MMM d'}}
+            </span>
+          </div>
+
+          <tf-progress-bar
+            value="project.completedTasks"
+            max="project.totalTasks"
+            color="project.color"
+            show-label="true">
+          </tf-progress-bar>
+
+          <div class="project-footer">
+            <div class="member-stack">
+              <tf-avatar ng-repeat="member in project.members | limitTo:4 track by member.id"
+                         user="member" size="sm"
+                         tf-tooltip="{{member.name}}">
+              </tf-avatar>
+              <span ng-if="project.members.length > 4" class="member-overflow">
+                +{{project.members.length - 4}}
+              </span>
+            </div>
+            <span class="task-count">
+              {{project.completedTasks}}/{{project.totalTasks}} tasks
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ==========================================
+     views/task-board.html  (Kanban Board)
+     ========================================== -->
+<!-- Save as: views/task-board.html -->
+<div class="page task-board-page">
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a href="#/projects">Projects</a>
+      <span>/</span>
+      <a href="#/projects/{{vm.project.id}}">{{vm.project.name}}</a>
+      <span>/</span>
+      <span>Board</span>
+    </div>
+
+    <div class="board-filters">
+      <select ng-model="vm.assigneeFilter" class="select-input">
+        <option value="">All Members</option>
+        <option ng-repeat="member in vm.teamMembers track by member.id"
+                value="{{member.id}}">{{member.name}}</option>
+      </select>
+
+      <select ng-model="vm.priorityFilter" class="select-input">
+        <option value="">All Priorities</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+
+      <span class="task-total">{{vm.totalTaskCount}} tasks</span>
+    </div>
+  </div>
+
+  <!-- Kanban Columns -->
+  <div class="kanban-board">
+    <div class="kanban-column"
+         ng-repeat="column in vm.columns track by column.id">
+
+      <div class="column-header">
+        <h3>{{column.label}}</h3>
+        <span class="column-count">{{vm.getFilteredTasks(column).length}}</span>
+      </div>
+
+      <div class="column-body"
+           tf-infinite-scroll="vm.loadMore(column.id)"
+           tf-scroll-threshold="50">
+
+        <!-- Task Cards -->
+        <div class="task-card"
+             ng-repeat="task in vm.getFilteredTasks(column) | priorityOrder track by task.id"
+             ng-class="{
+               'task-overdue': task.dueDate && task.status !== 'done' && (task.dueDate | date:'yyyyMMdd') < (today | date:'yyyyMMdd'),
+               'task-priority-critical': task.priority === 'critical'
+             }">
+
+          <div class="task-priority-stripe" ng-class="'stripe-' + task.priority"></div>
+
+          <div class="task-card-content">
+            <h4>
+              <a href="#/tasks/{{task.id}}">{{task.title | truncate:60}}</a>
+            </h4>
+
+            <p ng-if="task.description && !vm.compact" class="task-desc">
+              {{task.description | truncate:100}}
+            </p>
+
+            <div class="task-tags">
+              <span class="tag" ng-repeat="tag in task.tags track by $index">{{tag}}</span>
+            </div>
+
+            <div class="task-card-footer">
+              <tf-priority-badge priority="{{task.priority}}"></tf-priority-badge>
+
+              <span class="due-date" ng-if="task.dueDate"
+                    ng-class="{'overdue': task.dueDate < today}">
+                📅 {{task.dueDate | date:'MMM d'}}
+              </span>
+
+              <tf-avatar ng-if="task.assignee" user="task.assignee" size="sm"
+                         tf-tooltip="{{task.assignee.name}}">
+              </tf-avatar>
+
+              <div class="task-actions">
+                <select ng-model="task.status"
+                        ng-change="vm.moveTask(task, task.status)"
+                        class="status-select select-input">
+                  <option value="todo">To Do</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="review">In Review</option>
+                  <option value="done">Done</option>
+                </select>
+
+                <button class="btn-icon btn-danger"
+                        tf-confirm-click="vm.deleteTask(task, column)"
+                        tf-confirm-message="Delete task '{{task.title}}'?">
+                  🗑
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Add Task -->
+        <div ng-if="vm.showNewTaskForm[column.id]" class="quick-add-form">
+          <input type="text"
+                 ng-model="vm.newTaskTitle"
+                 placeholder="Task title…"
+                 tf-autofocus
+                 ng-keyup="$event.keyCode === 13 && vm.quickAddTask(column.id)"
+                 ng-keyup="$event.keyCode === 27 && (vm.showNewTaskForm[column.id] = false)"
+                 class="input-field">
+          <div class="quick-add-actions">
+            <button class="btn btn-primary btn-sm" ng-click="vm.quickAddTask(column.id)">Add</button>
+            <button class="btn btn-ghost btn-sm" ng-click="vm.showNewTaskForm[column.id] = false">Cancel</button>
+          </div>
+        </div>
+
+        <button class="btn-add-task"
+                ng-click="vm.showNewTaskForm[column.id] = true"
+                ng-if="!vm.showNewTaskForm[column.id]">
+          + Add task
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==========================================
+     views/task-detail.html
+     ========================================== -->
+<!-- Save as: views/task-detail.html -->
+<div class="page task-detail-page" ng-if="!vm.isLoading">
+  <div class="page-header">
+    <a class="back-link" href="#/projects/{{vm.task.projectId}}/tasks">← Back to Board</a>
+    <div class="header-actions">
+      <button class="btn btn-secondary" ng-click="vm.startEdit()" ng-if="!vm.isEditing">Edit</button>
+      <button class="btn btn-danger btn-sm"
+              tf-confirm-click="vm.deleteTask()"
+              tf-confirm-message="Permanently delete this task?">Delete</button>
+    </div>
+  </div>
+
+  <!-- View Mode -->
+  <div ng-if="!vm.isEditing" class="task-detail-view">
+    <div class="task-main">
+      <div class="task-status-bar">
+        <tf-priority-badge priority="{{vm.task.priority}}"></tf-priority-badge>
+        <span class="status-badge status-{{vm.task.status}}">
+          {{vm.task.status | statusLabel}}
+        </span>
+        <span class="due-date" ng-if="vm.task.dueDate">
+          Due {{vm.task.dueDate | date:'MMMM d, yyyy'}}
+        </span>
+      </div>
+
+      <h1 class="task-title">{{vm.task.title}}</h1>
+      <p class="task-description">{{vm.task.description}}</p>
+
+      <!-- Status Change -->
+      <div class="status-controls">
+        <label>Change Status:</label>
+        <button ng-repeat="status in ['todo','in-progress','review','done']"
+                class="btn btn-sm"
+                ng-class="{'btn-primary': vm.task.status === status, 'btn-ghost': vm.task.status !== status}"
+                ng-click="vm.changeStatus(status)">
+          {{status | statusLabel}}
+        </button>
+      </div>
+
+      <!-- Assignee -->
+      <div class="assignee-section">
+        <label>Assignee:</label>
+        <div ng-if="vm.task.assignee" class="current-assignee">
+          <tf-avatar user="vm.task.assignee" size="md"></tf-avatar>
+          <span>{{vm.task.assignee.name}}</span>
+        </div>
+        <select ng-model="vm.task.assigneeId"
+                ng-change="vm.assignTo(vm.task.assigneeId)"
+                class="select-input">
+          <option value="">Unassigned</option>
+          <option ng-repeat="member in vm.teamMembers track by member.id"
+                  value="{{member.id}}">{{member.name}}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section">
+      <h3>Comments ({{vm.comments.length}})</h3>
+
+      <div class="comment"
+           ng-repeat="comment in vm.comments track by comment.id">
+        <tf-avatar user="comment.author" size="sm"></tf-avatar>
+        <div class="comment-body">
+          <div class="comment-header">
+            <strong>{{comment.author.name}}</strong>
+            <span class="comment-time">{{comment.createdAt | timeAgo}}</span>
+          </div>
+          <p>{{comment.content}}</p>
+        </div>
+      </div>
+
+      <form name="commentForm" ng-submit="vm.submitComment(commentForm)" novalidate>
+        <div class="form-group">
+          <textarea name="content"
+                    ng-model="vm.newComment.content"
+                    placeholder="Add a comment…"
+                    rows="3"
+                    required
+                    minlength="2"
+                    class="input-field textarea"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary"
+                ng-disabled="commentForm.$invalid || vm.isSavingComment">
+          {{vm.isSavingComment ? 'Posting…' : 'Post Comment'}}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Mode -->
+  <div ng-if="vm.isEditing" class="task-edit-form">
+    <h2>Edit Task</h2>
+    <form name="editForm" ng-submit="vm.saveEdit()" novalidate>
+
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" name="title"
+               ng-model="vm.editData.title"
+               required maxlength="200"
+               class="input-field">
+        <span class="field-error" ng-show="editForm.title.$error.required && editForm.title.$touched">
+          Title is required.
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea ng-model="vm.editData.description"
+                  rows="5" class="input-field textarea"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Priority</label>
+          <select ng-model="vm.editData.priority" class="select-input">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="date" name="dueDate"
+                 ng-model="vm.editData.dueDate"
+                 tf-datepicker="allow-past"
+                 class="input-field">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" ng-disabled="editForm.$invalid">Save Changes</button>
+        <button type="button" class="btn btn-ghost" ng-click="vm.cancelEdit()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="loading-spinner" ng-if="vm.isLoading">Loading task…</div>
+
+
+<!-- ==========================================
+     views/profile.html
+     ========================================== -->
+<!-- Save as: views/profile.html -->
+<div class="page profile-page">
+  <div class="page-header">
+    <h1>My Profile</h1>
+    <span class="unsaved-badge" ng-if="vm.isDirty">Unsaved changes</span>
+  </div>
+
+  <div class="profile-layout">
+    <div class="profile-sidebar">
+      <tf-avatar user="vm.user" size="xl"></tf-avatar>
+      <h2>{{vm.user.name}}</h2>
+      <p>{{vm.user.email}}</p>
+      <p class="user-role">{{vm.user.role | capitalize}}</p>
+    </div>
+
+    <div class="profile-main">
+      <form name="profileForm" ng-submit="vm.saveProfile(profileForm)" novalidate>
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" name="name"
+                 ng-model="vm.user.name"
+                 required class="input-field">
+        </div>
+
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" name="email"
+                 ng-model="vm.user.email"
+                 required class="input-field">
+        </div>
+
+        <div class="form-group">
+          <label>Job Title</label>
+          <input type="text" ng-model="vm.user.jobTitle" class="input-field">
+        </div>
+
+        <div class="form-group">
+          <label>Bio</label>
+          <textarea ng-model="vm.user.bio" rows="4" class="input-field textarea"
+                    maxlength="500"></textarea>
+          <span class="char-count">{{(vm.user.bio || '').length}}/500</span>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" ng-disabled="profileForm.$invalid || vm.isSaving">
+            {{vm.isSaving ? 'Saving…' : 'Save Profile'}}
+          </button>
+          <button type="button" class="btn btn-ghost" ng-click="vm.resetProfile()" ng-if="vm.isDirty">
+            Reset Changes
+          </button>
+        </div>
+      </form>
+
+      <!-- Preferences Section -->
+      <div class="preferences-section">
+        <h3>Preferences</h3>
+
+        <div class="pref-item">
+          <label>
+            <input type="checkbox" ng-model="vm.preferences.emailNotifications">
+            Email notifications
+          </label>
+        </div>
+
+        <div class="pref-item">
+          <label>
+            <input type="checkbox" ng-model="vm.preferences.desktopNotifications">
+            Desktop notifications
+          </label>
+        </div>
+
+        <div class="pref-item">
+          <label>Theme</label>
+          <select ng-model="vm.preferences.theme" class="select-input">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="system">System</option>
+          </select>
+        </div>
+
+        <div class="pref-item">
+          <label>Default View</label>
+          <select ng-model="vm.preferences.defaultView" class="select-input">
+            <option value="board">Board</option>
+            <option value="list">List</option>
+          </select>
+        </div>
+
+        <button class="btn btn-secondary" ng-click="vm.savePreferences()">
+          Save Preferences
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

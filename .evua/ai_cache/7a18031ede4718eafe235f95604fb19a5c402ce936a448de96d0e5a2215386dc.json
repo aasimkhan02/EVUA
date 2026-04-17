@@ -1,0 +1,7 @@
+{
+  "id": "ai_0003",
+  "suggestion": "Review dynamic behavior and replace with explicit typed flow where possible.",
+  "confidence": 0.73,
+  "explanation": "Mock analysis for ai_0003.",
+  "token_usage": 0
+}

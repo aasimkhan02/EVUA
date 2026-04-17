@@ -1,26 +1,42 @@
-import { Routes, Route } from "react-router-dom";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Home from "./pages/Home";
-import BenchmarkSelector from "./pages/BenchmarkSelector";
-import SessionDetail from "./pages/SessionDetail";
+import React, { useState } from 'react';
+import Sidebar from './components/sidebar/sidebar';
+import Navbar from './components/Navbar/Navbar';
+import Migration from './pages/Migration/Migration';
+import Workspace from './pages/workspace/Workspace';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Validation from './pages/Validation/Validation';
+import History from './pages/History/History';
+import './App.css';
 
-function App() {
+const App = () => {
+  const [activePage, setActivePage] = useState('migration');
+
+  const renderContent = () => {
+    switch (activePage) {
+      case 'migration':
+        return <Migration setActivePage={setActivePage} />;
+      case 'workspace':
+        return <Workspace />;
+      case 'dashboard':
+        return <Dashboard />;
+      case 'validation':
+        return <Validation />;
+      case 'history':
+        return <History />;
+      default:
+        return <Migration />;
+    }
+  };
+
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-
-      {/* Protected routes */}
-      <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/benchmarks" element={<BenchmarkSelector />} />
-        <Route path="/sessions/:sessionId" element={<SessionDetail />} />
-      </Route>
-    </Routes>
+    <div className="app-container">
+      <Sidebar activePage={activePage} setActivePage={setActivePage} />
+      <div className="main-content" style={{ height: '100vh', overflowY: 'auto' }}>
+        <Navbar />
+        {renderContent()}
+      </div>
+    </div>
   );
-}
+};
 
 export default App;
