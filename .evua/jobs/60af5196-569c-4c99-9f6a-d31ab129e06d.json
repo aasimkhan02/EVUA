@@ -1,0 +1,177 @@
+{
+  "job_id": "60af5196-569c-4c99-9f6a-d31ab129e06d",
+  "report": {
+    "metadata": {
+      "source_version": "7.0",
+      "target_version": "8.2",
+      "timestamp": "2026-04-17T18:41:19Z",
+      "files_analyzed": 4,
+      "total_issues": 0
+    },
+    "summary": {
+      "automatable_changes": 0,
+      "manual_review_items": 0,
+      "risk_level": "MEDIUM",
+      "estimated_effort_hours": 0.0
+    },
+    "files": [
+      {
+        "path": "engine/php/old_php_project\\config.php",
+        "risk_score": 0.03,
+        "changes": [],
+        "metrics": {
+          "cyclomatic_complexity": 3,
+          "lines_of_code": 6,
+          "nesting_depth": 0,
+          "dependencies": 0,
+          "test_coverage_estimate": 0.0
+        },
+        "manual_review": [],
+        "ai_handoff": {
+          "needed": false,
+          "items": []
+        }
+      },
+      {
+        "path": "engine/php/old_php_project\\db.php",
+        "risk_score": 0.12,
+        "changes": [],
+        "metrics": {
+          "cyclomatic_complexity": 4,
+          "lines_of_code": 11,
+          "nesting_depth": 2,
+          "dependencies": 1,
+          "test_coverage_estimate": 0.0
+        },
+        "manual_review": [
+          {
+            "line": 5,
+            "snippet": "$conn = mysql_connect($GLOBALS['DB_HOST'], $GLOBALS['DB_USER'], $GLOBALS['DB_PASS']);",
+            "reason": "mysql_* was removed and needs migration",
+            "confidence": 0.95
+          },
+          {
+            "line": 7,
+            "snippet": "die(\"Connection failed: \" . mysql_error());",
+            "reason": "mysql_* was removed and needs migration",
+            "confidence": 0.95
+          },
+          {
+            "line": 10,
+            "snippet": "mysql_select_db($GLOBALS['DB_NAME'], $conn);",
+            "reason": "mysql_* was removed and needs migration",
+            "confidence": 0.95
+          }
+        ],
+        "ai_handoff": {
+          "needed": false,
+          "items": []
+        }
+      },
+      {
+        "path": "engine/php/old_php_project\\index.php",
+        "risk_score": 0.03,
+        "changes": [],
+        "metrics": {
+          "cyclomatic_complexity": 3,
+          "lines_of_code": 6,
+          "nesting_depth": 0,
+          "dependencies": 1,
+          "test_coverage_estimate": 0.0
+        },
+        "manual_review": [],
+        "ai_handoff": {
+          "needed": false,
+          "items": []
+        }
+      },
+      {
+        "path": "engine/php/old_php_project\\user.php",
+        "risk_score": 0.12,
+        "changes": [],
+        "metrics": {
+          "cyclomatic_complexity": 4,
+          "lines_of_code": 12,
+          "nesting_depth": 2,
+          "dependencies": 1,
+          "test_coverage_estimate": 0.0
+        },
+        "manual_review": [
+          {
+            "line": 8,
+            "snippet": "$result = mysql_query($query);",
+            "reason": "mysql_* was removed and needs migration",
+            "confidence": 0.95
+          },
+          {
+            "line": 11,
+            "snippet": "die(\"Query failed: \" . mysql_error());",
+            "reason": "mysql_* was removed and needs migration",
+            "confidence": 0.95
+          },
+          {
+            "line": 14,
+            "snippet": "return mysql_fetch_assoc($result);",
+            "reason": "mysql_* was removed and needs migration",
+            "confidence": 0.95
+          }
+        ],
+        "ai_handoff": {
+          "needed": false,
+          "items": []
+        }
+      }
+    ],
+    "changes_by_category": {
+      "deprecated_functions": 0,
+      "type_system_changes": 0,
+      "namespace_updates": 0,
+      "error_handling": 0,
+      "syntax_changes": 0
+    },
+    "ai_handoff_summary": {
+      "total_items": 0,
+      "processed": 0,
+      "successful": 0,
+      "failed": 0,
+      "total_tokens_used": 0,
+      "estimated_cost_usd": 0.0
+    },
+    "migration_path": [
+      {
+        "step": 1,
+        "from": "7.0",
+        "to": "7.4",
+        "label": "7.0->7.4",
+        "dependencies": []
+      },
+      {
+        "step": 2,
+        "from": "7.4",
+        "to": "8.0",
+        "label": "7.4->8.0",
+        "dependencies": [
+          "7.0->7.4"
+        ]
+      },
+      {
+        "step": 3,
+        "from": "8.0",
+        "to": "8.1",
+        "label": "8.0->8.1",
+        "dependencies": [
+          "7.4->8.0"
+        ]
+      },
+      {
+        "step": 4,
+        "from": "8.1",
+        "to": "8.2",
+        "label": "8.1->8.2",
+        "dependencies": [
+          "8.0->8.1"
+        ]
+      }
+    ]
+  }
+}

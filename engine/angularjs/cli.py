@@ -122,6 +122,7 @@ from pipeline.reporting.reporters.markdown_reporter import MarkdownReporter
 
 from pipeline.validation.runners.tests import TestRunner
 from pipeline.validation.comparators.snapshot import SnapshotComparator
+from pipeline.validation.analyzers.coverage import CoverageAnalyzer
 
 from orchestration.pipeline_runner import PipelineRunner
 from pipeline.ai.client import AIClient
@@ -260,13 +261,114 @@ def _rewrite_md_report(repo_path, analysis, patterns, transformation, risk,
                     md += f"- `{fname}:{e.line}` — {e.code}: {e.message}\n"
                 if len(errs) > 5:
                     md += f"- *...{len(errs)-5} more*\n"
-    md_path = repo_path / ".evua_report.md"
+    reports_root = Path("reports") / repo_path.name
+    reports_root.mkdir(parents=True, exist_ok=True)
+    md_path = reports_root / ".evua_report.md"
     md_path.write_text(md, encoding="utf-8", errors="replace")
 
 
 # ---------------------------------------------------------------------------
 # Pipeline
 # ---------------------------------------------------------------------------
+
+def _run_validation(
+    repo_path,
+    real_out_dir,
+    dry_run: bool,
+    show_diff: bool,
+) -> dict:
+
+    from pipeline.validation.runners.tests      import TestRunner
+    from pipeline.validation.analyzers.coverage  import CoverageAnalyzer
+    from pipeline.validation.comparators.snapshot import SnapshotComparator
+
+    print("\n  [validation] Starting validation phase...")
+
+    failures: list[str] = []
+
+    # ── 1. Tests ─────────────────────────────────────────────────────────
+    print("  [validation] Running tests...", end="", flush=True)
+
+    if dry_run or show_diff:
+        from pipeline.validation.runners.tests import TestResult
+        test_result = TestResult(
+            passed=False,
+            output="Skipped in dry-run / diff mode",
+        )
+        tests_passed = False
+    else:
+        test_result  = TestRunner().run(str(repo_path))
+        tests_passed = test_result.passed
+
+    print(" done")
+
+    if not tests_passed and not (dry_run or show_diff):
+        if test_result.runner_missing:
+            failures.append("Tests: runner not found (ng / npm)")
+        elif test_result.timed_out:
+            failures.append("Tests: execution timed out")
+        else:
+            failures.append(
+                f"Tests: {test_result.specs_failed} spec(s) failed"
+                if test_result.specs_total
+                else "Tests failed"
+            )
+
+    # ── 2. Snapshot comparison ────────────────────────────────────────────
+    print("  [validation] Comparing snapshots...", end="", flush=True)
+
+    if dry_run or show_diff:
+        snapshot_passed   = False
+        snapshot_failures = ["Skipped in dry-run / diff mode"]
+    else:
+        before_snapshot, after_snapshot = _find_snapshots(repo_path)
+        snapshot_passed   = False
+        snapshot_failures = []
+        if before_snapshot.exists() and after_snapshot.exists():
+            snapshot_passed, snapshot_failures = SnapshotComparator().compare(
+                str(before_snapshot), str(after_snapshot)
+            )
+        else:
+            missing = [str(p) for p in [before_snapshot, after_snapshot] if not p.exists()]
+            snapshot_failures = [f"Snapshot file(s) missing: {', '.join(missing)}"]
+
+    print(" done")
+
+    failures.extend(snapshot_failures)
+
+    # ── 4. Coverage ───────────────────────────────────────────────────────
+    print("  [validation] Calculating coverage...", end="", flush=True)
+
+    if dry_run or show_diff:
+        from pipeline.validation.analyzers.coverage import CoverageResult
+        coverage_result = CoverageResult(
+            covered=0, stub=0, uncovered=0, total=0, by_type={}
+        )
+    else:
+        coverage_result = CoverageAnalyzer(real_out_dir).analyze()
+
+    print(" done")
+
+    print("  [validation] Completed.\n")
+
+    print(
+        f"  Validate  : tests={tests_passed}, "
+        f"snapshot={snapshot_passed}, "
+        f"coverage={coverage_result.percent}%"
+    )
+
+    return {
+        "tests_passed":    tests_passed,
+        "snapshot_passed": snapshot_passed,
+        "tsc_passed":      None,
+        "tsc_errors":      [],
+        "tsc_summary":     "",
+        "tsc_found":       None,
+        "failures":        failures,
+        "test_run":        test_result.to_dict(),
+        "coverage_report": coverage_result.to_dict(),
+    }
+
 
 def run_pipeline(
     repo_path: str,
@@ -435,31 +537,12 @@ def run_pipeline(
             print(f"    ! RISKY   {name} — {reason[:80]}")
 
     # ── Validation (skip in dry-run / diff — files not written to real location) ──
-    if dry_run or show_diff:
-        tests_passed    = False
-        snapshot_passed = False
-        snapshot_failures = ["Skipped in dry-run / diff mode"]
-    else:
-        tests_passed, _ = TestRunner().run(str(repo_path))
-        before_snapshot, after_snapshot = _find_snapshots(repo_path)
-        snapshot_passed   = False
-        snapshot_failures = []
-        if before_snapshot.exists() and after_snapshot.exists():
-            snapshot_passed, snapshot_failures = SnapshotComparator().compare(
-                str(before_snapshot), str(after_snapshot)
-            )
-        else:
-            missing = [str(p) for p in [before_snapshot, after_snapshot] if not p.exists()]
-            snapshot_failures = [f"Snapshot file(s) missing: {', '.join(missing)}"]
-
-    validation_summary = {
-        "tests_passed":    tests_passed,
-        "snapshot_passed": snapshot_passed,
-        "tsc_passed":      None,
-        "tsc_errors":      [],
-        "failures": ([] if tests_passed else ["Tests failed"]) + snapshot_failures,
-    }
-    print(f"  Validate  : tests={tests_passed}, snapshot={snapshot_passed}")
+    validation_summary = _run_validation(
+        repo_path=repo_path,
+        real_out_dir=real_out_dir,
+        dry_run=dry_run,
+        show_diff=show_diff,
+    )
 
     # ── Diff output ────────────────────────────────────────────────────────
     if show_diff and shadow_dir:
@@ -531,6 +614,8 @@ def run_pipeline(
     except Exception:
         report_dict = {}
 
+    report_dict["validation"] = validation_summary
+
     md_report = MarkdownReporter().render(analysis, patterns, transformation, risk, validation_summary)
 
     report_dict["risk"] = {"by_level": risk_by_level}
@@ -544,9 +629,11 @@ def run_pipeline(
     if "changes" not in report_dict:
         report_dict["changes"] = []
 
-    # In dry-run / diff mode still write the report (read-only metadata)
-    report_path = repo_path / ".evua_report.json"
-    md_path     = repo_path / ".evua_report.md"
+    reports_root = Path("reports") / repo_path.name
+    reports_root.mkdir(parents=True, exist_ok=True)
+
+    report_path = reports_root / ".evua_report.json"
+    md_path     = reports_root / ".evua_report.md"
 
     report_json = json.dumps(report_dict, indent=2, ensure_ascii=False)
     report_path.write_text(report_json, encoding="utf-8", errors="replace")
@@ -599,7 +686,9 @@ def run_pipeline(
             validation_summary["failures"].append(
                 f"TypeScript: {tsc_result.error_count} error(s)"
             )
-        report_dict["validation"] = validation_summary
+        report_dict["validation"]       = validation_summary
+        report_dict["test_run"]         = validation_summary.get("test_run",        {})
+
         report_dict["tsc_validation"] = tsc_result.to_dict()
         report_json = json.dumps(report_dict, indent=2, ensure_ascii=False)
         report_path.write_text(report_json, encoding="utf-8", errors="replace")

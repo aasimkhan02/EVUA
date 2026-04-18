@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./Migration.css";
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -24,6 +24,7 @@ const ENGINES = [
 ];
 
 const STRATEGIES = ["full", "dry-run", "diff"];
+const MIGRATION_STATE_KEY = "evua:migration-state";
 
 // ─── component ────────────────────────────────────────────────────────────────
 export default function Migration({ setActivePage }) {
@@ -37,6 +38,7 @@ export default function Migration({ setActivePage }) {
   const [phpCommand, setPhpCommand]         = useState("migrate");
   const [outputPath, setOutputPath]         = useState("");
   const [file, setFile]                     = useState(null);
+  const [fileMeta, setFileMeta]             = useState(null);
 
   // run state
   const [running, setRunning]     = useState(false);
@@ -45,10 +47,61 @@ export default function Migration({ setActivePage }) {
 
   const fileInputRef = useRef();
 
+  useEffect(() => {
+    const saved = localStorage.getItem(MIGRATION_STATE_KEY);
+    if (!saved) return;
+    try {
+      const state = JSON.parse(saved);
+      if (state.selectedEngine) setSelectedEngine(state.selectedEngine);
+      if (state.strategy) setStrategy(state.strategy);
+      if (typeof state.projectName === "string") setProjectName(state.projectName);
+      if (state.targetVersion) setTargetVersion(state.targetVersion);
+      if (state.phpSourceVersion) setPhpSourceVersion(state.phpSourceVersion);
+      if (state.phpTargetVersion) setPhpTargetVersion(state.phpTargetVersion);
+      if (state.phpCommand) setPhpCommand(state.phpCommand);
+      if (typeof state.outputPath === "string") setOutputPath(state.outputPath);
+      if (state.result) setResult(state.result);
+      if (state.error) setError(state.error);
+      if (state.fileMeta) setFileMeta(state.fileMeta);
+    } catch {
+      // Ignore bad cache and let defaults load.
+    }
+  }, []);
+
+  useEffect(() => {
+    const snapshot = {
+      selectedEngine,
+      strategy,
+      projectName,
+      targetVersion,
+      phpSourceVersion,
+      phpTargetVersion,
+      phpCommand,
+      outputPath,
+      result,
+      error,
+      fileMeta,
+    };
+    localStorage.setItem(MIGRATION_STATE_KEY, JSON.stringify(snapshot));
+  }, [
+    selectedEngine,
+    strategy,
+    projectName,
+    targetVersion,
+    phpSourceVersion,
+    phpTargetVersion,
+    phpCommand,
+    outputPath,
+    result,
+    error,
+    fileMeta,
+  ]);
+
   // ── handlers ──────────────────────────────────────────────────────────────
   const handleFileChange = (e) => {
     const f = e.target.files[0];
     setFile(f || null);
+    setFileMeta(f ? { name: f.name, size: f.size } : null);
     if (f && !projectName) setProjectName(f.name.replace(/\.(zip|tar\.gz)$/i, ""));
   };
 
@@ -88,6 +141,23 @@ export default function Migration({ setActivePage }) {
       }
 
       setResult(data);
+      if (data?.status === "success") {
+        localStorage.setItem(
+          "evua:last-run",
+          JSON.stringify({
+            engine: selectedEngine,
+            projectName,
+            status: data.status,
+            strategy,
+            command: selectedEngine === "php" ? phpCommand : "migrate",
+            targetVersion,
+            sourceVersion: selectedEngine === "php" ? phpSourceVersion : undefined,
+            returnCode: data?.result?.return_code,
+            indicators: data?.result?.indicators || [],
+            runAt: new Date().toISOString(),
+          }),
+        );
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -160,11 +230,13 @@ export default function Migration({ setActivePage }) {
             </svg>
           </div>
           <div className="ingest-title">
-            {file ? file.name : "Upload Project Archive"}
+            {file?.name || fileMeta?.name || "Upload Project Archive"}
           </div>
           <div className="ingest-desc">
             {file
               ? `${(file.size / 1024).toFixed(1)} KB — ready to migrate`
+              : fileMeta
+                ? `${(fileMeta.size / 1024).toFixed(1)} KB — previously selected (re-upload to run again)`
               : "Drop a .zip of your AngularJS project here or browse to select it."}
           </div>
           <input

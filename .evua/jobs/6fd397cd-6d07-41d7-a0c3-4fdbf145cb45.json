@@ -1,10 +1,10 @@
 {
-  "job_id": "db04da46-fae4-470d-a55f-24a467390d40",
+  "job_id": "6fd397cd-6d07-41d7-a0c3-4fdbf145cb45",
   "report": {
     "metadata": {
       "source_version": "5.6",
-      "target_version": "8.2",
-      "timestamp": "2026-04-16T18:53:46Z",
+      "target_version": "8.3",
+      "timestamp": "2026-04-18T12:22:11Z",
       "files_analyzed": 4,
       "total_issues": 6
     },
@@ -16,7 +16,7 @@
     },
     "files": [
       {
-        "path": "engine/php/old_php_project\\config.php",
+        "path": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\temp_uploads\\extracted_old_php_project\\old_php_project\\config.php",
         "risk_score": 0.03,
         "changes": [],
         "metrics": {
@@ -33,7 +33,7 @@
         }
       },
       {
-        "path": "engine/php/old_php_project\\db.php",
+        "path": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\temp_uploads\\extracted_old_php_project\\old_php_project\\db.php",
         "risk_score": 0.35,
         "changes": [
           {
@@ -96,7 +96,7 @@
           "items": [
             {
               "id": "ai_0001",
-              "description": "Manual migration review for engine/php/old_php_project\\db.php",
+              "description": "Manual migration review for C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\temp_uploads\\extracted_old_php_project\\old_php_project\\db.php",
               "code_snippet": "$conn = mysql_connect($GLOBALS['DB_HOST'], $GLOBALS['DB_USER'], $GLOBALS['DB_PASS']);",
               "concern": "The mysql_* functions are removed in PHP 7. Replace with mysqli_* or PDO.",
               "gemini_response": {
@@ -109,7 +109,7 @@
             },
             {
               "id": "ai_0002",
-              "description": "Manual migration review for engine/php/old_php_project\\db.php",
+              "description": "Manual migration review for C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\temp_uploads\\extracted_old_php_project\\old_php_project\\db.php",
               "code_snippet": "die(\"Connection failed: \" . mysql_error());",
               "concern": "The mysql_* functions are removed in PHP 7. Replace with mysqli_* or PDO.",
               "gemini_response": {
@@ -122,7 +122,7 @@
             },
             {
               "id": "ai_0003",
-              "description": "Manual migration review for engine/php/old_php_project\\db.php",
+              "description": "Manual migration review for C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\temp_uploads\\extracted_old_php_project\\old_php_project\\db.php",
               "code_snippet": "mysql_select_db($GLOBALS['DB_NAME'], $conn);",
               "concern": "The mysql_* functions are removed in PHP 7. Replace with mysqli_* or PDO.",
               "gemini_response": {
@@ -137,7 +137,7 @@
         }
       },
       {
-        "path": "engine/php/old_php_project\\index.php",
+        "path": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\temp_uploads\\extracted_old_php_project\\old_php_project\\index.php",
         "risk_score": 0.03,
         "changes": [],
         "metrics": {
@@ -154,7 +154,7 @@
         }
       },
       {
-        "path": "engine/php/old_php_project\\user.php",
+        "path": "C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\temp_uploads\\extracted_old_php_project\\old_php_project\\user.php",
         "risk_score": 0.35,
         "changes": [
           {
@@ -217,7 +217,7 @@
           "items": [
             {
               "id": "ai_0004",
-              "description": "Manual migration review for engine/php/old_php_project\\user.php",
+              "description": "Manual migration review for C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\temp_uploads\\extracted_old_php_project\\old_php_project\\user.php",
               "code_snippet": "$result = mysql_query($query);",
               "concern": "The mysql_* functions are removed in PHP 7. Replace with mysqli_* or PDO.",
               "gemini_response": {
@@ -230,7 +230,7 @@
             },
             {
               "id": "ai_0005",
-              "description": "Manual migration review for engine/php/old_php_project\\user.php",
+              "description": "Manual migration review for C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\temp_uploads\\extracted_old_php_project\\old_php_project\\user.php",
               "code_snippet": "die(\"Query failed: \" . mysql_error());",
               "concern": "The mysql_* functions are removed in PHP 7. Replace with mysqli_* or PDO.",
               "gemini_response": {
@@ -243,7 +243,7 @@
             },
             {
               "id": "ai_0006",
-              "description": "Manual migration review for engine/php/old_php_project\\user.php",
+              "description": "Manual migration review for C:\\Users\\moidin\\Desktop\\Projects\\EVUA\\temp_uploads\\extracted_old_php_project\\old_php_project\\user.php",
               "code_snippet": "return mysql_fetch_assoc($result);",
               "concern": "The mysql_* functions are removed in PHP 7. Replace with mysqli_* or PDO.",
               "gemini_response": {
@@ -315,6 +315,15 @@
         "label": "8.1->8.2",
         "dependencies": [
           "8.0->8.1"
+        ]
+      },
+      {
+        "step": 6,
+        "from": "8.2",
+        "to": "8.3",
+        "label": "8.2->8.3",
+        "dependencies": [
+          "8.1->8.2"
         ]
       }
     ]
