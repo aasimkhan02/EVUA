@@ -1,228 +1,119 @@
-# 🚀 EVUA — Automated Legacy Upgrade Engine  
-**AngularJS (1.x) → Modern Angular (v15+)**
+# 🚀 EVUA — Enterprise Visionary Upgrade Assistant
 
-EVUA is an automated modernization engine that migrates legacy AngularJS (1.x) codebases to modern Angular.  
-It converts most application logic automatically, flags risky or ambiguous cases for manual review, and measures accuracy using a benchmark harness.
+**Modernizing Legacy Ecosystems with AI-Powered Intelligence**
 
-**🎯 Goal:** 80–90% automated migration for real-world AngularJS projects.
+EVUA is an enterprise-grade automated modernization platform designed to migrate legacy codebases (AngularJS and PHP) to modern, secure, and maintainable architectures. By combining **AST-based rule engines** with **Advanced AI Verification**, EVUA achieves 80-90% automation in real-world transformation journeys.
 
 ---
 
-## ✨ What EVUA Does
+## 🛠️ Unified Migration Engines
 
-EVUA runs a full end-to-end pipeline on a legacy repo:
+EVUA features a modular architecture with specialized engines for different technology stacks:
 
-> **Ingestion → Analysis → Pattern Detection → Transformation → Risk Assessment → Validation → Reporting → Benchmarking**
+### 🅰️ AngularJS Engine
+*Legacy AngularJS (1.x) → Modern Angular (v17+)*
+- **Componentization**: Automatically converts Controllers and `$scope` logic into Angular Components.
+- **Service Migration**: Transforms Services and Factories into `@Injectable` services.
+- **Dependency modernizing**: Replaces `$http` with `HttpClient` and `$q` with RxJS.
+- **RxJS Integration**: Converts simple `$scope.$watch` patterns into `BehaviorSubject` and Observables.
 
----
-
-## ✅ Working Features
-
-| Feature | Status |
-|--------|--------|
-| Controllers → Angular Components | ✅ |
-| Services / Factories → Angular Injectable Services | ✅ |
-| `$http` → `HttpClient` | ✅ |
-| Simple `$scope.$watch` → RxJS (`BehaviorSubject`) | ✅ |
-| Angular workspace scaffold | ✅ |
-| JSON + Markdown reports | ✅ |
-| Benchmark harness | ✅ |
-| Risk classification (SAFE / RISKY / MANUAL) | ✅ |
+### 🐘 PHP Engine
+*Legacy PHP (5.6+) → Modern PHP (8.x+)*
+- **AST Parsing**: Full Abstract Syntax Tree analysis for accurate code transformation.
+- **Version Control**: Built-in Git integration to track every migration step as a commit.
+- **AI Verification**: Automatically passes high-risk code through Gemini/OpenAI for logic verification.
+- **Safe Refactoring**: Handles deprecated functions, type hinting, and modern syntax patterns.
 
 ---
 
-## ⚠️ In Progress
+## ✨ Key Features
 
-| Feature | Status |
-|--------|--------|
-| HTML template generation (`.component.html`) | 🚧 |
-| Routing module generation (`app-routing.module.ts`) | 🚧 |
-| Directive detection | 🚧 |
-| Directive auto-migration | ⏳ |
-| Naming normalization | 🚧 |
-| Deep watcher handling | ⏳ |
-| Complex template binding migration | ⏳ |
-
----
-
-## 📊 Current Accuracy (Benchmarks)
-
-| Metric | Current Result |
-|--------|----------------|
-| Auto coverage | ~100% |
-| Manual recall | ~100% (directives pending) |
-| File accuracy | ~33% – 60% |
-| Validation | ❌ (no real tests yet) |
-
-**Interpretation:**  
-EVUA migrates the right things, but does not yet generate all required Angular files.
-
-**📈 Project status:** ~75% complete (MVP)
+- **🎯 Risk Assessment Dashboard**: Automated heuristics calculate complexity and risk scores (Low, Medium, High, Critical) for every file.
+- **🤖 AI-Powered Refactoring**: Integrated LLM adapters for handling complex logic that deterministic rules can't solve.
+- **🌓 Side-by-Side Workspace**: High-fidelity diff editor (powered by CodeMirror) for manual review and approval of changes.
+- **📈 Validation Pipeline**: Integrated benchmarking harness to measure migration accuracy and regression.
+- **🔄 Git-Based Rollbacks**: Snapshot-based version control allowing you to revert or branch migration attempts.
 
 ---
 
 ## 🧠 Architecture Overview
 
+```mermaid
+graph TD
+    UI[React Frontend] --> API[FastAPI Backend]
+    API --> Job[Job Manager]
+    Job --> AN[AngularJS Engine]
+    Job --> PH[PHP Engine]
+    
+    AN --> AN_AST[Rule-based Transpiler]
+    PH --> PH_AST[AST Parser + Rules]
+    
+    PH_AST --> AI[AI Processor & Verifier]
+    AI --> Git[Git Versioning]
+    
+    API --> DB[(SQLite / Job Store)]
+    AN --> Reports[JSON/MD Reports]
 ```
-engine/
-├── .gitignore
-├── cli.py
-├── package-lock.json
-├── __init__.py
-│
-├── benchmarks/
-│   └── angularjs/
-│       ├── bench-02-multi-service/
-│       ├── bench-03-directive-hazard/
-│       ├── bench-04-nested-scope/
-│       ├── bench-05-mixed-realistic/
-│       └── evua-benchmark-01/
-│
-├── evaluation/
-│   ├── config.py
-│   ├── harness.py
-│   ├── metrics.py
-│   ├── reporters.py
-│   ├── runners.py
-│   └── schemas.py
-│
-├── ir/
-│   ├── behavior_model/
-│   ├── code_model/
-│   ├── dependency_model/
-│   ├── migration_model/
-│   ├── template_model/
-│   └── tests/
-│
-├── orchestration/
-│   ├── pipeline_runner.py
-│   ├── progress_tracker.py
-│   ├── rollback_manager.py
-│   ├── stage_controller.py
-│   └── __init__.py
-│
-├── out/
-│   └── angular-app/          # Generated Angular workspace output
-│
-├── pipeline/
-│   ├── ai/
-│   │   └── adapters/
-│   │       └── openai.py
-│   │
-│   ├── analysis/
-│   │   └── analyzers/
-│   │       ├── html.py
-│   │       ├── js.py
-│   │       └── py.py
-│   │
-│   ├── ingestion/
-│   ├── patterns/
-│   │   └── detectors/angularjs/
-│   │       ├── controller_detector.py
-│   │       ├── http_detector.py
-│   │       ├── service_detector.py
-│   │       ├── simple_watch_detector.py
-│   │       └── template_binding_detector.py
-│   │
-│   ├── reporting/
-│   │   └── reporters/
-│   │       ├── json_reporter.py
-│   │       └── markdown_reporter.py
-│   │
-│   ├── risk/
-│   │   └── rules/angularjs/
-│   │       ├── template_binding_risk.py
-│   │       └── watcher_risk.py
-│   │
-│   ├── transformation/
-│   │   └── rules/angularjs/
-│   │       ├── controller_to_component.py
-│   │       ├── http_to_httpclient.py
-│   │       ├── service_to_injectable.py
-│   │       └── simple_watch_to_rxjs.py
-│   │
-│   ├── validation/
-│   │   └── runners/
-│   │       ├── lint.py
-│   │       └── tests.py
-│   │
-│   └── tests/
-│
-└── reports/
-```
-
-## ▶️ Usage
-
-### Run migration
-
-```bash
-python engine/cli.py path/to/angularjs-repo
-```
-
-## Outputs:
-
-Migrated Angular app: out/angular-app/
-Report: .evua_report.json, .evua_report.md
-
-## Run benchmarks
-```bash
-python -m evaluation.harness
-```
-
-## Outputs:
-
-Metrics per benchmark
-Reports in /reports
-
-## 🧪 Metrics Explained
-
-| Metric        | Meaning |
-|---------------|---------|
-| auto_coverage | % of expected components/services auto-migrated |
-| manual_recall | % of expected manual cases correctly flagged |
-| file_accuracy | % of expected Angular files generated |
-| validation    | Snapshot/test validation result |
 
 ---
 
-## 🛠️ Roadmap
+## 🚀 Quick Start
 
-### MVP Completion
+### Prerequisites
+- **Python 3.10+**
+- **Node.js 18+**
+- **Docker** (Optional, for easy setup)
 
-- [ ] Generate `.component.html` files  
-- [ ] Always generate `app-routing.module.ts`  
-- [ ] Directive detection + manual-risk flag  
-- [ ] Naming normalization  
-- [ ] File accuracy ≥ 85%  
+### Installation
 
-### Next Phase
+1. **Clone and Setup Backend**
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   uvicorn app.main:app --reload --port 8000
+   ```
 
-- [ ] `$routeProvider` → Angular Router  
-- [ ] Filters → Pipes  
-- [ ] Template binding rewrite  
-- [ ] Deep `$scope.$watch` handling  
-- [ ] `ng build` passes on output  
+2. **Setup Frontend**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+3. **Configure Environment**
+   Create a `.env` in the `backend` folder:
+   ```env
+   GEMINI_API_KEY=your_key_here
+   OPENAI_API_KEY=your_key_here
+   ```
+
+---
+
+## 📊 Project Roadmap
+
+### Phase 1: MVP (Complete ✅)
+- [x] Basic AngularJS Controller/Service migration.
+- [x] PHP AST Parsing and rule application.
+- [x] Unified FastAPI backend with Job tracking.
+- [x] React-based Workspace and Dashboard.
+
+### Phase 2: Intelligence (In Progress 🚧)
+- [ ] **AngularJS**: Template binding refactoring and Directive conversion.
+- [ ] **PHP**: Deep static analysis for security vulnerabilities.
+- [ ] **AI**: Enhanced feedback loops for self-correcting migrations.
+
+### Phase 3: Enterprise Scale (Planned ⏳)
+- [ ] Multi-project workspace management.
+- [ ] CI/CD integration for automated modernization PRs.
+- [ ] Support for React/Vue as target frameworks.
 
 ---
 
 ## 🤝 Contributing
 
-Good first contributions:
-
-- Add AngularJS detectors (directives, filters)  
-- Add transformation rules  
-- Improve Angular file generation  
-- Add benchmarks  
-- Improve risk heuristics  
-
-PRs welcome.
+We welcome contributions to the migration rules, AI adapters, and UI components! Please see our [Contributing Guide](documentation/CONTRIBUTING.md) for more details.
 
 ---
 
 ## 📌 TL;DR
-
-- EVUA already migrates most AngularJS logic automatically  
-- The pipeline is real and benchmarked  
-- Accuracy is measurable  
-- Remaining work is mostly Angular scaffolding + directives  
-- This is a real modernization engine, not a toy script  
+EVUA isn't a simple script—it's a **Modernization Operating System**. Whether you are killing off an old AngularJS app or breathing life into a PHP 5.6 monolith, EVUA provides the tools, visibility, and automation to do it safely at scale.

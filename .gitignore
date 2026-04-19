@@ -4,3 +4,7 @@
 **/out/
 __pycache__/
 *.pyc
+.evua/
+reports/php/
+temp_uploads/
+.env
