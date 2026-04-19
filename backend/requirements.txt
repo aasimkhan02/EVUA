@@ -39,3 +39,4 @@ urllib3==2.6.3
 uvicorn==0.40.0
 rich==13.7.0
 PyYAML
+Jinja2
