@@ -4,14 +4,18 @@ from app.routes import migration
 
 app = FastAPI()
 
-# CORS (IMPORTANT for React)
+# CORS (Permissive for Demo/College Project)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # later restrict to localhost:5173
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/health")
+def health():
+    return {"status": "healthy", "service": "EVUA Backend"}
 
 app.include_router(migration.router, prefix="/api")
 
