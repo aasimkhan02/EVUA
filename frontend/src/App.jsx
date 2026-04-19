@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Sidebar from './components/sidebar/sidebar';
+import Sidebar from './components/Sidebar/Sidebar';
 import Navbar from './components/Navbar/Navbar';
 import Migration from './pages/Migration/Migration';
-import Workspace from './pages/workspace/Workspace';
+import Workspace from './pages/Workspace/Workspace';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Validation from './pages/Validation/Validation';
 import History from './pages/History/History';
