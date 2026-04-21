@@ -205,6 +205,9 @@ async def run_angular_engine(
 
     print(f"\n[EVUA] {'✓' if success else '✗'}  Engine exited with code {return_code}\n")
 
+    # Resolve report path (Angular standard)
+    report_path = _ROOT / "engine" / "angularjs" / "reports" / project_name / ".evua_report.json"
+
     return {
         "engine":       engine,
         "strategy":     strategy,
@@ -213,6 +216,7 @@ async def run_angular_engine(
         "return_code":  return_code,
         "indicators":   indicators,
         "log":          log_lines,
+        "report_path":  str(report_path) if report_path.exists() else None,
         "message":      "Migration complete" if success else "Migration failed — see log for details",
     }
 
@@ -394,6 +398,12 @@ async def run_php_engine(
 
     print(f"\n[EVUA] {'✓' if success else '✗'}  PHP engine exited with code {return_code}\n")
 
+    # Resolve report path (PHP standard)
+    report_path = out_dir / "analyze-report.json" if command == "analyze" else None
+    if not report_path or not report_path.exists():
+        # Fallback to general .evua if not found in custom out_dir
+        report_path = _ROOT / ".evua" / "analyze-report.json"
+
     return {
         "engine":         engine,
         "command":        cmd_verb,
@@ -405,6 +415,7 @@ async def run_php_engine(
         "return_code":    return_code,
         "indicators":     indicators,
         "log":            log_lines,
+        "report_path":    str(report_path) if report_path.exists() else None,
         "message":        (
             f"PHP {cmd_verb} complete (exit {return_code})" if success
             else f"PHP {cmd_verb} failed — see log for details (exit {return_code})"

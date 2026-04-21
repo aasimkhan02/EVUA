@@ -41,3 +41,10 @@ rich==13.7.0
 PyYAML
 Jinja2
 beautifulsoup4
+SQLAlchemy
+pydantic-settings
+psycopg2-binary
+passlib[bcrypt]
+bcrypt==4.0.1
+sqlmodel
+python-jose[cryptography]

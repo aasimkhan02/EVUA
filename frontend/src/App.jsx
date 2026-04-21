@@ -6,10 +6,27 @@ import Workspace from './pages/Workspace/Workspace';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Validation from './pages/Validation/Validation';
 import History from './pages/History/History';
+import Login from './pages/Login/Login';
+import Register from './pages/Register/Register';
+import { useAuth } from './context/AuthContext';
 import './App.css';
 
 const App = () => {
+  const { isAuthenticated, loading } = useAuth();
   const [activePage, setActivePage] = useState('migration');
+  const [authView, setAuthView] = useState('login'); // 'login' or 'register'
+
+  if (loading) {
+    return <div className="loading-screen">Loading EVUA...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return authView === 'login' ? (
+      <Login switchToRegister={() => setAuthView('register')} />
+    ) : (
+      <Register switchToLogin={() => setAuthView('login')} />
+    );
+  }
 
   const renderContent = () => {
     switch (activePage) {
