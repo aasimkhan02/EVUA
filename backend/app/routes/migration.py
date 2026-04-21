@@ -6,8 +6,10 @@ from sqlmodel import Session
 from app.api import deps
 from app.core.database import get_session
 from app.models.database_models import User, Project, Job, JobStatus
+from app.models.schemas import JobOut
 from app.services.engine_runner import run_engine
 from app.services.migration_persistor import persist_migration_results
+from typing import List
 
 router = APIRouter()
 ROOT_DIR = Path(__file__).resolve().parents[3]
@@ -50,7 +52,7 @@ def _resolve_angular_report_path(project_name: str, fmt: str) -> Path:
 async def migrate_project(
     engine: str         = Form(...),
     strategy: str       = Form(...),
-    project_id: int      = Form(...), # Changed from project_name to project_id
+    project_name: str    = Form(...), # Changed back to project_name for UI compatibility
     output_path: str    = Form(...),
     file: UploadFile    = File(...),
     # Angular-specific
@@ -66,16 +68,28 @@ async def migrate_project(
     Unified migration endpoint.
     Routes to the Angular or PHP engine and persists results to the database.
     """
-    # 1. Verify Project
-    project = session.get(Project, project_id)
+    # 1. Verify/Create Project
+    from sqlmodel import select
+    project = session.exec(
+        select(Project)
+        .where(Project.name == project_name)
+        .where(Project.user_id == current_user.id)
+    ).first()
+
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    if project.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to access this project")
+        project = Project(
+            name=project_name,
+            user_id=current_user.id,
+            tech_stack=engine,
+            description=f"Auto-created during {engine} migration"
+        )
+        session.add(project)
+        session.commit()
+        session.refresh(project)
 
     # 2. Create Job in DB
     job = Job(
-        project_id=project_id,
+        project_id=project.id,
         status=JobStatus.RUNNING,
         source_version=source_version if engine == "php" else "AngularJS",
         target_version=target_version,
@@ -174,3 +188,33 @@ async def get_report(
         "path": str(report_path.relative_to(ROOT_DIR)),
         "content": report_path.read_text(encoding="utf-8", errors="replace"),
     }
+
+
+@router.get("/jobs", response_model=List[JobOut])
+async def get_jobs(
+    current_user: User = Depends(deps.get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Get migration history for the current user.
+    """
+    from sqlmodel import select
+    
+    # We join Job with Project to get the project_name for the history list
+    statement = (
+        select(Job, Project.name)
+        .join(Project)
+        .where(Project.user_id == current_user.id)
+        .order_by(Job.created_at.desc())
+    )
+    
+    results = session.exec(statement).all()
+    
+    # Map the results to JobOut objects
+    jobs = []
+    for job, project_name in results:
+        job_dict = job.dict()
+        job_dict["project_name"] = project_name
+        jobs.append(JobOut(**job_dict))
+        
+    return jobs

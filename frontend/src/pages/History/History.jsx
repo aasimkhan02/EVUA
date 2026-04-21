@@ -1,44 +1,69 @@
-import React from 'react';
-import { Filter, ArrowLeftRight, Zap, Layers, Brain, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Filter, ArrowLeftRight, Zap, Layers, Brain, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Info, Database, Globe } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import './History.css';
 
-const MIGRATIONS = [
-  {
-    id: 1,
-    timestamp: 'Nov 02, 2023',
-    time: '14:22:10 UTC',
-    engineType: 'Turbo-Rust Refactor',
-    engineIcon: <Zap size={16} className="engine-icon-zap" />,
-    source: 'Legacy JS',
-    target: 'Rust v1.72',
-    status: 'COMPLETED',
-    selected: true,
-  },
-  {
-    id: 2,
-    timestamp: 'Oct 31, 2023',
-    time: '09:15:44 UTC',
-    engineType: 'Schema Evolution',
-    engineIcon: <Layers size={16} className="engine-icon-layers" />,
-    source: 'v1.2 Beta',
-    target: 'v1.2.1 Stable',
-    status: 'FAILED',
-    selected: true,
-  },
-  {
-    id: 3,
-    timestamp: 'Oct 28, 2023',
-    time: '18:02:11 UTC',
-    engineType: 'AI Optimization',
-    engineIcon: <Brain size={16} className="engine-icon-brain" />,
-    source: 'Python 3.8',
-    target: 'Python 3.11',
-    status: 'COMPLETED',
-    selected: false,
-  }
-];
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
 const History = () => {
+  const { token } = useAuth();
+  const [migrations, setMigrations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_BASE}/jobs`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!res.ok) throw new Error('Failed to fetch history');
+        const data = await res.json();
+        setMigrations(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchHistory();
+    }
+  }, [token]);
+
+  const getEngineInfo = (job) => {
+    const src = job.source_version || 'Legacy';
+    if (src.toLowerCase().includes('php')) {
+      return {
+        label: 'PHP Modernization',
+        icon: <Database size={16} />,
+        colorClass: 'icon-3',
+        source: `PHP ${job.source_version}`,
+        target: `PHP ${job.target_version}`
+      };
+    }
+    return {
+      label: 'AngularJS Migration',
+      icon: <Globe size={16} />,
+      colorClass: 'icon-1',
+      source: 'AngularJS 1.x',
+      target: `Angular ${job.target_version || '17+'}`
+    };
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return { date: '-', time: '-' };
+    const date = new Date(dateStr);
+    return {
+      date: date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      time: date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' UTC'
+    };
+  };
+
   return (
     <div className="history-container">
       <div className="history-header">
@@ -107,7 +132,7 @@ const History = () => {
                 <th className="th-checkbox">
                   <input type="checkbox" className="custom-checkbox" />
                 </th>
-                <th>TIMESTAMP</th>
+                <th>TIMESTAMP / PROJECT</th>
                 <th>ENGINE TYPE</th>
                 <th>SOURCE / TARGET</th>
                 <th>STATUS</th>
@@ -115,48 +140,54 @@ const History = () => {
               </tr>
             </thead>
             <tbody>
-              {MIGRATIONS.map((migration) => (
-                <tr key={migration.id} className={migration.selected ? 'row-selected' : ''}>
-                  <td>
-                    <input 
-                      type="checkbox" 
-                      className="custom-checkbox" 
-                      checked={migration.selected}
-                      readOnly
-                    />
-                  </td>
-                  <td className="td-timestamp">
-                    <div className="ts-date">{migration.timestamp}</div>
-                    <div className="ts-time">{migration.time}</div>
-                  </td>
-                  <td className="td-engine">
-                    <div className="engine-wrapper">
-                      <div className={`engine-icon-bg icon-${migration.id}`}>
-                        {migration.engineIcon}
+              {loading ? (
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#6e7681' }}>Fetching history...</td></tr>
+              ) : migrations.length === 0 ? (
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#6e7681' }}>No migrations found. Start your first mission in the Migration tab!</td></tr>
+              ) : migrations.map((job) => {
+                const engine = getEngineInfo(job);
+                const { date, time } = formatDate(job.created_at);
+                return (
+                  <tr key={job.id}>
+                    <td>
+                      <input 
+                        type="checkbox" 
+                        className="custom-checkbox" 
+                      />
+                    </td>
+                    <td className="td-timestamp">
+                      <div className="ts-date">{date}</div>
+                      <div className="ts-time">{job.project_name || 'Unnamed Project'}</div>
+                    </td>
+                    <td className="td-engine">
+                      <div className="engine-wrapper">
+                        <div className={`engine-icon-bg ${engine.colorClass}`}>
+                          {engine.icon}
+                        </div>
+                        <span className="engine-name">{engine.label}</span>
                       </div>
-                      <span className="engine-name">{migration.engineType}</span>
-                    </div>
-                  </td>
-                  <td className="td-source-target">
-                    <div className="path-pair">
-                      <span className="path-chip">{migration.source}</span>
-                      <ChevronRight size={12} className="path-arrow" />
-                      <span className="path-chip highlight">{migration.target}</span>
-                    </div>
-                  </td>
-                  <td className="td-status">
-                    <div className={`status-pill ${migration.status.toLowerCase()}`}>
-                      <span className="status-dot"></span>
-                      {migration.status}
-                    </div>
-                  </td>
-                  <td className="td-actions text-right">
-                    <button className="icon-btn">
-                      <Info size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="td-source-target">
+                      <div className="path-pair">
+                        <span className="path-chip">{engine.source}</span>
+                        <ChevronRight size={12} className="path-arrow" />
+                        <span className="path-chip highlight">{engine.target}</span>
+                      </div>
+                    </td>
+                    <td className="td-status">
+                      <div className={`status-pill ${job.status.toLowerCase()}`}>
+                        <span className="status-dot"></span>
+                        {job.status.toUpperCase()}
+                      </div>
+                    </td>
+                    <td className="td-actions text-right">
+                      <button className="icon-btn">
+                        <Info size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -164,21 +195,23 @@ const History = () => {
             <div className="metrics-group">
               <div className="metric-item">
                 <span className="metric-label">TOTAL MIGRATIONS</span>
-                <span className="metric-value">1,284</span>
+                <span className="metric-value">{migrations.length}</span>
               </div>
               <div className="metric-item">
                 <span className="metric-label">SUCCESS RATE</span>
-                <span className="metric-value highlight-blue">98.2%</span>
+                <span className="metric-value highlight-blue">
+                   {migrations.length > 0 ? Math.round((migrations.filter(m => m.status === 'completed').length / migrations.length) * 100) : 0}%
+                </span>
               </div>
               <div className="metric-item">
-                <span className="metric-label">COMPUTE USED</span>
-                <span className="metric-value">42.8 TFLOPS</span>
+                <span className="metric-label">DATABASE SYNC</span>
+                <span className="metric-value">ACTIVE</span>
               </div>
             </div>
 
             <div className="pagination">
               <button className="page-btn"><ChevronLeft size={18} /></button>
-              <span className="page-info">Page <span className="white-text">1</span> of 64</span>
+              <span className="page-info">Page <span className="white-text">1</span> of 1</span>
               <button className="page-btn"><ChevronRight size={18} /></button>
             </div>
           </div>

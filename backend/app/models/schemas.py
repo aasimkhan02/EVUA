@@ -53,3 +53,19 @@ class ProjectOut(ProjectBase):
 
     class Config:
         from_attributes = True
+
+# --- Job Schemas ---
+
+class JobOut(BaseModel):
+    id: int
+    project_id: int
+    status: str
+    source_version: Optional[str] = None
+    target_version: Optional[str] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    created_at: datetime
+    project_name: Optional[str] = None # Added via join
+
+    class Config:
+        from_attributes = True

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import "./Migration.css";
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -28,6 +29,7 @@ const MIGRATION_STATE_KEY = "evua:migration-state";
 
 // ─── component ────────────────────────────────────────────────────────────────
 export default function Migration({ setActivePage }) {
+  const { token } = useAuth();
   // form state
   const [selectedEngine, setSelectedEngine] = useState("angular");
   const [strategy, setStrategy]             = useState("full");
@@ -131,6 +133,9 @@ export default function Migration({ setActivePage }) {
 
       const res = await fetch(`${API_BASE}/migrate`, {
         method: "POST",
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: form,
       });
 
