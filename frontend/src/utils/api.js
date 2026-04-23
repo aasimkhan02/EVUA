@@ -1,18 +1,26 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const TOKEN_KEY = 'evua_token';
+
+// Called when a 401/403 is received — wipes local state and reloads to show login
+const forceLogout = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem('evua:last-run');
+  localStorage.removeItem('evua:migration-prefs');
+  // Trigger a full page reload so AuthContext re-runs and lands on login
+  window.location.reload();
+};
 
 const api = {
   async request(endpoint, options = {}) {
-    const token = localStorage.getItem('evua_token');
-    
-    const headers = {
-      ...options.headers,
-    };
+    const token = localStorage.getItem(TOKEN_KEY);
+
+    const headers = { ...options.headers };
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Don't set Content-Type for FormData (browser does it automatically with boundary)
+    // Don't set Content-Type for FormData (browser sets it automatically with boundary)
     if (!(options.body instanceof FormData) && !headers['Content-Type']) {
       headers['Content-Type'] = 'application/json';
     }
@@ -21,6 +29,12 @@ const api = {
       ...options,
       headers,
     });
+
+    // Auto-logout on auth failure — stops the "stuck logged-in with invalid token" bug
+    if (response.status === 401 || response.status === 403) {
+      forceLogout();
+      throw new Error('Session expired. Please log in again.');
+    }
 
     const data = await response.json();
 

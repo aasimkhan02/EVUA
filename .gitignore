@@ -4,7 +4,9 @@
 **/out/
 __pycache__/
 *.pyc
-.evua/
+**/.evua/
 reports/php/
 temp_uploads/
 .env
+engine/angularjs/reports/
+out/

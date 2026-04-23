@@ -17,7 +17,12 @@ const Login = ({ switchToRegister, onLoginSuccess }) => {
 
     try {
       const data = await api.post('/auth/login', { email, password });
-      login(data.access_token, { email }); // In a real app, 'data' would contain user info
+      // Fetch user profile with the new token before calling login()
+      const meRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/auth/me`, {
+        headers: { Authorization: `Bearer ${data.access_token}` }
+      });
+      const userData = meRes.ok ? await meRes.json() : { email };
+      login(data.access_token, userData);
       if (onLoginSuccess) onLoginSuccess();
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
@@ -25,6 +30,7 @@ const Login = ({ switchToRegister, onLoginSuccess }) => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="login-container">
