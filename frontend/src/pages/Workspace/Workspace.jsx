@@ -391,20 +391,135 @@ function buildCmTheme() {
 // WORKSPACE COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
+import api from '../../utils/api';
+
 export default function Workspace() {
   const [viewMode, setViewMode]       = useState('legacy');   // 'legacy' | 'modern'
-  const [selectedFile, setSelectedFile] = useState(null);     // a FILES entry
+  const [files, setFiles]             = useState(FILES);      // the dynamic files array
+  const [selectedFile, setSelectedFile] = useState(null);     // a files entry
   const [openFolders, setOpenFolders] = useState({});         // id → bool
   const [copied, setCopied]           = useState(false);
   const cmRef   = useRef(null);   // div that CodeMirror mounts INTO
-  const theme   = useMemo(buildCmTheme, []);
+  const theme   = useMemo(() => buildCmTheme(), []);
 
-  // Build both trees once
-  const legacyTree = useMemo(() => buildTree(FILES, 'legacyPath'), []);
-  const modernTree = useMemo(() => buildTree(FILES, 'modernPath'), []);
+  // Fetch real files on mount
+  useEffect(() => {
+    async function loadReport() {
+      try {
+        const runStr = localStorage.getItem('evua:last-run');
+        if (!runStr) return;
+        const lastRun = JSON.parse(runStr);
+        if (!lastRun.engine || !lastRun.projectName) return;
+
+        const res = await api.get(`/report?engine=${lastRun.engine}&project_name=${lastRun.projectName}&format=json`);
+        const report = res.content;
+        const dynamicFiles = [];
+
+        if (lastRun.engine === 'angular') {
+          report.changes?.forEach((c, idx) => {
+            let modernPathFull = null;
+            const match = c.reason?.match(/(?:written to|at)\s+([A-Z]:\\[^\s]+|\/[^\s]+)/);
+            if (match) modernPathFull = match[1];
+
+            let legacyPathFull = null;
+            if (c.source_file && c.source_file !== 'unknown') {
+              legacyPathFull = c.source_file;
+            }
+
+            if (!legacyPathFull && !modernPathFull) return;
+
+            let status = 'overwritten';
+            if (!legacyPathFull) status = 'new';
+            if (!modernPathFull) status = 'deleted';
+
+            dynamicFiles.push({
+              id: c.before_id || `file_${idx}`,
+              status,
+              legacyPathFull,
+              modernPathFull,
+              legacyPath: legacyPathFull ? legacyPathFull.replace(/\\/g, '/').split('/').slice(-3) : null,
+              modernPath: modernPathFull ? modernPathFull.replace(/\\/g, '/').split('/').slice(-3) : null,
+              legacyCode: '// Loading...',
+              modernCode: '// Loading...',
+            });
+          });
+        } else if (lastRun.engine === 'php') {
+          report.files?.forEach((f, idx) => {
+            const legacyPathFull = f.path.replace(/\\/g, '/');
+            const projectName = lastRun.projectName;
+            const modernPathFull = legacyPathFull.replace(`extracted_${projectName}/${projectName}`, `php_out_${projectName}`);
+
+            dynamicFiles.push({
+              id: `php_${idx}`,
+              status: 'overwritten',
+              legacyPathFull: f.path,
+              modernPathFull,
+              legacyPath: legacyPathFull.split('/').slice(-3),
+              modernPath: modernPathFull.split('/').slice(-3),
+              legacyCode: '// Loading...',
+              modernCode: '// Loading...',
+            });
+          });
+        }
+
+        if (dynamicFiles.length > 0) {
+          setFiles(dynamicFiles);
+        }
+      } catch (err) {
+        console.error("Failed to load real report", err);
+      }
+    }
+    loadReport();
+  }, []);
+
+  // Fetch actual file contents when a file is selected
+  useEffect(() => {
+    if (!selectedFile) return;
+    if (selectedFile.legacyCode !== '// Loading...' && selectedFile.modernCode !== '// Loading...') return;
+
+    async function fetchFileContents() {
+      let legacyCode = selectedFile.legacyCode;
+      let modernCode = selectedFile.modernCode;
+
+      if (selectedFile.legacyPathFull) {
+        try {
+          const res = await api.get(`/file?path=${encodeURIComponent(selectedFile.legacyPathFull)}`);
+          legacyCode = res.content;
+        } catch (e) {
+          legacyCode = '// Failed to load original file from backend\n// ' + e.message;
+        }
+      } else {
+        legacyCode = null;
+      }
+
+      if (selectedFile.modernPathFull) {
+        try {
+          const res = await api.get(`/file?path=${encodeURIComponent(selectedFile.modernPathFull)}`);
+          modernCode = res.content;
+        } catch (e) {
+          modernCode = '// Failed to load migrated file from backend\n// ' + e.message;
+        }
+      } else {
+        modernCode = null;
+      }
+
+      setFiles(prev => prev.map(f => {
+        if (f.id === selectedFile.id) {
+          return { ...f, legacyCode, modernCode };
+        }
+        return f;
+      }));
+      setSelectedFile(prev => ({...prev, legacyCode, modernCode}));
+    }
+    fetchFileContents();
+  }, [selectedFile?.id]);
+
+  // Build both trees when files change
+  const legacyTree = useMemo(() => buildTree(files, 'legacyPath'), [files]);
+  const modernTree = useMemo(() => buildTree(files, 'modernPath'), [files]);
   const activeTree = viewMode === 'legacy' ? legacyTree : modernTree;
 
-  // Pre-open all folders by default
+  // Pre-open all folders automatically when trees change
   useEffect(() => {
     const ids = {};
     function collect(nodes) {
@@ -415,10 +530,9 @@ export default function Workspace() {
     collect(legacyTree);
     collect(modernTree);
     setOpenFolders(ids);
-  }, []); // eslint-disable-line
+  }, [legacyTree, modernTree]); // Update when tree changes
 
   // Mount / remount CodeMirror MergeView only when diff is active
-  // useLayoutEffect guarantees cmRef.current is set before this runs
   useLayoutEffect(() => {
     if (!cmRef.current) return;
     if (!selectedFile || selectedFile.status !== 'overwritten') return;
@@ -440,7 +554,7 @@ export default function Workspace() {
       console.error('MergeView init error:', e);
     }
     return () => view?.destroy();
-  }, [selectedFile, theme]);
+  }, [selectedFile, theme, selectedFile?.legacyCode, selectedFile?.modernCode]);
 
   // Toggle folder open/closed
   function toggleFolder(id) {
