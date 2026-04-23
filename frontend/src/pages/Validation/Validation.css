@@ -117,7 +117,44 @@
 .coverage-card { flex: 1; border-left: 3px solid #fdb877; }
 .syntax-card { flex: 2; }
 .architecture-card { flex: 1; }
-.manifest-card { flex: 2.2; }
+.manifest-card { flex: 1; }
+.metric-block { flex: 1; }
+.path-card { flex: 1; }
+
+/* Migration Path Timeline */
+.path-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  margin-top: 28px;
+  padding: 0 8px;
+}
+.path-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+  flex-shrink: 0;
+}
+.path-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, #3fb950, #00d2ff);
+  margin: 0 4px;
+  margin-top: 14px; /* align with node circle center */
+  align-self: flex-end;
+  z-index: 1;
+}
+
+/* AI Stats */
+.ai-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
 
 /* Metrics */
 .metric-row {
@@ -139,6 +176,19 @@
   font-size: 11px;
   color: #8b949e;
 }
+
+.action-dist-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dist-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 
 /* Progress Bars */
 .progress-label {
@@ -486,6 +536,29 @@
 }
 .diff-status.unresolved { color: #fca5a5; }
 .diff-status.suggestion { color: #fdb877; }
+
+/* Migration Path */
+.path-timeline {
+  position: relative;
+}
+
+.path-node {
+  position: relative;
+  z-index: 2;
+}
+
+.path-line {
+  position: relative;
+  z-index: 1;
+}
+
+/* AI Stats */
+.ai-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
 
 .diff-lines {
   display: flex;
