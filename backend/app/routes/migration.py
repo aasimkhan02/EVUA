@@ -259,3 +259,35 @@ async def get_jobs(
         jobs.append(JobOut(**job_dict))
         
     return jobs
+
+@router.delete("/jobs/{job_id}", status_code=204)
+async def delete_job(
+    job_id: int,
+    current_user: User = Depends(deps.get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Delete a specific migration job and its associated data.
+    """
+    from sqlmodel import select, delete
+    from app.models.database_models import Report, FileTracking, JobLog, Validation, AIDecision
+    
+    # Ensure job belongs to the current user
+    statement = select(Job).join(Project).where(
+        Job.id == job_id, 
+        Project.user_id == current_user.id
+    )
+    job = session.exec(statement).first()
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+        
+    # Delete related dependencies explicitly to ensure clean cleanup
+    for model in [Report, AIDecision, FileTracking, JobLog, Validation]:
+        session.exec(delete(model).where(model.job_id == job.id))
+        
+    # Delete the job itself
+    session.delete(job)
+    session.commit()
+    
+    return None
