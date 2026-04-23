@@ -361,8 +361,9 @@ function buildCmTheme() {
     '.cm-gutters':      { backgroundColor: '#0d1117', border: 'none' },
     '.cm-gutter':       { backgroundColor: '#0d1117' },
     '.cm-lineNumbers .cm-gutterElement': { color: '#3b434b', minWidth: '3ch', padding: '0 12px 0 4px', textAlign: 'right' },
-    '.cm-mergeView':               { height: '100%' },
-    '.cm-mergeView .cm-editor':    { height: '100%' },
+    '.cm-mergeView':               { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 },
+    '.cm-mergeViewEditors':        { height: '100%', display: 'flex', alignItems: 'stretch' },
+    '.cm-mergeView .cm-editor':    { height: '100%', flex: 1, minWidth: 0 },
     '.cm-mergeView-gutter':        { width: '28px', backgroundColor: '#0d1117', borderLeft: '1px solid rgba(255,255,255,0.04)', borderRight: '1px solid rgba(255,255,255,0.04)' },
     // Left (legacy) — red tint
     '.cm-merge-a .cm-deletedLine': { backgroundColor: 'rgba(200,60,60,0.09)' },
@@ -712,7 +713,7 @@ export default function Workspace() {
             <div
               key={selectedFile?.id}
               ref={cmRef}
-              style={{ height: '100%', overflow: 'hidden' }}
+              style={{ height: '100%', overflow: 'hidden', position: 'relative' }}
             />
           )}
 

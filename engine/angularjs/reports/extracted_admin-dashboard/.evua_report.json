@@ -2,47 +2,47 @@
   "angular_workspace": "out/angular-app",
   "controllers": [
     {
-      "id": "c71e38a0-4024-4cde-b182-1e119f71a5c3",
+      "id": "fc1a1dcb-258f-4693-8c35-d684f5583069",
       "name": "ActivityController",
       "file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\controllers\\ActivityController.js"
     },
     {
-      "id": "b22f7ff8-e14a-4f01-8311-03277afd994a",
+      "id": "bdf35ea4-5c95-4945-9ae5-4800c3d8c355",
       "name": "DashboardController",
       "file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\controllers\\DashboardController.js"
     },
     {
-      "id": "460a60ec-13d5-4077-b823-bc34cfb0322a",
+      "id": "cf0f650d-a843-40c2-b89e-2f7d0be62510",
       "name": "NavController",
       "file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\controllers\\NavController.js"
     },
     {
-      "id": "78641fb7-3316-4577-b474-85652d1db3e8",
+      "id": "011e299e-5f50-444b-9bfe-a1ddeba255df",
       "name": "UserFormController",
       "file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\controllers\\UserController.js"
     },
     {
-      "id": "37dafa66-bbf1-423f-a52b-c848a587c7df",
+      "id": "c3f3b300-dd46-4617-8448-8ff4df72ded0",
       "name": "UserController",
       "file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\controllers\\UserController.js"
     },
     {
-      "id": "0dfba7f4-5c41-4f6f-a471-3ae0a80c965e",
+      "id": "0f6b6db1-ad12-40a0-8c09-c52d588098c7",
       "name": "unknown",
       "file": "unknown"
     },
     {
-      "id": "62e52a36-f8f3-4319-abc1-42b3a17ed245",
+      "id": "8e8018b4-7c1f-458f-8d7a-5c46d058a3c5",
       "name": "unknown",
       "file": "unknown"
     },
     {
-      "id": "d9ca6e25-a5f4-4dd5-8b43-9f32a2333770",
+      "id": "a64e724e-e50c-44fe-84cb-b6d797cb859a",
       "name": "StatsService",
       "file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\services\\StatsService.js"
     },
     {
-      "id": "5b01428a-f6ba-4229-9159-59e26cca04d1",
+      "id": "6a1abbd5-4ff3-4c84-bed5-1d9d8baee1a3",
       "name": "UserService",
       "file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\services\\UserService.js"
     }
@@ -53,7 +53,7 @@
       "before_name": "unknown",
       "source_file": "unknown",
       "after_id": "angular_routing_module",
-      "reason": "Angular Router configured written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\app-routing.module.ts",
+      "reason": "Angular Router configured written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\app-routing.module.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -62,11 +62,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "c71e38a0-4024-4cde-b182-1e119f71a5c3",
+      "before_id": "fc1a1dcb-258f-4693-8c35-d684f5583069",
       "before_name": "ActivityController",
       "source_file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\controllers\\ActivityController.js",
-      "after_id": "component_c71e38a0-4024-4cde-b182-1e119f71a5c3",
-      "reason": "Controller -> Angular Component written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\activity.component.ts",
+      "after_id": "component_fc1a1dcb-258f-4693-8c35-d684f5583069",
+      "reason": "Controller -> Angular Component written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\activity.component.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -75,11 +75,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "c71e38a0-4024-4cde-b182-1e119f71a5c3_html",
+      "before_id": "fc1a1dcb-258f-4693-8c35-d684f5583069_html",
       "before_name": "unknown",
       "source_file": "unknown",
-      "after_id": "component_html_c71e38a0-4024-4cde-b182-1e119f71a5c3",
-      "reason": "Component template written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\activity.component.html",
+      "after_id": "component_html_fc1a1dcb-258f-4693-8c35-d684f5583069",
+      "reason": "Component template written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\activity.component.html",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -88,11 +88,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "b22f7ff8-e14a-4f01-8311-03277afd994a",
+      "before_id": "bdf35ea4-5c95-4945-9ae5-4800c3d8c355",
       "before_name": "DashboardController",
       "source_file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\controllers\\DashboardController.js",
-      "after_id": "component_b22f7ff8-e14a-4f01-8311-03277afd994a",
-      "reason": "Controller -> Angular Component written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\dashboard.component.ts",
+      "after_id": "component_bdf35ea4-5c95-4945-9ae5-4800c3d8c355",
+      "reason": "Controller -> Angular Component written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\dashboard.component.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -101,11 +101,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "b22f7ff8-e14a-4f01-8311-03277afd994a_html",
+      "before_id": "bdf35ea4-5c95-4945-9ae5-4800c3d8c355_html",
       "before_name": "unknown",
       "source_file": "unknown",
-      "after_id": "component_html_b22f7ff8-e14a-4f01-8311-03277afd994a",
-      "reason": "Component template written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\dashboard.component.html",
+      "after_id": "component_html_bdf35ea4-5c95-4945-9ae5-4800c3d8c355",
+      "reason": "Component template written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\dashboard.component.html",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -114,11 +114,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "460a60ec-13d5-4077-b823-bc34cfb0322a",
+      "before_id": "cf0f650d-a843-40c2-b89e-2f7d0be62510",
       "before_name": "NavController",
       "source_file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\controllers\\NavController.js",
-      "after_id": "component_460a60ec-13d5-4077-b823-bc34cfb0322a",
-      "reason": "Controller -> Angular Component written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\nav.component.ts",
+      "after_id": "component_cf0f650d-a843-40c2-b89e-2f7d0be62510",
+      "reason": "Controller -> Angular Component written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\nav.component.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -127,11 +127,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "460a60ec-13d5-4077-b823-bc34cfb0322a_html",
+      "before_id": "cf0f650d-a843-40c2-b89e-2f7d0be62510_html",
       "before_name": "unknown",
       "source_file": "unknown",
-      "after_id": "component_html_460a60ec-13d5-4077-b823-bc34cfb0322a",
-      "reason": "Component template written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\nav.component.html",
+      "after_id": "component_html_cf0f650d-a843-40c2-b89e-2f7d0be62510",
+      "reason": "Component template written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\nav.component.html",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -140,11 +140,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "78641fb7-3316-4577-b474-85652d1db3e8",
+      "before_id": "011e299e-5f50-444b-9bfe-a1ddeba255df",
       "before_name": "UserFormController",
       "source_file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\controllers\\UserController.js",
-      "after_id": "component_78641fb7-3316-4577-b474-85652d1db3e8",
-      "reason": "Controller -> Angular Component written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\userform.component.ts",
+      "after_id": "component_011e299e-5f50-444b-9bfe-a1ddeba255df",
+      "reason": "Controller -> Angular Component written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\userform.component.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -153,11 +153,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "78641fb7-3316-4577-b474-85652d1db3e8_html",
+      "before_id": "011e299e-5f50-444b-9bfe-a1ddeba255df_html",
       "before_name": "unknown",
       "source_file": "unknown",
-      "after_id": "component_html_78641fb7-3316-4577-b474-85652d1db3e8",
-      "reason": "Component template written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\userform.component.html",
+      "after_id": "component_html_011e299e-5f50-444b-9bfe-a1ddeba255df",
+      "reason": "Component template written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\userform.component.html",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -166,11 +166,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "37dafa66-bbf1-423f-a52b-c848a587c7df",
+      "before_id": "c3f3b300-dd46-4617-8448-8ff4df72ded0",
       "before_name": "UserController",
       "source_file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\controllers\\UserController.js",
-      "after_id": "component_37dafa66-bbf1-423f-a52b-c848a587c7df",
-      "reason": "Controller -> Angular Component written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\user.component.ts",
+      "after_id": "component_c3f3b300-dd46-4617-8448-8ff4df72ded0",
+      "reason": "Controller -> Angular Component written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\user.component.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -179,11 +179,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "37dafa66-bbf1-423f-a52b-c848a587c7df_html",
+      "before_id": "c3f3b300-dd46-4617-8448-8ff4df72ded0_html",
       "before_name": "unknown",
       "source_file": "unknown",
-      "after_id": "component_html_37dafa66-bbf1-423f-a52b-c848a587c7df",
-      "reason": "Component template written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\user.component.html",
+      "after_id": "component_html_c3f3b300-dd46-4617-8448-8ff4df72ded0",
+      "reason": "Component template written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\user.component.html",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -192,11 +192,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "d9ca6e25-a5f4-4dd5-8b43-9f32a2333770",
+      "before_id": "a64e724e-e50c-44fe-84cb-b6d797cb859a",
       "before_name": "StatsService",
       "source_file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\services\\StatsService.js",
-      "after_id": "injectable_d9ca6e25-a5f4-4dd5-8b43-9f32a2333770",
-      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\statsservice.service.ts",
+      "after_id": "injectable_a64e724e-e50c-44fe-84cb-b6d797cb859a",
+      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\statsservice.service.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -205,11 +205,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "5b01428a-f6ba-4229-9159-59e26cca04d1",
+      "before_id": "6a1abbd5-4ff3-4c84-bed5-1d9d8baee1a3",
       "before_name": "UserService",
       "source_file": "C:\\Users\\khans\\Project\\EVUA\\temp_uploads\\extracted_admin-dashboard\\admin-dashboard\\js\\services\\UserService.js",
-      "after_id": "injectable_5b01428a-f6ba-4229-9159-59e26cca04d1",
-      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\userservice.service.ts",
+      "after_id": "injectable_6a1abbd5-4ff3-4c84-bed5-1d9d8baee1a3",
+      "reason": "Service → @Injectable(providedIn: 'root') at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\userservice.service.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -218,11 +218,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "0dfba7f4-5c41-4f6f-a471-3ae0a80c965e",
+      "before_id": "0f6b6db1-ad12-40a0-8c09-c52d588098c7",
       "before_name": "unknown",
       "source_file": "unknown",
       "after_id": "httpclient_stats_q_defer",
-      "reason": "$q.q_defer() detected in StatsService — q_defer stub written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\stats.service.ts (MANUAL review required)",
+      "reason": "$q.q_defer() detected in StatsService — q_defer stub written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\stats.service.ts (MANUAL review required)",
       "output_path": null,
       "risk": "RiskLevel.MANUAL",
       "risk_reason": "$q.defer() detected — Promise chain requires manual RxJS migration",
@@ -231,11 +231,11 @@
       "tsc_passed": null
     },
     {
-      "before_id": "62e52a36-f8f3-4319-abc1-42b3a17ed245",
+      "before_id": "8e8018b4-7c1f-458f-8d7a-5c46d058a3c5",
       "before_name": "unknown",
       "source_file": "unknown",
       "after_id": "httpclient_user_q_defer",
-      "reason": "$q.q_defer() detected in UserService — q_defer stub written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\user.service.ts (MANUAL review required)",
+      "reason": "$q.q_defer() detected in UserService — q_defer stub written to C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\user.service.ts (MANUAL review required)",
       "output_path": null,
       "risk": "RiskLevel.MANUAL",
       "risk_reason": "$q.defer() detected — Promise chain requires manual RxJS migration",
@@ -261,7 +261,7 @@
       "before_name": "unknown",
       "source_file": "unknown",
       "after_id": "pipe_pluralize",
-      "reason": "AngularJS filter 'pluralize' → Angular @Pipe stub at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\pluralize.pipe.ts",
+      "reason": "AngularJS filter 'pluralize' → Angular @Pipe stub at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\pluralize.pipe.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -274,7 +274,7 @@
       "before_name": "unknown",
       "source_file": "unknown",
       "after_id": "pipe_roleclass",
-      "reason": "AngularJS filter 'roleClass' → Angular @Pipe stub at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\roleclass.pipe.ts",
+      "reason": "AngularJS filter 'roleClass' → Angular @Pipe stub at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\roleclass.pipe.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -287,7 +287,7 @@
       "before_name": "unknown",
       "source_file": "unknown",
       "after_id": "pipe_statuslabel",
-      "reason": "AngularJS filter 'statusLabel' → Angular @Pipe stub at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\statuslabel.pipe.ts",
+      "reason": "AngularJS filter 'statusLabel' → Angular @Pipe stub at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\statuslabel.pipe.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -300,7 +300,7 @@
       "before_name": "unknown",
       "source_file": "unknown",
       "after_id": "pipe_shortemail",
-      "reason": "AngularJS filter 'shortEmail' → Angular @Pipe stub at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\shortemail.pipe.ts",
+      "reason": "AngularJS filter 'shortEmail' → Angular @Pipe stub at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\shortemail.pipe.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
@@ -313,7 +313,7 @@
       "before_name": "unknown",
       "source_file": "unknown",
       "after_id": "pipe_titlecase",
-      "reason": "AngularJS filter 'titleCase' → Angular @Pipe stub at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_3caf8c21\\angular-app\\src\\app\\titlecase.pipe.ts",
+      "reason": "AngularJS filter 'titleCase' → Angular @Pipe stub at C:\\Users\\khans\\Project\\EVUA\\engine\\angularjs\\out\\.tmp_7759a5a9\\angular-app\\src\\app\\titlecase.pipe.ts",
       "output_path": null,
       "risk": "RiskLevel.SAFE",
       "risk_reason": "No risky watcher behavior detected",
