@@ -19,13 +19,13 @@ def _resolve_angular_report_path(project_name: str, fmt: str) -> Path:
     report_file = ".evua_report.json" if fmt == "json" else ".evua_report.md"
     reports_root = ROOT_DIR / "engine" / "angularjs" / "reports"
 
-    direct = reports_root / project_name / report_file
-    if direct.exists():
-        return direct
-
     extracted = reports_root / f"extracted_{project_name}" / report_file
     if extracted.exists():
         return extracted
+
+    direct = reports_root / project_name / report_file
+    if direct.exists():
+        return direct
 
     # Fallback: pick newest matching report directory for this project key.
     candidates = []
@@ -154,12 +154,10 @@ async def get_report(
     if engine_key in {"angular", "angularjs"}:
         report_path = _resolve_angular_report_path(project_name, fmt)
     elif engine_key == "php":
-        # Current PHP flow keeps JSON in .evua and markdown in reports/php.
-        report_path = (
-            ROOT_DIR / ".evua" / "analyze-report.json"
-            if fmt == "json"
-            else ROOT_DIR / "reports" / "php" / "evua_report.md"
-        )
+        out_dir = ROOT_DIR / "temp_uploads" / f"php_out_{project_name}"
+        report_path = out_dir / "evua_report.json"
+        if not report_path.exists():
+            report_path = ROOT_DIR / ".evua" / "analyze-report.json" if fmt == "json" else ROOT_DIR / "reports" / "php" / "evua_report.md"
     else:
         raise HTTPException(status_code=400, detail="Unsupported engine")
 
@@ -188,6 +186,49 @@ async def get_report(
         "path": str(report_path.relative_to(ROOT_DIR)),
         "content": report_path.read_text(encoding="utf-8", errors="replace"),
     }
+
+
+@router.get("/file")
+async def get_file_content(
+    path: str = Query(..., description="Absolute path to the file"),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """
+    Read file contents from the local filesystem to display in the Workspace diff editor.
+    """
+    try:
+        target = Path(path)
+        if not target.is_absolute():
+            target = ROOT_DIR / target
+        target = target.resolve()
+        
+        # Fallback for Angular: pipeline_runner renames .tmp_ to angular-app
+        if not target.exists() and ".tmp_" in str(target) and "angular-app" in str(target):
+            import re
+            fixed_path = re.sub(r"\.tmp_[a-f0-9]+", "angular-app", str(target))
+            alt_target = Path(fixed_path).resolve()
+            if alt_target.exists():
+                target = alt_target
+
+        # Fallback for PHP: if looking in php_out but it doesn't exist, use the extracted source
+        if not target.exists() and "php_out_" in str(target):
+            import re
+            # Extract project name from php_out_{project_name}
+            match = re.search(r"php_out_([^/\\]+)", str(target))
+            if match:
+                project_name = match.group(1)
+                fixed_path = re.sub(rf"php_out_{project_name}", rf"extracted_{project_name}/{project_name}", str(target))
+                alt_target = Path(fixed_path).resolve()
+                if alt_target.exists():
+                    target = alt_target
+        
+        if not target.exists() or not target.is_file():
+            raise HTTPException(status_code=404, detail="File not found on server")
+        content = target.read_text(encoding="utf-8", errors="replace")
+        return {"path": str(target), "content": content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @router.get("/jobs", response_model=List[JobOut])

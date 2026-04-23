@@ -206,7 +206,7 @@ async def run_angular_engine(
     print(f"\n[EVUA] {'✓' if success else '✗'}  Engine exited with code {return_code}\n")
 
     # Resolve report path (Angular standard)
-    report_path = _ROOT / "engine" / "angularjs" / "reports" / project_name / ".evua_report.json"
+    report_path = _ROOT / "engine" / "angularjs" / "reports" / f"extracted_{project_name}" / ".evua_report.json"
 
     return {
         "engine":       engine,
@@ -399,7 +399,13 @@ async def run_php_engine(
     print(f"\n[EVUA] {'✓' if success else '✗'}  PHP engine exited with code {return_code}\n")
 
     # Resolve report path (PHP standard)
-    report_path = out_dir / "analyze-report.json" if command == "analyze" else None
+    if command == "analyze":
+        report_path = out_dir / "analyze-report.json"
+    elif command == "migrate":
+        report_path = out_dir / "evua_report.json"
+    else:
+        report_path = None
+
     if not report_path or not report_path.exists():
         # Fallback to general .evua if not found in custom out_dir
         report_path = _ROOT / ".evua" / "analyze-report.json"

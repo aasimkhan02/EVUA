@@ -162,6 +162,8 @@ export default function Migration({ setActivePage }) {
             runAt: new Date().toISOString(),
           }),
         );
+        // Automatically switch to the workspace view to see the files
+        setActivePage("workspace");
       }
     } catch (err) {
       setError(err.message);
