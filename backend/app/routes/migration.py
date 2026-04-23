@@ -68,6 +68,38 @@ async def migrate_project(
     Unified migration endpoint.
     Routes to the Angular or PHP engine and persists results to the database.
     """
+    # 0. Engine/File validation — check the archive contains files for the chosen engine
+    import zipfile, tempfile, shutil as _shutil
+    _allowed = {"angular": [".js", ".ts"], "php": [".php"]}
+    _ext_required = _allowed.get(engine.lower())
+    if _ext_required:
+        # Peek inside the zip without running the full engine
+        try:
+            _zip_bytes = await file.read()
+            await file.seek(0)   # FastAPI UploadFile.seek() is a coroutine
+            import io as _io
+            with zipfile.ZipFile(_io.BytesIO(_zip_bytes)) as _zf:
+                _names = [n.lower() for n in _zf.namelist()]
+            # Count files matching the engine
+            _matched = sum(1 for n in _names if any(n.endswith(ext) for ext in _ext_required))
+            # Count files belonging to the OTHER engine (e.g. .php when engine=angular)
+            _other_exts = [".php"] if engine.lower() in ("angular", "angularjs") else [".js", ".ts"]
+            _other = sum(1 for n in _names if any(n.endswith(ext) for ext in _other_exts))
+            if _matched == 0 and _other > 0:
+                _other_label = "PHP" if engine.lower() in ("angular", "angularjs") else "JavaScript/TypeScript"
+                _chosen_label = "AngularJS" if engine.lower() in ("angular", "angularjs") else "PHP"
+                raise HTTPException(
+                    status_code=422,
+                    detail=(
+                        f"Engine mismatch: you selected the {_chosen_label} engine, but the uploaded "
+                        f"archive contains {_other} {_other_label} file(s) and no "
+                        f"{', '.join(_ext_required)} files. "
+                        f"Please select the correct engine for your project."
+                    )
+                )
+        except zipfile.BadZipFile:
+            pass  # Non-zip uploads — let engine_runner handle validation
+
     # 1. Verify/Create Project
     from sqlmodel import select
     project = session.exec(

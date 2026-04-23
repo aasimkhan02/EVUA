@@ -25,12 +25,16 @@ const ENGINES = [
 ];
 
 const STRATEGIES = ["full", "dry-run", "diff"];
-const MIGRATION_STATE_KEY = "evua:migration-state";
+
+// Keys that should persist between sessions (engine preference, strategy choice)
+// — but NOT project name, file info, or previous results.
+const PERSIST_KEY = "evua:migration-prefs";
 
 // ─── component ────────────────────────────────────────────────────────────────
 export default function Migration({ setActivePage }) {
   const { token } = useAuth();
-  // form state
+
+  // ── Form state (reset per-run) ─────────────────────────────────────────────
   const [selectedEngine, setSelectedEngine] = useState("angular");
   const [strategy, setStrategy]             = useState("full");
   const [projectName, setProjectName]       = useState("");
@@ -40,77 +44,80 @@ export default function Migration({ setActivePage }) {
   const [phpCommand, setPhpCommand]         = useState("migrate");
   const [outputPath, setOutputPath]         = useState("");
   const [file, setFile]                     = useState(null);
-  const [fileMeta, setFileMeta]             = useState(null);
 
-  // run state
-  const [running, setRunning]     = useState(false);
-  const [result, setResult]       = useState(null);   // last API response
-  const [error, setError]         = useState(null);
+  // ── Run state ──────────────────────────────────────────────────────────────
+  const [running, setRunning] = useState(false);
+  const [result, setResult]   = useState(null);
+  const [error, setError]     = useState(null);
 
   const fileInputRef = useRef();
 
+  // ── Restore only non-sensitive preferences on mount ────────────────────────
   useEffect(() => {
-    const saved = localStorage.getItem(MIGRATION_STATE_KEY);
-    if (!saved) return;
     try {
-      const state = JSON.parse(saved);
-      if (state.selectedEngine) setSelectedEngine(state.selectedEngine);
-      if (state.strategy) setStrategy(state.strategy);
-      if (typeof state.projectName === "string") setProjectName(state.projectName);
-      if (state.targetVersion) setTargetVersion(state.targetVersion);
-      if (state.phpSourceVersion) setPhpSourceVersion(state.phpSourceVersion);
-      if (state.phpTargetVersion) setPhpTargetVersion(state.phpTargetVersion);
-      if (state.phpCommand) setPhpCommand(state.phpCommand);
-      if (typeof state.outputPath === "string") setOutputPath(state.outputPath);
-      if (state.result) setResult(state.result);
-      if (state.error) setError(state.error);
-      if (state.fileMeta) setFileMeta(state.fileMeta);
+      const saved = localStorage.getItem(PERSIST_KEY);
+      if (!saved) return;
+      const prefs = JSON.parse(saved);
+      // Only restore safe, non-project-specific preferences
+      if (prefs.selectedEngine) setSelectedEngine(prefs.selectedEngine);
+      if (prefs.strategy)       setStrategy(prefs.strategy);
+      if (prefs.phpCommand)     setPhpCommand(prefs.phpCommand);
+      if (prefs.phpSourceVersion) setPhpSourceVersion(prefs.phpSourceVersion);
+      if (prefs.phpTargetVersion) setPhpTargetVersion(prefs.phpTargetVersion);
+      if (prefs.targetVersion)  setTargetVersion(prefs.targetVersion);
     } catch {
-      // Ignore bad cache and let defaults load.
+      // Ignore corrupted cache
     }
   }, []);
 
+  // ── Persist only safe preferences (never project name, file, or results) ──
   useEffect(() => {
-    const snapshot = {
+    localStorage.setItem(PERSIST_KEY, JSON.stringify({
       selectedEngine,
       strategy,
-      projectName,
-      targetVersion,
+      phpCommand,
       phpSourceVersion,
       phpTargetVersion,
-      phpCommand,
-      outputPath,
-      result,
-      error,
-      fileMeta,
-    };
-    localStorage.setItem(MIGRATION_STATE_KEY, JSON.stringify(snapshot));
-  }, [
-    selectedEngine,
-    strategy,
-    projectName,
-    targetVersion,
-    phpSourceVersion,
-    phpTargetVersion,
-    phpCommand,
-    outputPath,
-    result,
-    error,
-    fileMeta,
-  ]);
+      targetVersion,
+    }));
+  }, [selectedEngine, strategy, phpCommand, phpSourceVersion, phpTargetVersion, targetVersion]);
 
-  // ── handlers ──────────────────────────────────────────────────────────────
-  const handleFileChange = (e) => {
-    const f = e.target.files[0];
-    setFile(f || null);
-    setFileMeta(f ? { name: f.name, size: f.size } : null);
-    if (f && !projectName) setProjectName(f.name.replace(/\.(zip|tar\.gz)$/i, ""));
+  // ── Reset result/error/file/project when engine changes ───────────────────
+  const handleEngineChange = (engineId) => {
+    setSelectedEngine(engineId);
+    setResult(null);
+    setError(null);
+    // Reset to engine-default versions
+    if (engineId === "angular") setTargetVersion("17");
+    if (engineId === "php")     { setPhpSourceVersion("5.6"); setPhpTargetVersion("8.3"); }
   };
 
+  // ── File handler ──────────────────────────────────────────────────────────
+  const handleFileChange = (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    setFile(f);
+    // Auto-fill project name only if it's currently empty
+    if (!projectName.trim()) {
+      setProjectName(f.name.replace(/\.(zip|tar\.gz|tar\.bz2)$/i, ""));
+    }
+    // Always clear stale results when a new file is chosen
+    setResult(null);
+    setError(null);
+  };
+
+  const handleClearFile = () => {
+    setFile(null);
+    setProjectName("");
+    setResult(null);
+    setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // ── Submit ────────────────────────────────────────────────────────────────
   const handleStartMigration = async () => {
-    // basic validation
-    if (!file)        return alert("Please upload a project archive (.zip) first.");
-    if (!projectName) return alert("Please enter a project name.");
+    if (!file)              return alert("Please upload a project archive (.zip) first.");
+    if (!projectName.trim()) return alert("Please enter a project name.");
 
     setRunning(true);
     setResult(null);
@@ -118,11 +125,12 @@ export default function Migration({ setActivePage }) {
 
     try {
       const form = new FormData();
-      form.append("engine",         selectedEngine);
-      form.append("strategy",       strategy);
-      form.append("project_name",   projectName);
-      form.append("output_path",    outputPath || "./out");
-      form.append("file",           file);
+      form.append("engine",       selectedEngine);
+      form.append("strategy",     strategy);
+      form.append("project_name", projectName.trim());
+      form.append("output_path",  outputPath.trim() || "./out");
+      form.append("file",         file);
+
       if (selectedEngine === "angular") {
         form.append("target_version", targetVersion);
       } else if (selectedEngine === "php") {
@@ -133,9 +141,7 @@ export default function Migration({ setActivePage }) {
 
       const res = await fetch(`${API_BASE}/migrate`, {
         method: "POST",
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: form,
       });
 
@@ -146,24 +152,21 @@ export default function Migration({ setActivePage }) {
       }
 
       setResult(data);
+
+      // Save to last-run for Validation page
       if (data?.status === "success") {
-        localStorage.setItem(
-          "evua:last-run",
-          JSON.stringify({
-            engine: selectedEngine,
-            projectName,
-            status: data.status,
-            strategy,
-            command: selectedEngine === "php" ? phpCommand : "migrate",
-            targetVersion,
-            sourceVersion: selectedEngine === "php" ? phpSourceVersion : undefined,
-            returnCode: data?.result?.return_code,
-            indicators: data?.result?.indicators || [],
-            runAt: new Date().toISOString(),
-          }),
-        );
-        // Automatically switch to the workspace view to see the files
-        setActivePage("workspace");
+        localStorage.setItem("evua:last-run", JSON.stringify({
+          engine:        selectedEngine,
+          projectName:   projectName.trim(),
+          status:        data.status,
+          strategy,
+          command:       selectedEngine === "php" ? phpCommand : "migrate",
+          targetVersion: selectedEngine === "php" ? phpTargetVersion : targetVersion,
+          sourceVersion: selectedEngine === "php" ? phpSourceVersion : undefined,
+          returnCode:    data?.result?.return_code,
+          indicators:    data?.result?.indicators || [],
+          runAt:         new Date().toISOString(),
+        }));
       }
     } catch (err) {
       setError(err.message);
@@ -171,6 +174,12 @@ export default function Migration({ setActivePage }) {
       setRunning(false);
     }
   };
+
+  // ── Derived helpers ───────────────────────────────────────────────────────
+  const isReady = Boolean(file && projectName.trim());
+  const engineLabel = selectedEngine === "php"
+    ? `PHP ${phpSourceVersion} → ${phpTargetVersion} · ${phpCommand.toUpperCase()}`
+    : `AngularJS → Angular ${targetVersion} · ${strategy}`;
 
   // ── render ────────────────────────────────────────────────────────────────
   return (
@@ -204,7 +213,7 @@ export default function Migration({ setActivePage }) {
               <button
                 key={eng.id}
                 className={`engine-option${selectedEngine === eng.id ? " active" : ""}${eng.disabled ? " disabled" : ""}`}
-                onClick={() => !eng.disabled && setSelectedEngine(eng.id)}
+                onClick={() => !eng.disabled && handleEngineChange(eng.id)}
                 disabled={eng.disabled}
                 title={eng.disabled ? "Coming soon" : undefined}
               >
@@ -230,32 +239,42 @@ export default function Migration({ setActivePage }) {
         <div className="ingest-card">
           <div className="upload-circle">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                 stroke="#00d2ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                 stroke={file ? "#3fb950" : "#00d2ff"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
           </div>
           <div className="ingest-title">
-            {file?.name || fileMeta?.name || "Upload Project Archive"}
+            {file?.name || "Upload Project Archive"}
           </div>
           <div className="ingest-desc">
             {file
-              ? `${(file.size / 1024).toFixed(1)} KB — ready to migrate`
-              : fileMeta
-                ? `${(fileMeta.size / 1024).toFixed(1)} KB — previously selected (re-upload to run again)`
-              : "Drop a .zip of your AngularJS project here or browse to select it."}
+              ? `${(file.size / 1024).toFixed(1)} KB · ready to migrate`
+              : `Drop a .zip of your ${selectedEngine === "php" ? "PHP" : "AngularJS"} project here or browse to select it.`}
           </div>
           <input
             ref={fileInputRef}
             type="file"
-            accept=".zip"
+            accept=".zip,.tar.gz,.tar.bz2"
             style={{ display: "none" }}
             onChange={handleFileChange}
           />
-          <button className="browse-btn" onClick={() => fileInputRef.current.click()}>
-            {file ? "CHANGE FILE" : "BROWSE FILES"}
-          </button>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button className="browse-btn" onClick={() => fileInputRef.current.click()}>
+              {file ? "CHANGE FILE" : "BROWSE FILES"}
+            </button>
+            {file && (
+              <button
+                className="browse-btn"
+                onClick={handleClearFile}
+                style={{ background: "rgba(248,81,73,0.12)", color: "#f85149", border: "1px solid rgba(248,81,73,0.25)" }}
+                title="Clear file and project name"
+              >
+                CLEAR
+              </button>
+            )}
+          </div>
         </div>
 
         {/* CARD 3 — Params */}
@@ -331,7 +350,7 @@ export default function Migration({ setActivePage }) {
                 <div className="input-group" style={{ width: "100%" }}>
                   <label>COMMAND</label>
                   <div className="strategy-toggles">
-                    {["analyze", "migrate", "report", "rules"].map((cmd) => (
+                    {["analyze", "migrate"].map((cmd) => (
                       <button
                         key={cmd}
                         className={`strategy-btn${phpCommand === cmd ? " active" : ""}`}
@@ -341,32 +360,45 @@ export default function Migration({ setActivePage }) {
                       </button>
                     ))}
                   </div>
+                  {phpCommand === "analyze" && (
+                    <p style={{ fontSize: 11, color: "#5a7482", marginTop: 8, margin: "8px 0 0" }}>
+                      Analysis generates a JSON report viewable in Validation. No files are modified.
+                    </p>
+                  )}
+                  {phpCommand === "migrate" && (
+                    <p style={{ fontSize: 11, color: "#5a7482", marginTop: 8, margin: "8px 0 0" }}>
+                      Full migration rewrites PHP source files to the target version.
+                    </p>
+                  )}
                 </div>
               </>
             )}
 
+            {/* Strategy only shown for Angular. PHP uses its own command toggle above. */}
+            {selectedEngine === "angular" && (
+              <div className="input-group" style={{ width: "100%" }}>
+                <label>STRATEGY</label>
+                <div className="strategy-toggles">
+                  {STRATEGIES.map((s) => (
+                    <button
+                      key={s}
+                      className={`strategy-btn${strategy === s ? " active" : ""}`}
+                      onClick={() => setStrategy(s)}
+                    >
+                      {s.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="input-group" style={{ width: "100%" }}>
-              <label>OUTPUT PATH (OPTIONAL)</label>
+              <label>OUTPUT PATH <span style={{ opacity: 0.5, fontWeight: 400 }}>(OPTIONAL)</span></label>
               <input
                 value={outputPath}
                 onChange={(e) => setOutputPath(e.target.value)}
                 placeholder="./out"
               />
-            </div>
-
-            <div className="input-group" style={{ width: "100%" }}>
-              <label>STRATEGY</label>
-              <div className="strategy-toggles">
-                {STRATEGIES.map((s) => (
-                  <button
-                    key={s}
-                    className={`strategy-btn${strategy === s ? " active" : ""}`}
-                    onClick={() => setStrategy(s)}
-                  >
-                    {s.toUpperCase()}
-                  </button>
-                ))}
-              </div>
             </div>
 
           </div>
@@ -396,7 +428,6 @@ export default function Migration({ setActivePage }) {
         <div className="action-status">
           <div className="action-icon">
             {running ? (
-              /* spinner */
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
                    stroke="#00d2ff" strokeWidth="2"
                    style={{ animation: "spin 1s linear infinite" }}>
@@ -411,68 +442,96 @@ export default function Migration({ setActivePage }) {
             )}
           </div>
           <div className="status-text">
-            <h4>{running ? "RUNNING ENGINE…" : "READY TO MIGRATE"}</h4>
+            <h4>{running ? "RUNNING ENGINE…" : isReady ? "READY TO MIGRATE" : "AWAITING CONFIGURATION"}</h4>
             <p>
               {running
                 ? "Processing — check the terminal for live output"
-                : file
-                  ? selectedEngine === "php"
-                    ? `${file.name} · ${phpCommand} · PHP ${phpSourceVersion} → ${phpTargetVersion}`
-                    : `${file.name} · ${strategy} · ${selectedEngine}`
-                  : "Configure settings and upload a project to begin"}
+                : isReady
+                  ? `${file.name} · ${engineLabel}`
+                  : "Upload a project archive and set a project name to begin"}
             </p>
           </div>
         </div>
 
-        <button
-          className="start-migration-btn"
-          onClick={handleStartMigration}
-          disabled={running}
-        >
-          {running ? "RUNNING…" : "START MIGRATION"}
-          <span className="btn-icon">→</span>
-        </button>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          {result && (
+            <button
+              className="btn-secondary"
+              style={{ padding: "8px 16px", fontSize: "10px", letterSpacing: "1px" }}
+              onClick={() => { setResult(null); setError(null); }}
+            >
+              CLEAR RESULT
+            </button>
+          )}
+          <button
+            className="start-migration-btn"
+            onClick={handleStartMigration}
+            disabled={running || !isReady}
+            style={!isReady && !running ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+          >
+            {running ? "RUNNING…" : "START MIGRATION"}
+            <span className="btn-icon">→</span>
+          </button>
+        </div>
       </div>
 
       {/* ── RESULT PANEL ────────────────────────────────────────────────── */}
       {error && (
         <div className="result-panel result-error" style={panelStyle}>
-          <span style={badgeStyle("#ff4d4d")}>FAILED</span>
-          <p style={{ color: "#ff8080", marginTop: 12 }}>{error}</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={badgeStyle("#ff4d4d")}>FAILED</span>
+            <button
+              style={{ background: "transparent", border: "none", color: "#5a7482", cursor: "pointer", fontSize: 20, lineHeight: 1 }}
+              onClick={() => setError(null)}
+              title="Dismiss"
+            >×</button>
+          </div>
+          <p style={{ color: "#ff8080", marginTop: 12, fontFamily: "monospace", fontSize: 13 }}>{error}</p>
         </div>
       )}
 
       {result && !error && (
-        <div
-          className="result-panel"
-          style={panelStyle}
-        >
+        <div className="result-panel" style={panelStyle}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={badgeStyle(result.status === "success" ? "#00d2ff" : "#ff4d4d")}>
-              {result.status.toUpperCase()}
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <span style={badgeStyle(result.status === "success" ? "#00d2ff" : "#ff4d4d")}>
+                {result.status?.toUpperCase?.() ?? "DONE"}
+              </span>
+              {result.job_id && (
+                <span style={{ fontSize: 11, color: "#5a7482", fontFamily: "monospace" }}>
+                  JOB #{result.job_id}
+                </span>
+              )}
+            </div>
 
-            {(strategy === "full" || strategy === "diff") && (
-              <div style={{ display: "flex", gap: "12px" }}>
-                <button
-                  className="btn-primary"
-                  style={{ padding: "8px 16px", fontSize: "10px" }}
-                  onClick={() => setActivePage("workspace")}
-                >
-                  CHECK DIFF
-                </button>
-                <button
-                  className="btn-secondary"
-                  style={{ padding: "8px 16px", fontSize: "10px" }}
-                  onClick={() => setActivePage("dashboard")}
-                >
-                  SHOW STATS
-                </button>
-              </div>
-            )}
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              {result.status === "success" && (
+                <>
+                  <button
+                    className="btn-primary"
+                    style={{ padding: "8px 16px", fontSize: "10px" }}
+                    onClick={() => setActivePage("validation")}
+                  >
+                    VIEW REPORT
+                  </button>
+                  <button
+                    className="btn-secondary"
+                    style={{ padding: "8px 16px", fontSize: "10px" }}
+                    onClick={() => setActivePage("workspace")}
+                  >
+                    CHECK DIFF
+                  </button>
+                </>
+              )}
+              <button
+                style={{ background: "transparent", border: "none", color: "#5a7482", cursor: "pointer", fontSize: 20, lineHeight: 1 }}
+                onClick={() => { setResult(null); setError(null); }}
+                title="Dismiss"
+              >×</button>
+            </div>
           </div>
 
-          {/* Key indicator lines */}
+          {/* Engine output indicators */}
           {result.result?.indicators?.length > 0 && (
             <div style={{ marginTop: 20 }}>
               <p style={labelStyle}>ENGINE OUTPUT</p>
@@ -482,10 +541,15 @@ export default function Migration({ setActivePage }) {
             </div>
           )}
 
-          {/* Full log (collapsed by default) */}
+          {/* Message when no indicators */}
+          {!result.result?.indicators?.length && result.result?.message && (
+            <p style={{ color: "#a0abb6", marginTop: 12, fontSize: 13 }}>{result.result.message}</p>
+          )}
+
+          {/* Full log (collapsed) */}
           {result.result?.log?.length > 0 && (
             <details style={{ marginTop: 16 }}>
-              <summary style={{ color: "#5a7482", cursor: "pointer", fontSize: 11, letterSpacing: 1 }}>
+              <summary style={{ color: "#5a7482", cursor: "pointer", fontSize: 11, letterSpacing: 1, userSelect: "none" }}>
                 FULL LOG ({result.result.log.length} lines)
               </summary>
               <pre style={{ ...preStyle, maxHeight: 320, overflowY: "auto", marginTop: 8 }}>
@@ -500,13 +564,14 @@ export default function Migration({ setActivePage }) {
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .engine-option.disabled { opacity: 0.4; cursor: not-allowed; }
+        .start-migration-btn:disabled { box-shadow: none; transform: none !important; }
       `}</style>
 
     </div>
   );
 }
 
-// ─── tiny inline style helpers (keeps Migration.css untouched) ─────────────
+// ─── tiny inline style helpers ──────────────────────────────────────────────
 const panelStyle = {
   margin: "0 60px 40px",
   padding: "28px 32px",
