@@ -47,9 +47,17 @@ const App = () => {
 
   return (
     <div className="app-container">
-      <Sidebar activePage={activePage} setActivePage={setActivePage} />
+      <Sidebar
+        activePage={activePage}
+        setActivePage={setActivePage}
+        onLogoClick={() => setActivePage('migration')}
+      />
       <div className="main-content" style={{ height: '100vh', overflowY: 'auto' }}>
-        <Navbar />
+        <Navbar
+          onLogoClick={() => setActivePage('migration')}
+          onNavClick={setActivePage}
+          activePage={activePage}
+        />
         {renderContent()}
       </div>
     </div>

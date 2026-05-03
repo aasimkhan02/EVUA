@@ -21,7 +21,7 @@ EVUA features a modular architecture with specialized engines for different tech
 *Legacy PHP (5.6+) → Modern PHP (8.x+)*
 - **AST Parsing**: Full Abstract Syntax Tree analysis for accurate code transformation.
 - **Version Control**: Built-in Git integration to track every migration step as a commit.
-- **AI Verification**: Automatically passes high-risk code through Gemini/OpenAI for logic verification.
+- **AI Verification**: Automatically passes high-risk code through Ollama first when configured, otherwise falls back to Gemini/OpenAI for logic verification.
 - **Safe Refactoring**: Handles deprecated functions, type hinting, and modern syntax patterns.
 
 ---
@@ -63,6 +63,7 @@ graph TD
 - **Python 3.10+**
 - **Node.js 18+**
 - **Docker** (Optional, for easy setup)
+- **Ollama** (Optional, for local AI)
 
 ### Installation
 
@@ -83,9 +84,26 @@ graph TD
 3. **Configure Environment**
    Create a `.env` in the `backend` folder:
    ```env
+   OLLAMA_API_BASE=http://localhost:11434
+   OLLAMA_MODEL=gemma3:latest
    GEMINI_API_KEY=your_key_here
    OPENAI_API_KEY=your_key_here
    ```
+
+   When `OLLAMA_API_BASE` is present, EVUA uses Ollama exclusively for AI-assisted PHP migration work.
+   Set `OLLAMA_MODEL` to your Gemma variant (for example, `gemma3:latest`).
+   During `migrate`, AI fixes are applied for issues marked as AI-required.
+
+4. **Start Ollama (Optional)**
+   If you want to use local AI, install Ollama and start the server:
+   ```bash
+   ollama serve
+   ```
+   Then pull the Gemma model you plan to use:
+   ```bash
+   ollama pull gemma3:latest
+   ```
+   Keep the Ollama server running while EVUA is using AI.
 
 ---
 

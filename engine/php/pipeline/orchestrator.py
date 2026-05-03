@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from pathlib import Path
 from typing import Any
 
-from ..ai_processor.handoff import GeminiHandoffProcessor
+from ..ai_processor.factory import build_code_processor, build_handoff_processor
 from ..ast_parser.analyzer import AnalysisFinding, analyze_php_source
 from ..migration_detector import detect_migration_path, estimate_effort_hours
-from ..models.migration_models import PHPVersion
+from ..models.migration_models import MigrationStatus, PHPVersion
 from ..report_generator import ReportModel, build_report, default_timestamp
 from ..rule_engine.engine import RuleEngine
 from ..utils.file_scanner import FileScanner
@@ -61,14 +62,10 @@ class CLIOrchestrator:
         job_id = str(uuid.uuid4())
 
         rule_engine = RuleEngine(dry_run=dry_run or not do_migrate)
-        use_mock = self.config.gemini.mock_mode or not bool(self.config.gemini.api_key)
-        ai_processor = GeminiHandoffProcessor(
-            api_key=self.config.gemini.api_key,
-            model=self.config.gemini.model,
-            cache_dir=".evua/ai_cache",
-            mock_mode=use_mock,
-            cache_responses=self.config.gemini.cache_responses,
-        )
+        ai_handoff_processor = build_handoff_processor(self.config)
+        ai_code_processor = None
+        if do_migrate and not (dry_run or self.config.migration.dry_run):
+            ai_code_processor = build_code_processor(self.config)
 
         report_files: list[dict[str, Any]] = []
         all_ai_items: list[dict[str, Any]] = []
@@ -88,6 +85,16 @@ class CLIOrchestrator:
             source = self._load_file(file_path)
             ast, findings, metrics = analyze_php_source(file_path, source)
             result = rule_engine.run(file_path, source, ast, src_v, tgt_v)
+
+            if ai_code_processor and result.status == MigrationStatus.AI_REQUIRED:
+                # Run AI fixer when required issues are detected.
+                result = asyncio.run(
+                    ai_code_processor.process(
+                        result=result,
+                        source_version=src_v,
+                        target_version=tgt_v,
+                    )
+                )
 
             if do_migrate and not (dry_run or self.config.migration.dry_run):
                 Path(file_path).write_text(result.migrated_code, encoding="utf-8")
@@ -171,7 +178,7 @@ class CLIOrchestrator:
             if progress_cb:
                 progress_cb(idx, len(files), file_path)
 
-        ai_results, ai_usage = ai_processor.process_batch(all_ai_items, source_version, target_version)
+        ai_results, ai_usage = ai_handoff_processor.process_batch(all_ai_items, source_version, target_version)
         ai_lookup = {item["id"]: item for item in ai_results}
 
         for f in report_files:

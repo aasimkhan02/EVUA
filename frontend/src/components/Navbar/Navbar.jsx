@@ -3,7 +3,7 @@ import { LogOut, ChevronDown, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ onLogoClick, onNavClick, activePage }) => {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -29,12 +29,29 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <div className="navbar-logo">EVUA</div>
+      <button
+        type="button"
+        className="navbar-logo-button"
+        onClick={onLogoClick}
+        aria-label="Go to home"
+      >
+        <span className="navbar-logo">EVUA</span>
+      </button>
 
       <ul className="navbar-links">
-        {['Platform', 'Migrations', 'Features'].map((link) => (
+        {[
+          { id: 'dashboard', label: 'Platform' },
+          { id: 'migration', label: 'Migrations' },
+          { id: 'validation', label: 'Features' },
+        ].map((link) => (
           <li key={link} className="nav-item">
-            <button className="nav-link">{link}</button>
+            <button
+              className={`nav-link ${activePage === link.id ? 'active' : ''}`}
+              onClick={() => onNavClick(link.id)}
+              type="button"
+            >
+              {link.label}
+            </button>
           </li>
         ))}
       </ul>

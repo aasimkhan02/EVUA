@@ -158,3 +158,130 @@ class GeminiHandoffProcessor:
 
         usage.estimated_cost_usd = round((usage.total_tokens / 1_000_000) * 2.5, 6)
         return outputs, usage
+
+
+class OllamaHandoffProcessor:
+    def __init__(
+        self,
+        api_base: str,
+        model: str,
+        cache_dir: str = ".evua/ai_cache",
+        mock_mode: bool = False,
+        cache_responses: bool = True,
+        timeout: int = 120,
+    ):
+        self.api_base = api_base.rstrip("/")
+        self.model = model
+        self.mock_mode = mock_mode
+        self.cache_responses = cache_responses
+        self.timeout = timeout
+        self.cache_dir = Path(cache_dir)
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def _hash_payload(payload: dict[str, Any]) -> str:
+        raw = json.dumps(payload, sort_keys=True).encode("utf-8")
+        return hashlib.sha256(raw).hexdigest()
+
+    def _cache_file(self, key: str) -> Path:
+        return self.cache_dir / f"{key}.json"
+
+    def _build_prompt(self, item: dict[str, Any], source_version: str, target_version: str) -> str:
+        snippet = (item.get("code_snippet") or "")[:1000]
+        return (
+            "You are a PHP migration specialist. Return only JSON with keys: suggestion, confidence, explanation.\n"
+            f"Source version: {source_version}\n"
+            f"Target version: {target_version}\n"
+            f"Reason for review: {item.get('concern', 'complex migration case')}\n"
+            f"Item description: {item.get('description', '')}\n"
+            f"Code:\n{snippet}\n"
+        )
+
+    def _mock_response(self, item: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "suggestion": "Review dynamic behavior and replace with explicit typed flow where possible.",
+            "confidence": 0.73,
+            "explanation": f"Mock analysis for {item.get('id', 'unknown')}.",
+        }
+
+    def _call_ollama(self, prompt: str) -> tuple[dict[str, Any], int]:
+        url = f"{self.api_base}/api/generate"
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": False,
+            "format": "json",
+            "options": {"temperature": 0.1},
+        }
+        response = requests.post(url, json=payload, timeout=self.timeout)
+        response.raise_for_status()
+        body = response.json()
+        text = body.get("response", "")
+        if not text:
+            raise ValueError("Ollama returned an empty response")
+        return json.loads(text), int(body.get("eval_count", 0) or 0)
+
+    def process_batch(
+        self,
+        items: list[dict[str, Any]],
+        source_version: str,
+        target_version: str,
+    ) -> tuple[list[dict[str, Any]], AIUsage]:
+        usage = AIUsage(processed=len(items))
+        outputs: list[dict[str, Any]] = []
+
+        for item in items:
+            payload = {
+                "item": item,
+                "source_version": source_version,
+                "target_version": target_version,
+                "model": self.model,
+                "provider": "ollama",
+            }
+            key = self._hash_payload(payload)
+            cache_file = self._cache_file(key)
+
+            if self.cache_responses and cache_file.exists():
+                cached = json.loads(cache_file.read_text(encoding="utf-8"))
+                outputs.append(cached)
+                usage.successful += 1
+                usage.total_tokens += int(cached.get("token_usage", 0))
+                continue
+
+            try:
+                if self.mock_mode:
+                    data = self._mock_response(item)
+                    tokens = 0
+                else:
+                    prompt = self._build_prompt(item, source_version, target_version)
+                    data, tokens = self._call_ollama(prompt)
+
+                result = {
+                    "id": item.get("id"),
+                    "suggestion": data.get("suggestion"),
+                    "confidence": float(data.get("confidence", 0.5)),
+                    "explanation": data.get("explanation", ""),
+                    "token_usage": tokens,
+                }
+                if self.cache_responses:
+                    cache_file.write_text(json.dumps(result, indent=2), encoding="utf-8")
+
+                outputs.append(result)
+                usage.successful += 1
+                usage.total_tokens += tokens
+
+            except Exception as exc:
+                outputs.append(
+                    {
+                        "id": item.get("id"),
+                        "suggestion": None,
+                        "confidence": 0.0,
+                        "explanation": str(exc),
+                        "token_usage": 0,
+                        "error": True,
+                    }
+                )
+                usage.failed += 1
+
+        usage.estimated_cost_usd = 0.0
+        return outputs, usage

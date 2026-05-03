@@ -303,6 +303,7 @@ async def delete_job(
     """
     from sqlmodel import select, delete
     from app.models.database_models import Report, FileTracking, JobLog, Validation, AIDecision
+    import shutil
     
     # Ensure job belongs to the current user
     statement = select(Job).join(Project).where(
@@ -317,6 +318,19 @@ async def delete_job(
     # Delete related dependencies explicitly to ensure clean cleanup
     for model in [Report, AIDecision, FileTracking, JobLog, Validation]:
         session.exec(delete(model).where(model.job_id == job.id))
+
+    # Remove related on-disk artifacts
+    project_name = job.project.name if job.project else None
+    if project_name:
+        temp_root = ROOT_DIR / "temp_uploads"
+        artifacts = [
+            temp_root / f"extracted_{project_name}",
+            temp_root / f"php_out_{project_name}",
+            ROOT_DIR / "engine" / "angularjs" / "reports" / f"extracted_{project_name}",
+        ]
+        for path in artifacts:
+            if path.exists():
+                shutil.rmtree(path, ignore_errors=True)
         
     # Delete the job itself
     session.delete(job)

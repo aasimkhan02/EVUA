@@ -19,6 +19,9 @@
   border-radius: 8px;
   margin-bottom: 40px;
   color: #1a1a1c;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .sidebar-nav {

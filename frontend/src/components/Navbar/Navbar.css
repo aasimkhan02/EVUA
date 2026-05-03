@@ -17,6 +17,18 @@
   flex: 1; /* Pushes center links to the actual center if right flex is also 1 */
 }
 
+.navbar-logo-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  flex: 1;
+}
+
 .navbar-links {
   display: flex;
   align-items: center;

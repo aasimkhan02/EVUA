@@ -2,7 +2,7 @@ import React from 'react';
 import { Compass, SquareTerminal, FolderKanban, LayoutDashboard, ShieldCheck, History } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = ({ activePage, setActivePage }) => {
+const Sidebar = ({ activePage, setActivePage, onLogoClick }) => {
   const menuItems = [
     { id: 'migration', icon: SquareTerminal },       // 1st: Migration
     { id: 'workspace', icon: FolderKanban },         // 2nd: Workspace
@@ -13,9 +13,14 @@ const Sidebar = ({ activePage, setActivePage }) => {
 
   return (
     <div className="sidebar">
-      <div className="sidebar-logo">
+      <button
+        type="button"
+        className="sidebar-logo"
+        onClick={onLogoClick}
+        aria-label="Go to home"
+      >
         <Compass className="logo-icon" size={24} />
-      </div>
+      </button>
 
       <div className="sidebar-nav">
         {menuItems.map((item) => {

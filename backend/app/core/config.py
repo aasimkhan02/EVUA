@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
     GROQ_API_KEY: Optional[str] = None
+    OLLAMA_API_BASE: Optional[str] = None
+    OLLAMA_MODEL: Optional[str] = "gemma3:latest"
 
     class Config:
         case_sensitive = True
