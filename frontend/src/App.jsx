@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar/Sidebar';
 import Navbar from './components/Navbar/Navbar';
 import Migration from './pages/Migration/Migration';
@@ -6,27 +7,20 @@ import Workspace from './pages/Workspace/Workspace';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Validation from './pages/Validation/Validation';
 import History from './pages/History/History';
-import Login from './pages/Login/Login';
-import Register from './pages/Register/Register';
-import { useAuth } from './context/AuthContext';
+import Landing from './pages/landing/landing';
 import './App.css';
 
-const App = () => {
-  const { isAuthenticated, loading } = useAuth();
+const AppContent = () => {
+  const location = useLocation();
   const [activePage, setActivePage] = useState('migration');
-  const [authView, setAuthView] = useState('login'); // 'login' or 'register'
 
-  if (loading) {
-    return <div className="loading-screen">Loading EVUA...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return authView === 'login' ? (
-      <Login switchToRegister={() => setAuthView('register')} />
-    ) : (
-      <Register switchToLogin={() => setAuthView('login')} />
-    );
-  }
+  useEffect(() => {
+    if (location.pathname.includes('/history')) {
+      setActivePage('history');
+    } else if (location.pathname.includes('/project')) {
+      setActivePage('migration');
+    }
+  }, [location]);
 
   const renderContent = () => {
     switch (activePage) {
@@ -53,6 +47,17 @@ const App = () => {
         {renderContent()}
       </div>
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/*" element={<AppContent />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 
