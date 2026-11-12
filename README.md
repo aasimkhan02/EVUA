@@ -185,10 +185,6 @@ Located in `engine/php/`, the PHP engine brings AST-backed analysis, live migrat
 
 ## 🖥️ Interactive Modernization Workspace
 
-<div align="center">
-  <img src="frontend/src/assets/ai_architect.png" alt="EVUA AI Architect and Code Modernization Overview" width="820" style="border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.45);" />
-</div>
-
 The **React 19 + Vite 8** frontend (`frontend/src/pages/`) guides engineering teams through the complete modernization lifecycle:
 - **Landing & Auth (`landing/`, `Login/`, `Register/`)**: JWT-backed workspace authentication.
 - **Migration Launcher (`Migration/`)**: Upload zipped AngularJS or PHP repositories, choose strategy and target version, and launch asynchronous migrations with instant mismatch validation.
